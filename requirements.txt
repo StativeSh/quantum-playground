@@ -1,0 +1,8 @@
+numpy
+scipy
+sympy
+matplotlib
+pandas
+jupyterlab
+ipykernel
+pytest

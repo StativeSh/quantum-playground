@@ -1,6 +1,6 @@
 PY ?= .venv/bin/python
 
-.PHONY: install test demos animations lab notebooks-check clean
+.PHONY: install test demos animations lab notebooks-check clean readme-media site
 
 install:
 	python3 -m venv .venv
@@ -28,3 +28,9 @@ clean:
 
 animations:
 	$(PY) -m qplay animate all --out figures
+
+readme-media:
+	$(PY) scripts/make_readme_media.py docs/images
+
+site:
+	$(PY) scripts/build_site.py _site

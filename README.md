@@ -1,6 +1,31 @@
 # quantum-playground
 
+[![CI](https://github.com/StativeSh/quantum-playground/actions/workflows/ci.yml/badge.svg)](https://github.com/StativeSh/quantum-playground/actions/workflows/ci.yml)
+[![Pages](https://github.com/StativeSh/quantum-playground/actions/workflows/pages.yml/badge.svg)](https://stativesh.github.io/quantum-playground/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A physics and maths playground in Python: simulations, symbolic mechanics and Jupyter notebooks, with tests that check every solver against known analytic results.
+
+**[Website](https://stativesh.github.io/quantum-playground/)**: every figure and animation, the executed notebooks, and an [interactive explorer](https://stativesh.github.io/quantum-playground/explorer/) with sliders for the pendulum, quantum tunnelling and the double slit.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/double-slit.gif" width="260" alt="Wavepacket passing through two slits"><br><sub>Double slit: a 2D Schrödinger simulation</sub></td>
+    <td align="center"><img src="docs/images/double-pendulum.gif" width="260" alt="Chaotic double pendulum"><br><sub>Chaotic double pendulum</sub></td>
+    <td align="center"><img src="docs/images/figure-eight.gif" width="260" alt="Three-body figure-eight orbit"><br><sub>Three-body figure-eight orbit</sub></td>
+  </tr>
+</table>
+
+<img src="docs/images/wavepacket.gif" width="100%" alt="Wavepacket tunnelling through a barrier">
+
+| | |
+|---|---|
+| ![Hydrogen orbitals](docs/images/hydrogen.png) | ![Double-slit fringes against theory](docs/images/double-slit.png) |
+| Hydrogen orbitals $\lvert\psi_{nlm}\rvert$ | Double-slit fringes against the two-source prediction |
+| ![Ising model](docs/images/ising.png) | ![Phase portraits](docs/images/phase-portrait.png) |
+| 2D Ising model against Onsager's exact result | Phase portraits with classified fixed points |
+| ![Mandelbrot set](docs/images/mandelbrot.png) | ![Domain colouring](docs/images/domain-coloring.png) |
+| Mandelbrot set | Domain colouring and the argument principle |
 
 ## Quick start
 
@@ -87,6 +112,8 @@ It appears in `qplay list` and is covered by the test suite automatically. Anima
 ## Development
 
 See `CLAUDE.md` for conventions. CI runs the tests on Python 3.10, 3.12 and 3.13 and executes the notebooks.
+
+The website is built by `.github/workflows/pages.yml` on every push to `main`: `scripts/build_site.py` renders all demos and animations, executes the notebooks to HTML and copies the explorer from `site_src/`. Build it locally with `make site` (output in `_site/`). The README images live in `docs/images/` and are regenerated with `make readme-media`.
 
 ## License
 

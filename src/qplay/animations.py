@@ -105,7 +105,8 @@ def double_slit_anim(n_frames):
     amp = np.abs(psi)
     # square-root colour scale: the transmitted ~13% stays visible next to the bright incident packet
     norm = PowerNorm(gamma=0.5, vmin=0, vmax=np.percentile(amp, 99.9))
-    fig, ax = plt.subplots(figsize=(6, 4))
+    fig, ax = plt.subplots(figsize=(4.6, 4.25))
+    fig.subplots_adjust(left=0.02, right=0.98, bottom=0.02, top=0.98)
     im = ax.imshow(amp[0], origin="lower", extent=[x[0], x[-1], y[0], y[-1]], cmap="magma", norm=norm)
     ax.contour(x, y, run["V"], [1], colors="c", linewidths=0.8)
     ax.set(xlim=(-15, 50), ylim=(-30, 30), xticks=[], yticks=[])

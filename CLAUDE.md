@@ -5,15 +5,17 @@ Physics and maths playground: a small Python package (`qplay`) plus notebooks.
 ## Commands
 
 - Install: `make install` (venv in `.venv`, editable install with dev extras)
-- Test: `make test` (about 25 s)
+- Test: `make test` (about 45 s)
 - Render all demo figures: `make demos`; all GIFs: `make animations` (both write `figures/`, gitignored)
 - Check notebooks run end to end: `make notebooks-check`
+- Website: `make site` builds `_site/` (deployed by `.github/workflows/pages.yml` on push to `main`); README images: `make readme-media` writes `docs/images/`
 
 ## Layout
 
 - `src/qplay/` one module per topic: `mechanics`, `waves`, `em`, `quantum`, `relativity`, `chaos`, `statmech`, `symbolic`, `hamiltonian`, `dynamics`, `complexplane`, `linalg`, `numerics`, plus `integrators`, `plotting`, `demos`, `animations`
 - `tests/` one test file per area; tests check numerics against analytic results
 - `notebooks/` committed without outputs
+- `scripts/` site and README-media builders; `site_src/` landing-page template (`string.Template`, so a literal `$` is written `$$`) and the standalone explorer page
 
 ## Conventions
 

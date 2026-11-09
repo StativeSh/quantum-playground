@@ -41,3 +41,19 @@ def save_gif(fig, update, frames, path, fps=30):
 
 
 setup_style()
+
+
+def shrink_gif(path, width, colors=128):
+    """Resize a GIF in place to ``width`` pixels and reduce its palette, keeping frame timing."""
+    from PIL import Image, ImageSequence
+
+    path = Path(path)
+    im = Image.open(path)
+    frames, durations = [], []
+    for frame in ImageSequence.Iterator(im):
+        f = frame.convert("RGB")
+        h = round(f.height * width / f.width)
+        frames.append(f.resize((width, h), Image.LANCZOS).quantize(colors=colors, method=Image.MEDIANCUT))
+        durations.append(frame.info.get("duration", 50))
+    frames[0].save(path, save_all=True, append_images=frames[1:], duration=durations, loop=0, optimize=True)
+    return path

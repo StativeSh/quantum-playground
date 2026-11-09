@@ -9,7 +9,7 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 
-from . import chaos, em, mechanics, plotting, quantum, waves
+from . import chaos, complexplane, dynamics, em, linalg, mechanics, plotting, quantum, statmech, waves
 
 DEMOS: dict = {}
 
@@ -204,4 +204,142 @@ def bifurcation_demo():
     fig, ax = plt.subplots(figsize=(7, 4.5))
     ax.scatter(r, x, s=0.1, c="k", alpha=0.3, linewidths=0)
     ax.set(xlabel="r", ylabel="x", title="Logistic map: the road to chaos")
+    return fig
+
+
+@demo("hydrogen")
+def hydrogen_demo():
+    """Hydrogen orbital probability densities in the xz-plane."""
+    states = [(1, 0, 0), (2, 0, 0), (2, 1, 0), (3, 1, 0), (3, 2, 0), (3, 2, 1), (4, 2, 0), (4, 3, 1)]
+    fig, axes = plt.subplots(2, 4, figsize=(11, 5.6))
+    names = "spdf"
+    for ax, (n, l, m) in zip(axes.flat, states):
+        X, Z, rho = quantum.hydrogen_density_xz(n, l, m, points=260)
+        ax.imshow(rho ** 0.5, origin="lower", cmap="inferno",
+                  extent=[X.min(), X.max(), Z.min(), Z.max()])
+        ax.set_title(rf"${n}{names[l]}$, $m={m}$", fontsize=10)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.grid(False)
+    fig.suptitle(r"Hydrogen orbitals $|\psi_{nlm}|$ in the $xz$-plane (lengths in $a_0$, own scale each)")
+    return fig
+
+
+@demo("double-slit")
+def double_slit_demo():
+    """Quantum double-slit interference from a 2D wavepacket simulation."""
+    run = quantum.double_slit_experiment()
+    x, y, psi = run["x"], run["y"], run["psi"]
+    frame = np.argmin(np.abs(run["times"] - 11.0))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.5), gridspec_kw={"width_ratios": [2, 1]})
+    rho = np.abs(psi[frame]) ** 2
+    ax1.imshow(rho, origin="lower", extent=[x[0], x[-1], y[0], y[-1]], cmap="magma",
+               vmax=np.percentile(rho, 99.7))
+    ax1.contour(x, y, run["V"], [1], colors="c", linewidths=0.8)
+    ax1.axvline(run["screen_x"], color="w", ls="--", lw=0.8)
+    ax1.set(xlim=(-15, 50), ylim=(-30, 30), xlabel="x", ylabel="y",
+            title=rf"$|\psi|^2$ at $t={run['times'][frame]:.0f}$ (dashed: screen)")
+    ax1.grid(False)
+    L, d, lam = run["screen_x"], 5.0, 2 * np.pi / 3.0
+    path_diff = np.hypot(L, y + d / 2) - np.hypot(L, y - d / 2)
+    ax2.plot(run["screen"], y, label="simulation")
+    ax2.plot(np.cos(np.pi * path_diff / lam) ** 2, y, "k:", label="two point sources")
+    ax2.set(ylim=(-30, 30), xlabel="time-integrated intensity", title="Screen")
+    ax2.legend(fontsize=8, loc="lower right")
+    return fig
+
+
+@demo("ising")
+def ising_demo():
+    """2D Ising model: lattice snapshots and magnetisation vs Onsager's exact result."""
+    fig = plt.figure(figsize=(11, 4))
+    grid = fig.add_gridspec(1, 4)
+    for i, T in enumerate((1.8, statmech.T_CRITICAL, 3.2)):
+        spins, _, _ = statmech.ising(L=96, T=T, sweeps=300, start="hot", seed=i)
+        ax = fig.add_subplot(grid[0, i])
+        ax.imshow(spins, cmap="gray", interpolation="nearest")
+        ax.set(title=rf"$T={T:.2f}$", xticks=[], yticks=[])
+        ax.grid(False)
+    ax = fig.add_subplot(grid[0, 3])
+    temps = np.linspace(1.2, 3.6, 20)
+    mags = [np.mean(np.abs(statmech.ising(L=32, T=T, sweeps=400, seed=7)[1][150:])) for T in temps]
+    fine = np.linspace(1.0, 3.6, 300)
+    ax.plot(fine, statmech.onsager_magnetization(fine), "k", lw=1, label="Onsager (exact)")
+    ax.plot(temps, mags, "o", ms=4, label=r"Monte Carlo, $32^2$")
+    ax.axvline(statmech.T_CRITICAL, color="r", lw=0.5)
+    ax.set(xlabel="T", ylabel=r"$\langle|m|\rangle$", title="Phase transition")
+    ax.legend(fontsize=7)
+    return fig
+
+
+@demo("phase-portrait")
+def phase_portrait_demo():
+    """Phase planes with automatically classified fixed points."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.5))
+
+    def damped_pendulum(s):
+        return [s[1], -np.sin(s[0]) - 0.25 * s[1]]
+
+    dynamics.phase_portrait(damped_pendulum, (-2 * np.pi, 2 * np.pi), (-3, 3), ax=ax1,
+                            classify=[(g, 0) for g in np.arange(-2, 3) * np.pi])
+    ax1.set(xlabel=r"$\theta$", ylabel=r"$\dot\theta$", title=r"Damped pendulum $\ddot\theta=-\sin\theta-0.25\dot\theta$")
+
+    def predator_prey(s):
+        return [s[0] * (1 - s[1]), s[1] * (s[0] - 1) * 0.8]
+
+    dynamics.phase_portrait(predator_prey, (0, 3), (0, 3), ax=ax2, classify=[(0.01, 0.01), (1, 1)])
+    ax2.set(xlabel="prey", ylabel="predators", title="Lotka-Volterra")
+    return fig
+
+
+@demo("pendulum-phase-space")
+def pendulum_phase_space_demo():
+    r"""Pendulum energy contours $H = p^2/2 - \cos q$ with the separatrix."""
+    q, p = np.meshgrid(np.linspace(-2 * np.pi, 2 * np.pi, 400), np.linspace(-3, 3, 300))
+    H = p**2 / 2 - np.cos(q)
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    ax.contour(q, p, H, levels=np.linspace(-0.95, 3, 18), cmap="viridis", linewidths=0.9)
+    ax.contour(q, p, H, levels=[1.0], colors="r", linewidths=1.6)
+    ax.set(xlabel="q", ylabel="p",
+           title="Pendulum phase space: oscillation inside the red separatrix, rotation outside")
+    return fig
+
+
+@demo("domain-coloring")
+def domain_coloring_demo():
+    r"""Domain colouring of $f(z) = (z^2-1)(z-2-i)^2/(z^2+2+2i)$."""
+    def f(z):
+        return (z**2 - 1) * (z - 2 - 1j) ** 2 / (z**2 + 2 + 2j)
+
+    fig, ax = plt.subplots(figsize=(6, 5.5))
+    ax.imshow(complexplane.domain_coloring(f, (-3, 3), (-3, 3), 700), origin="lower", extent=[-3, 3, -3, 3])
+    count = complexplane.winding_number(f, 0, 1.5)
+    t = np.linspace(0, 2 * np.pi, 200)
+    ax.plot(1.5 * np.cos(t), 1.5 * np.sin(t), "w--", lw=1)
+    ax.set(xlabel="Re z", ylabel="Im z",
+           title=f"Hue = arg f, bands = log|f|\nzeros - poles inside dashed circle = {count}")
+    ax.grid(False)
+    return fig
+
+
+@demo("linear-map")
+def linear_map_demo():
+    """A 2x2 matrix maps the unit circle to an ellipse along its singular vectors."""
+    A = np.array([[1.6, 0.9], [0.3, 0.8]])
+    sigma, U = linalg.singular_axes(A)
+    vals, vecs = np.linalg.eig(A)
+    assert np.allclose(vecs.imag, 0), "this demo's matrix has real eigenvectors"
+    vals, vecs = vals.real, vecs.real  # recent NumPy returns a complex dtype even then
+    fig, ax = plt.subplots(figsize=(6, 5.5))
+    circle = linalg.unit_circle_image(np.eye(2))
+    ax.plot(*circle, color="0.6", label="unit circle")
+    ax.plot(*linalg.unit_circle_image(A), color="C0", label="image under A")
+    for i in range(2):
+        ax.annotate("", sigma[i] * U[:, i], (0, 0), arrowprops=dict(arrowstyle="->", color="C1", lw=2))
+        ax.plot(*np.outer(vecs[:, i], [-2.2, 2.2]), "--", color="C2", lw=1,
+                label="eigenvector lines" if i == 0 else None)
+    ax.plot([], [], color="C1", label=r"singular axes $\sigma_i\mathbf{u}_i$")
+    ax.set(aspect="equal", xlim=(-2.2, 2.2), ylim=(-2.2, 2.2),
+           title=rf"$A$: $\sigma = {sigma[0]:.2f}, {sigma[1]:.2f}$; $\lambda = {vals[0]:.2f}, {vals[1]:.2f}$")
+    ax.legend(fontsize=8, loc="lower right")
     return fig

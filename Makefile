@@ -1,6 +1,6 @@
 PY ?= .venv/bin/python
 
-.PHONY: install test demos lab notebooks-check clean
+.PHONY: install test demos animations lab notebooks-check clean
 
 install:
 	python3 -m venv .venv
@@ -25,3 +25,6 @@ notebooks-check:
 
 clean:
 	rm -rf figures .pytest_cache build dist src/*.egg-info
+
+animations:
+	$(PY) -m qplay animate all --out figures

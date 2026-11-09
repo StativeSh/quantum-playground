@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quantum Playground Explorer</title>
+<meta name="description" content="Interactive pendulum, quantum tunnelling and double-slit experiments.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a lab bench. Each experiment is a band: controls + readouts on the left, live plots on the right. */
+:root {
+  --bg: #eef2f5;          /* cool blue-grey paper */
+  --panel: #f9fbfc;
+  --fg: #13202b;          /* ink */
+  --muted: #5a6b7a;
+  --grid: #d3dce4;
+  --accent: #1d5bbf;      /* ink blue: the exact physics */
+  --accent-2: #b4541c;    /* rust: the approximation / comparison */
+  --barrier: #c9d5df;
+  --screen: #05070a;      /* the double-slit screen is dark in both themes, like a real one */
+  --focus: #1d5bbf;
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e151b; --panel: #141d25; --fg: #e2e9ef; --muted: #93a4b3; --grid: #26333f;
+    --accent: #7eb0ff; --accent-2: #f0965c; --barrier: #2c3b48; --focus: #7eb0ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e151b; --panel: #141d25; --fg: #e2e9ef; --muted: #93a4b3; --grid: #26333f;
+  --accent: #7eb0ff; --accent-2: #f0965c; --barrier: #2c3b48; --focus: #7eb0ff;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-block: 40px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 28px;
+}
+header { display: grid; gap: 10px; max-width: 68ch; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted);
+}
+h1 {
+  font-family: var(--font-display); font-weight: 750; font-size: clamp(30px, 5vw, 46px);
+  line-height: 1.05; margin: 0; text-wrap: balance; letter-spacing: -0.01em;
+}
+h2 {
+  font-family: var(--font-display); font-weight: 600; font-size: 24px; margin: 0;
+  text-wrap: balance;
+}
+p { margin: 0; }
+.lede { color: var(--muted); max-width: 64ch; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.experiment {
+  background: var(--panel);
+  border: 1px solid var(--grid);
+  border-radius: 6px;
+  padding: 22px;
+  display: grid;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  gap: 24px;
+}
+.side { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.side p { color: var(--muted); font-size: 14px; }
+.plots { display: grid; gap: 14px; min-width: 0; }
+.plots.two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+canvas { width: 100%; display: block; max-width: 100%; }
+.c-wide { aspect-ratio: 16 / 7; }
+.c-square { aspect-ratio: 1 / 1; }
+.c-band { aspect-ratio: 16 / 3; border-radius: 3px; }
+.c-plot { aspect-ratio: 16 / 7; }
+@media (max-width: 820px) { .c-plot, .c-wide { aspect-ratio: 4 / 3; } }
+
+.control { display: grid; gap: 4px; }
+.control label { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: 500; }
+.control output { font-family: var(--font-mono); font-size: 13px; color: var(--accent); font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; accent-color: var(--accent); margin: 0; }
+
+.readouts { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; font-size: 14px; }
+.readouts dt { color: var(--muted); }
+.readouts dd { margin: 0; font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.formula {
+  font-size: 17px; padding: 10px 12px; border-left: 2px solid var(--grid);
+  overflow-x: auto; color: var(--fg);
+}
+.formula math { font-size: 1.05em; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+.key { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { width: 18px; height: 0; border-top: 2px solid; display: inline-block; }
+.swatch.dash { border-top-style: dashed; }
+.badge {
+  justify-self: start; font-family: var(--font-mono); font-size: 12px; padding: 2px 8px;
+  border-radius: 999px; border: 1px solid currentColor;
+}
+button {
+  justify-self: start; font: inherit; font-size: 14px; font-weight: 500; color: var(--fg);
+  background: transparent; border: 1px solid var(--grid); border-radius: 4px; padding: 5px 12px; cursor: pointer;
+}
+button:hover { border-color: var(--accent); color: var(--accent); }
+footer { color: var(--muted); font-size: 13px; max-width: 72ch; display: grid; gap: 6px; }
+code { font-family: var(--font-mono); font-size: 0.92em; }
+
+@media (max-width: 820px) {
+  .experiment { grid-template-columns: minmax(0, 1fr); padding: 16px; }
+  .plots.two { grid-template-columns: minmax(0, 1fr); }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow"><a href="../">quantum-playground</a> · interactive explorer</span>
+    <h1>Quantum Playground Explorer</h1>
+    <p class="lede">Three experiments from the <a href="https://github.com/StativeSh/quantum-playground">quantum-playground</a> Python package, recomputed live as you drag. Each one puts an exact result next to the approximation it replaces.</p>
+  </header>
+
+  <!-- ===================== Pendulum ===================== -->
+  <section class="experiment" aria-labelledby="pend-h">
+    <div class="side">
+      <h2 id="pend-h">Pendulum period</h2>
+      <p>The familiar <math><msub><mi>T</mi><mn>0</mn></msub><mo>=</mo><mn>2</mn><mi>π</mi><msqrt><mrow><mi>L</mi><mo>/</mo><mi>g</mi></mrow></msqrt></math> assumes small swings. Raise the amplitude and the real pendulum falls behind.</p>
+      <div class="control">
+        <label for="pend-amp">Amplitude <output id="pend-amp-out" for="pend-amp"></output></label>
+        <input type="range" id="pend-amp" min="1" max="178" step="1" value="120">
+      </div>
+      <div class="control">
+        <label for="pend-len">Length <output id="pend-len-out" for="pend-len"></output></label>
+        <input type="range" id="pend-len" min="0.25" max="2" step="0.05" value="1">
+      </div>
+      <dl class="readouts">
+        <dt>Exact period</dt><dd id="pend-T"></dd>
+        <dt>Small-angle period</dt><dd id="pend-T0"></dd>
+        <dt>Ratio</dt><dd id="pend-ratio"></dd>
+      </dl>
+      <div class="formula" aria-label="Exact period formula">
+        <math display="block"><mi>T</mi><mo>=</mo><mn>4</mn><msqrt><mfrac><mi>L</mi><mi>g</mi></mfrac></msqrt><mspace width="0.2em"/><mi>K</mi><mo>(</mo><msup><mi>sin</mi><mn>2</mn></msup><mfrac><msub><mi>θ</mi><mn>0</mn></msub><mn>2</mn></mfrac><mo>)</mo></math>
+      </div>
+      <button type="button" id="pend-play" aria-pressed="true">Pause</button>
+    </div>
+    <div class="plots two">
+      <div style="display:grid;gap:8px;min-width:0">
+        <canvas id="pend-anim" class="c-square" role="img" aria-label="Two pendulums swinging: exact and small-angle"></canvas>
+        <div class="legend">
+          <span class="key"><span class="swatch" style="border-color:var(--accent)"></span>exact</span>
+          <span class="key"><span class="swatch dash" style="border-color:var(--accent-2)"></span>small-angle</span>
+        </div>
+      </div>
+      <div style="display:grid;gap:8px;min-width:0">
+        <canvas id="pend-curve" class="c-square" role="img" aria-label="Period ratio against amplitude"></canvas>
+        <p class="legend">How much longer the real period is, at every amplitude</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Tunnelling ===================== -->
+  <section class="experiment" aria-labelledby="tun-h">
+    <div class="side">
+      <h2 id="tun-h">Quantum tunnelling</h2>
+      <p>A particle of energy <math><mi>E</mi></math> meets a barrier of height <math><msub><mi>V</mi><mn>0</mn></msub></math> and width <math><mi>a</mi></math>. Classically it bounces whenever <math><mi>E</mi><mo>&lt;</mo><msub><mi>V</mi><mn>0</mn></msub></math>. Units with <math><mi>ℏ</mi><mo>=</mo><mi>m</mi><mo>=</mo><mn>1</mn></math>.</p>
+      <div class="control">
+        <label for="tun-E">Energy E <output id="tun-E-out" for="tun-E"></output></label>
+        <input type="range" id="tun-E" min="0.05" max="6" step="0.01" value="1.2">
+      </div>
+      <div class="control">
+        <label for="tun-V">Barrier height V₀ <output id="tun-V-out" for="tun-V"></output></label>
+        <input type="range" id="tun-V" min="0.5" max="5" step="0.05" value="2">
+      </div>
+      <div class="control">
+        <label for="tun-a">Barrier width a <output id="tun-a-out" for="tun-a"></output></label>
+        <input type="range" id="tun-a" min="0.2" max="3" step="0.05" value="1">
+      </div>
+      <span class="badge" id="tun-regime"></span>
+      <dl class="readouts">
+        <dt>Transmitted T</dt><dd id="tun-T"></dd>
+        <dt>Reflected R</dt><dd id="tun-R"></dd>
+        <dt>Wavelength</dt><dd id="tun-lam"></dd>
+      </dl>
+      <div class="formula" aria-label="Transmission below the barrier">
+        <math display="block"><mi>T</mi><mo>=</mo><msup><mrow><mo>[</mo><mn>1</mn><mo>+</mo><mfrac><mrow><msubsup><mi>V</mi><mn>0</mn><mn>2</mn></msubsup><msup><mi>sinh</mi><mn>2</mn></msup><mo>(</mo><mi>κ</mi><mi>a</mi><mo>)</mo></mrow><mrow><mn>4</mn><mi>E</mi><mo>(</mo><msub><mi>V</mi><mn>0</mn></msub><mo>−</mo><mi>E</mi><mo>)</mo></mrow></mfrac><mo>]</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup></math>
+      </div>
+    </div>
+    <div class="plots">
+      <canvas id="tun-psi" class="c-wide" role="img" aria-label="Probability density of the scattering state around the barrier"></canvas>
+      <div class="legend">
+        <span class="key"><span class="swatch" style="border-color:var(--accent)"></span><math><msup><mrow><mo>|</mo><mi>ψ</mi><mo>|</mo></mrow><mn>2</mn></msup></math></span>
+        <span class="key"><span class="swatch dash" style="border-color:var(--accent-2)"></span>Re <math><mi>ψ</mi></math></span>
+        <span class="key">shaded: barrier · incident wave from the left has amplitude 1</span>
+      </div>
+      <canvas id="tun-curve" class="c-plot" role="img" aria-label="Transmission probability against energy"></canvas>
+    </div>
+  </section>
+
+  <!-- ===================== Double slit ===================== -->
+  <section class="experiment" aria-labelledby="slit-h">
+    <div class="side">
+      <h2 id="slit-h">Young's double slit</h2>
+      <p>Laser light through two slits. Each slit's own diffraction sets the envelope; their interference sets the fine fringes.</p>
+      <div class="control">
+        <label for="slit-lam">Wavelength λ <output id="slit-lam-out" for="slit-lam"></output></label>
+        <input type="range" id="slit-lam" min="400" max="700" step="1" value="532">
+      </div>
+      <div class="control">
+        <label for="slit-d">Slit separation d <output id="slit-d-out" for="slit-d"></output></label>
+        <input type="range" id="slit-d" min="0.10" max="1.00" step="0.01" value="0.25">
+      </div>
+      <div class="control">
+        <label for="slit-w">Slit width w <output id="slit-w-out" for="slit-w"></output></label>
+        <input type="range" id="slit-w" min="0.01" max="0.09" step="0.005" value="0.04">
+      </div>
+      <div class="control">
+        <label for="slit-L">Screen distance L <output id="slit-L-out" for="slit-L"></output></label>
+        <input type="range" id="slit-L" min="0.5" max="3" step="0.05" value="1">
+      </div>
+      <dl class="readouts">
+        <dt>Fringe spacing λL/d</dt><dd id="slit-dy"></dd>
+        <dt>Central envelope λL/w</dt><dd id="slit-env"></dd>
+        <dt>Bright fringes inside it</dt><dd id="slit-n"></dd>
+      </dl>
+      <div class="formula" aria-label="Double-slit intensity">
+        <math display="block"><mi>I</mi><mo>∝</mo><msup><mi>cos</mi><mn>2</mn></msup><mrow><mo>(</mo><mfrac><mrow><mi>π</mi><mi>d</mi><mi>sin</mi><mi>θ</mi></mrow><mi>λ</mi></mfrac><mo>)</mo></mrow><msup><mi>sinc</mi><mn>2</mn></msup><mrow><mo>(</mo><mfrac><mrow><mi>π</mi><mi>w</mi><mi>sin</mi><mi>θ</mi></mrow><mi>λ</mi></mfrac><mo>)</mo></mrow></math>
+      </div>
+    </div>
+    <div class="plots">
+      <canvas id="slit-band" class="c-band" role="img" aria-label="Fringe pattern on the screen in the light's colour"></canvas>
+      <canvas id="slit-curve" class="c-plot" role="img" aria-label="Intensity across the screen with the single-slit envelope"></canvas>
+      <div class="legend">
+        <span class="key"><span class="swatch" style="border-color:var(--accent)"></span>intensity</span>
+        <span class="key"><span class="swatch dash" style="border-color:var(--accent-2)"></span>single-slit envelope</span>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Everything is computed in your browser. The same physics lives in Python as <code>mechanics.pendulum_period</code>, <code>quantum.barrier_transmission</code> and <code>quantum.double_slit_experiment</code>, where it is checked against these analytic results by the test suite.</p>
+    <p>The tunnelling plot is the exact stationary state, matched across both barrier edges. The double-slit pattern uses the Fraunhofer (far-field) formula.</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const tok = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const fmt = (x, d = 3) => Number.isFinite(x) ? x.toFixed(d) : "–";
+
+  // ---------- canvas + axes helpers ----------
+  function prep(cv) {
+    const dpr = window.devicePixelRatio || 1;
+    const r = cv.getBoundingClientRect();
+    const w = Math.max(1, r.width), h = Math.max(1, r.height);
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const ctx = cv.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    return { ctx, w, h };
+  }
+  function niceStep(span, n) {
+    const raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const f = raw / mag;
+    return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * mag;
+  }
+  function ticks(min, max, n) {
+    const s = niceStep(max - min, n), out = [];
+    for (let v = Math.ceil(min / s - 1e-9) * s; v <= max + 1e-9; v += s) out.push(Math.abs(v) < s * 1e-9 ? 0 : v);
+    return out;
+  }
+  // Draws a frame with ticks; returns scale functions. pad = room for labels.
+  function axes(ctx, w, h, xr, yr, opt = {}) {
+    const pad = { l: opt.l ?? 46, r: opt.r ?? 12, t: opt.t ?? 10, b: opt.b ?? 34 };
+    const X = (x) => pad.l + (x - xr[0]) / (xr[1] - xr[0]) * (w - pad.l - pad.r);
+    const Y = (y) => h - pad.b - (y - yr[0]) / (yr[1] - yr[0]) * (h - pad.t - pad.b);
+    ctx.font = `12px ${tok("--font-mono")}`;
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = tok("--grid"); ctx.fillStyle = tok("--muted");
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    for (const v of ticks(xr[0], xr[1], opt.nx ?? 6)) {
+      ctx.beginPath(); ctx.moveTo(X(v), pad.t); ctx.lineTo(X(v), h - pad.b); ctx.stroke();
+      ctx.fillText(opt.xfmt ? opt.xfmt(v) : +v.toPrecision(4) + "", X(v), h - pad.b + 5);
+    }
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    for (const v of ticks(yr[0], yr[1], opt.ny ?? 4)) {
+      ctx.beginPath(); ctx.moveTo(pad.l, Y(v)); ctx.lineTo(w - pad.r, Y(v)); ctx.stroke();
+      ctx.fillText(+v.toPrecision(4) + "", pad.l - 6, Y(v));
+    }
+    ctx.fillStyle = tok("--fg");
+    if (opt.xlabel) { ctx.textAlign = "right"; ctx.textBaseline = "bottom"; ctx.fillText(opt.xlabel, w - pad.r, h - 2); }
+    if (opt.ylabel) { ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText(opt.ylabel, pad.l + 4, pad.t + 2); }
+    return { X, Y, pad };
+  }
+  function line(ctx, pts, color, width = 2, dash = []) {
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash); ctx.lineJoin = "round";
+    ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke(); ctx.restore();
+  }
+  function dot(ctx, x, y, r, color) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI); ctx.fill(); }
+
+  // ---------- pendulum ----------
+  const g = 9.81;
+  function ellipK(m) {                       // complete elliptic integral of the first kind, via the AGM
+    let a = 1, b = Math.sqrt(1 - m);
+    for (let i = 0; i < 40 && Math.abs(a - b) > 1e-15; i++) { const an = (a + b) / 2; b = Math.sqrt(a * b); a = an; }
+    return Math.PI / (2 * a);
+  }
+  const period = (th0, L) => 4 * Math.sqrt(L / g) * ellipK(Math.sin(th0 / 2) ** 2);
+  const pend = { th: 0, om: 0, t: 0, th0: 0, L: 1, playing: true, last: null };
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  function pendParams() {
+    pend.th0 = +$("pend-amp").value * Math.PI / 180;
+    pend.L = +$("pend-len").value;
+    pend.th = pend.th0; pend.om = 0; pend.t = 0;
+    const T = period(pend.th0, pend.L), T0 = 2 * Math.PI * Math.sqrt(pend.L / g);
+    $("pend-amp-out").textContent = `${$("pend-amp").value}°`;
+    $("pend-len-out").textContent = `${pend.L.toFixed(2)} m`;
+    $("pend-T").textContent = `${fmt(T)} s`;
+    $("pend-T0").textContent = `${fmt(T0)} s`;
+    $("pend-ratio").textContent = `${fmt(T / T0)} ×`;
+    drawPendCurve(); drawPend();
+  }
+  function stepPend(dt) {                    // RK4 with 1 ms substeps
+    const k = g / pend.L, n = Math.max(1, Math.ceil(dt / 0.001)), h = dt / n;
+    for (let i = 0; i < n; i++) {
+      const f = (th, om) => [om, -k * Math.sin(th)];
+      const [a1, b1] = f(pend.th, pend.om);
+      const [a2, b2] = f(pend.th + h / 2 * a1, pend.om + h / 2 * b1);
+      const [a3, b3] = f(pend.th + h / 2 * a2, pend.om + h / 2 * b2);
+      const [a4, b4] = f(pend.th + h * a3, pend.om + h * b3);
+      pend.th += h / 6 * (a1 + 2 * a2 + 2 * a3 + a4);
+      pend.om += h / 6 * (b1 + 2 * b2 + 2 * b3 + b4);
+    }
+    pend.t += dt;
+  }
+  function drawPend() {
+    const { ctx, w, h } = prep($("pend-anim"));
+    const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.42;   // whole circle visible: amplitudes past 90° swing above the pivot
+    const thSmall = pend.th0 * Math.cos(Math.sqrt(g / pend.L) * pend.t);
+    ctx.strokeStyle = tok("--grid"); ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
+    const bob = (th) => [cx + R * Math.sin(th), cy + R * Math.cos(th)];
+    const [sx, sy] = bob(thSmall), [ex, ey] = bob(pend.th);
+    line(ctx, [[cx, cy], [sx, sy]], tok("--accent-2"), 1.5, [5, 4]);
+    dot(ctx, sx, sy, 7, tok("--accent-2"));
+    line(ctx, [[cx, cy], [ex, ey]], tok("--accent"), 2.5);
+    dot(ctx, ex, ey, 9, tok("--accent"));
+    dot(ctx, cx, cy, 3, tok("--fg"));
+    ctx.fillStyle = tok("--muted"); ctx.font = `12px ${tok("--font-mono")}`;
+    ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillText(`t = ${pend.t.toFixed(1)} s`, 8, 8);
+  }
+  function drawPendCurve() {
+    const { ctx, w, h } = prep($("pend-curve"));
+    const pts = [];
+    for (let d = 1; d <= 178; d += 1) pts.push([d, period(d * Math.PI / 180, 1) / (2 * Math.PI * Math.sqrt(1 / g))]);
+    const ymax = Math.max(3.6, pts[pts.length - 1][1] * 1.02);
+    const { X, Y } = axes(ctx, w, h, [0, 180], [1, ymax], { xlabel: "amplitude (°)", ylabel: "T / T₀", nx: 6, ny: 5, l: 40 });
+    line(ctx, pts.map(([x, y]) => [X(x), Y(y)]), tok("--accent"), 2);
+    const deg = +$("pend-amp").value, r = period(deg * Math.PI / 180, 1) / (2 * Math.PI * Math.sqrt(1 / g));
+    line(ctx, [[X(deg), Y(1)], [X(deg), Y(r)]], tok("--accent-2"), 1, [3, 3]);
+    dot(ctx, X(deg), Y(r), 5, tok("--accent-2"));
+  }
+  function loop(ts) {
+    if (pend.playing) {
+      if (pend.last !== null) stepPend(Math.min(0.05, (ts - pend.last) / 1000));
+      pend.last = ts;
+      drawPend();
+      requestAnimationFrame(loop);
+    } else pend.last = null;
+  }
+  function setPlaying(on) {
+    pend.playing = on;
+    $("pend-play").textContent = on ? "Pause" : "Play";
+    $("pend-play").setAttribute("aria-pressed", String(on));
+    if (on) requestAnimationFrame(loop);
+  }
+  $("pend-play").addEventListener("click", () => setPlaying(!pend.playing));
+  ["pend-amp", "pend-len"].forEach((id) => $(id).addEventListener("input", pendParams));
+
+  // ---------- tunnelling: exact stationary scattering state ----------
+  const C = (re, im = 0) => ({ re, im });
+  const add = (a, b) => C(a.re + b.re, a.im + b.im);
+  const sub = (a, b) => C(a.re - b.re, a.im - b.im);
+  const mul = (a, b) => C(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
+  const div = (a, b) => { const d = b.re * b.re + b.im * b.im; return C((a.re * b.re + a.im * b.im) / d, (a.im * b.re - a.re * b.im) / d); };
+  const scl = (a, s) => C(a.re * s, a.im * s);
+  const cexp = (a) => { const m = Math.exp(a.re); return C(m * Math.cos(a.im), m * Math.sin(a.im)); };
+  const abs2 = (a) => a.re * a.re + a.im * a.im;
+
+  // psi = e^{ikx} + r e^{-ikx} (x<0); A e^{qx} + B e^{-qx} (0<x<a); t e^{ikx} (x>a)
+  function scatter(E, V0, a) {
+    if (Math.abs(E - V0) < 1e-7) E = V0 + 1e-7;
+    const k = Math.sqrt(2 * E), d = 2 * (V0 - E);
+    const q = d > 0 ? C(Math.sqrt(d)) : C(0, Math.sqrt(-d));
+    const ik = C(0, k), ikq = div(ik, q), eika = cexp(C(0, k * a));
+    let A = mul(mul(eika, scl(add(C(1), ikq), 0.5)), cexp(scl(q, -a)));   // with t = 1
+    let B = mul(mul(eika, scl(sub(C(1), ikq), 0.5)), cexp(scl(q, a)));
+    const s = scl(add(add(A, B), div(mul(q, sub(A, B)), ik)), 0.5);         // incident amplitude for t = 1
+    const t = div(C(1), s), r = sub(div(add(A, B), s), C(1));
+    A = div(A, s); B = div(B, s);
+    return { k, q, a, A, B, t, r, T: abs2(t), R: abs2(r) };
+  }
+  function psiAt(x, S) {
+    if (x < 0) return add(cexp(C(0, S.k * x)), mul(S.r, cexp(C(0, -S.k * x))));
+    if (x <= S.a) return add(mul(S.A, cexp(scl(S.q, x))), mul(S.B, cexp(scl(S.q, -x))));
+    return mul(S.t, cexp(C(0, S.k * x)));
+  }
+  function tunParams() {
+    const E = +$("tun-E").value, V0 = +$("tun-V").value, a = +$("tun-a").value;
+    $("tun-E-out").textContent = E.toFixed(2);
+    $("tun-V-out").textContent = V0.toFixed(2);
+    $("tun-a-out").textContent = a.toFixed(2);
+    const S = scatter(E, V0, a);
+    $("tun-T").textContent = S.T < 1e-3 ? S.T.toExponential(2) : fmt(S.T);
+    $("tun-R").textContent = fmt(1 - S.T);
+    $("tun-lam").textContent = `${fmt(2 * Math.PI / S.k, 2)}`;
+    const below = E < V0;
+    const badge = $("tun-regime");
+    badge.textContent = below ? "E < V₀ · tunnelling" : "E > V₀ · over the barrier";
+    badge.style.color = below ? tok("--accent") : tok("--accent-2");
+    drawPsi(S, E, V0); drawTunCurve(E, V0, a);
+  }
+  function drawPsi(S, E, V0) {
+    const { ctx, w, h } = prep($("tun-psi"));
+    const xr = [-10, S.a + 10];
+    const { X, Y } = axes(ctx, w, h, xr, [-2.2, 4.2], { xlabel: "x", nx: 8, ny: 4, l: 34 });
+    ctx.fillStyle = tok("--barrier");
+    ctx.fillRect(X(0), Y(4.2), X(S.a) - X(0), Y(-2.2) - Y(4.2));
+    const re = [], dens = [];
+    for (let i = 0; i <= 900; i++) {
+      const x = xr[0] + (xr[1] - xr[0]) * i / 900, p = psiAt(x, S);
+      re.push([X(x), Y(p.re)]); dens.push([X(x), Y(abs2(p))]);
+    }
+    line(ctx, re, tok("--accent-2"), 1.2, [4, 3]);
+    line(ctx, dens, tok("--accent"), 2.2);
+  }
+  function drawTunCurve(E, V0, a) {
+    const { ctx, w, h } = prep($("tun-curve"));
+    const { X, Y } = axes(ctx, w, h, [0, 6], [0, 1.05], { xlabel: "energy E", ylabel: "transmission T", nx: 6, ny: 4, l: 40 });
+    line(ctx, [[X(V0), Y(0)], [X(V0), Y(1.05)]], tok("--muted"), 1, [2, 4]);
+    ctx.fillStyle = tok("--muted"); ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillText("V₀", X(V0) + 4, Y(1.0));
+    const pts = [];
+    for (let i = 1; i <= 600; i++) { const e = 6 * i / 600; pts.push([X(e), Y(scatter(e, V0, a).T)]); }
+    line(ctx, pts, tok("--accent"), 2);
+    dot(ctx, X(E), Y(scatter(E, V0, a).T), 5, tok("--accent-2"));
+  }
+  ["tun-E", "tun-V", "tun-a"].forEach((id) => $(id).addEventListener("input", tunParams));
+
+  // ---------- double slit ----------
+  function wavelengthRGB(nm) {                // approximate visible-spectrum colour
+    let r = 0, g2 = 0, b = 0;
+    if (nm < 440) { r = -(nm - 440) / 60; b = 1; }
+    else if (nm < 490) { g2 = (nm - 440) / 50; b = 1; }
+    else if (nm < 510) { g2 = 1; b = -(nm - 510) / 20; }
+    else if (nm < 580) { r = (nm - 510) / 70; g2 = 1; }
+    else if (nm < 645) { r = 1; g2 = -(nm - 645) / 65; }
+    else r = 1;
+    const fall = nm < 420 ? 0.3 + 0.7 * (nm - 380) / 40 : nm > 680 ? 0.3 + 0.7 * (750 - nm) / 70 : 1;
+    return [r, g2, b].map((c) => Math.round(255 * Math.pow(c * fall, 0.8)));
+  }
+  function slitState() {
+    const lam = +$("slit-lam").value * 1e-9, d = +$("slit-d").value * 1e-3,
+      w = Math.min(+$("slit-w").value * 1e-3, 0.9 * d), L = +$("slit-L").value;
+    return { lam, d, w, L };
+  }
+  function intensity(ymm, s) {
+    const y = ymm * 1e-3, sin = y / Math.hypot(y, s.L);
+    const beta = Math.PI * s.w * sin / s.lam, alpha = Math.PI * s.d * sin / s.lam;
+    const env = Math.abs(beta) < 1e-12 ? 1 : (Math.sin(beta) / beta) ** 2;
+    return { I: Math.cos(alpha) ** 2 * env, env };
+  }
+  function slitParams() {
+    const s = slitState();
+    $("slit-lam-out").textContent = `${$("slit-lam").value} nm`;
+    $("slit-d-out").textContent = `${(+$("slit-d").value).toFixed(2)} mm`;
+    $("slit-w-out").textContent = `${(s.w * 1e3).toFixed(3)} mm`;
+    $("slit-L-out").textContent = `${s.L.toFixed(2)} m`;
+    const dy = s.lam * s.L / s.d * 1e3, env = s.lam * s.L / s.w * 1e3;
+    $("slit-dy").textContent = `${fmt(dy, 2)} mm`;
+    $("slit-env").textContent = `±${fmt(env, 1)} mm`;
+    $("slit-n").textContent = `${2 * Math.floor(s.d / s.w - 1e-9) + 1}`;
+    const ymax = Math.min(80, 2.2 * env);
+    drawBand(s, ymax); drawSlitCurve(s, ymax);
+  }
+  function drawBand(s, ymax) {
+    const cv = $("slit-band"), { ctx, w, h } = prep(cv);
+    const [r, g2, b] = wavelengthRGB(s.lam * 1e9);
+    ctx.fillStyle = tok("--screen"); ctx.fillRect(0, 0, w, h);
+    const n = Math.ceil(w);
+    for (let i = 0; i < n; i++) {
+      const y = -ymax + 2 * ymax * (i + 0.5) / n;
+      const v = Math.pow(intensity(y, s).I, 0.6);
+      ctx.fillStyle = `rgba(${r},${g2},${b},${v})`;
+      ctx.fillRect(i, 0, 1.2, h);
+    }
+  }
+  function drawSlitCurve(s, ymax) {
+    const { ctx, w, h } = prep($("slit-curve"));
+    const { X, Y } = axes(ctx, w, h, [-ymax, ymax], [0, 1.05], { xlabel: "position on screen (mm)", nx: 8, ny: 4, l: 36 });
+    const I = [], E = [], n = Math.max(1200, Math.ceil(w * 3));
+    for (let i = 0; i <= n; i++) {
+      const y = -ymax + 2 * ymax * i / n, v = intensity(y, s);
+      I.push([X(y), Y(v.I)]); E.push([X(y), Y(v.env)]);
+    }
+    line(ctx, E, tok("--accent-2"), 1.2, [5, 4]);
+    line(ctx, I, tok("--accent"), 1.6);
+  }
+  ["slit-lam", "slit-d", "slit-w", "slit-L"].forEach((id) => $(id).addEventListener("input", slitParams));
+
+  // ---------- redraw on resize and theme change ----------
+  function redrawAll() { pendParams(); tunParams(); slitParams(); }
+  let raf = 0;
+  const schedule = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { drawPendCurve(); drawPend(); tunParams(); slitParams(); }); };
+  new ResizeObserver(schedule).observe(document.querySelector(".wrap"));
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", schedule);
+  new MutationObserver(schedule).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  redrawAll();
+  setPlaying(!reduceMotion.matches);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
+
+})();
+</script>
+
+</body>
+</html>

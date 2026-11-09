@@ -7,23 +7,23 @@
 <meta name="description" content="Interactive pendulum, quantum tunnelling and double-slit experiments.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: a lab bench. Each experiment is a band: controls + readouts on the left, live plots on the right. */
 :root {
-  --bg: #eef2f5;          /* cool blue-grey paper */
-  --panel: #f9fbfc;
-  --fg: #13202b;          /* ink */
-  --muted: #5a6b7a;
-  --grid: #d3dce4;
-  --accent: #1d5bbf;      /* ink blue: the exact physics */
+  --bg: #FBFBFD;
+  --panel: #FFFFFF;
+  --fg: #1D1D1F;
+  --muted: #6E6E73;
+  --grid: #E5E5EA;
+  --accent: #2F5BEA;      /* cobalt: the exact physics */
   --accent-2: #b4541c;    /* rust: the approximation / comparison */
   --barrier: #c9d5df;
   --screen: #05070a;      /* the double-slit screen is dark in both themes, like a real one */
-  --focus: #1d5bbf;
-  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
-  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --focus: #2F5BEA;
+  --font-display: "Inter Tight", Inter, "Helvetica Neue", Arial, sans-serif;
+  --font-body: Inter, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -60,7 +60,7 @@ header { display: grid; gap: 10px; max-width: 68ch; }
   text-transform: uppercase; color: var(--muted);
 }
 h1 {
-  font-family: var(--font-display); font-weight: 750; font-size: clamp(30px, 5vw, 46px);
+  font-family: var(--font-display); font-weight: 700; font-size: clamp(36px, 6vw, 64px); letter-spacing: -0.035em;
   line-height: 1.05; margin: 0; text-wrap: balance; letter-spacing: -0.01em;
 }
 h2 {
@@ -75,8 +75,8 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .experiment {
   background: var(--panel);
   border: 1px solid var(--grid);
-  border-radius: 6px;
-  padding: 22px;
+  border-radius: 28px;
+  padding: clamp(18px, 3vw, 32px);
   display: grid;
   grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
   gap: 24px;
@@ -115,7 +115,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); margin: 0; }
 }
 button {
   justify-self: start; font: inherit; font-size: 14px; font-weight: 500; color: var(--fg);
-  background: transparent; border: 1px solid var(--grid); border-radius: 4px; padding: 5px 12px; cursor: pointer;
+  background: transparent; border: 1px solid var(--grid); border-radius: 980px; padding: 8px 18px; min-height: 40px; cursor: pointer;
 }
 button:hover { border-color: var(--accent); color: var(--accent); }
 footer { color: var(--muted); font-size: 13px; max-width: 72ch; display: grid; gap: 6px; }
@@ -130,13 +130,20 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 body { margin: 0; }
 img { max-width: 100%; }
 [hidden] { display: none !important; }
+
+.glassbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 10px 22px; border-radius: 980px; margin-bottom: 18px;
+  background: color-mix(in srgb, var(--panel) 55%, transparent); -webkit-backdrop-filter: blur(22px) saturate(185%); backdrop-filter: blur(22px) saturate(185%);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.6), 0 10px 36px rgba(17,24,39,0.10); border: 1px solid color-mix(in srgb, var(--fg) 8%, transparent); }
+.glassbar .brand { font-family: var(--font-display); font-weight: 600; color: var(--fg); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+.glassbar .brand:hover { color: var(--accent); }
+.experiment { box-shadow: 0 1px 2px rgba(17,24,39,0.04), 0 18px 48px rgba(17,24,39,0.06); }
 </style>
 </head>
 <body>
 
 <div class="wrap">
   <header>
-    <span class="eyebrow"><a href="../">quantum-playground</a> · interactive explorer</span>
+    <nav class="glassbar" aria-label="Site"><a class="brand" href="../">← quantum-playground</a><span class="eyebrow">Interactive explorer</span></nav>
     <h1>Quantum Playground Explorer</h1>
     <p class="lede">Three experiments from the <a href="https://github.com/StativeSh/quantum-playground">quantum-playground</a> Python package, recomputed live as you drag. Each one puts an exact result next to the approximation it replaces.</p>
   </header>

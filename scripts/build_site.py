@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import html
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -28,6 +29,24 @@ from qplay import __version__, animations, demos, plotting  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 GIF_WIDTH = 420
+# Gallery order and layout: featured demos lead; wide figures span two columns.
+FEATURED = ["hydrogen", "double-slit", "ising", "phase-portrait", "mandelbrot", "domain-coloring"]
+WIDE = {"hydrogen", "double-slit", "ising", "phase-portrait"}
+# Package modules that are infrastructure rather than a physics or maths topic.
+NON_TOPIC = {"__init__", "__main__", "integrators", "plotting", "demos", "animations"}
+
+
+def _pretty(name):
+    return name.replace("-", " ").capitalize()
+
+
+def _count_word(n):
+    words = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"]
+    return words[n] if n < len(words) else str(n)
+
+
+def count_modules():
+    return sum(1 for p in (ROOT / "src" / "qplay").glob("*.py") if p.stem not in NON_TOPIC)
 
 
 def _doc(fn):
@@ -55,7 +74,7 @@ def execute_notebooks(out):
 
 
 def count_tests():
-    res = subprocess.run([sys.executable, "-m", "pytest", "--collect-only", "-q", str(ROOT / "tests")],
+    res = subprocess.run([sys.executable, "-m", "pytest", "-o", "addopts=", "--collect-only", "-q", str(ROOT / "tests")],
                          capture_output=True, text=True, cwd=ROOT)
     return sum(1 for line in res.stdout.splitlines() if "::" in line)
 
@@ -71,15 +90,17 @@ def build(out, quick=False):
         shutil.rmtree(out)
     figs = out / "figures"
 
+    demo_names = sorted(demos.DEMOS, key=lambda n: (n not in FEATURED, FEATURED.index(n) if n in FEATURED else 0, n))
     cards = []
-    for name in sorted(demos.DEMOS):
+    for name in demo_names:
         demos.run(name, figs)
         doc = html.escape(_doc(demos.DEMOS[name]))
+        wide = " wide" if name in WIDE else ""
         cards.append(
-            f'      <figure class="card"><a class="img" href="figures/{name}.png">'
-            f'<img src="figures/{name}.png" alt="{doc}" loading="lazy"></a>'
-            f"<figcaption><strong>{name}</strong><span>{doc}</span>"
-            f"<code>qplay run {name}</code></figcaption></figure>")
+            f'    <figure class="tile{wide}"><a class="tile-media" href="figures/{name}.png">'
+            f'<img src="figures/{name}.png" alt="{doc}" loading="lazy">'
+            f'<code class="chip glass">qplay run {name}</code></a>'
+            f"<figcaption><strong>{_pretty(name)}</strong><span>{doc}</span></figcaption></figure>")
 
     anims = []
     for name in sorted(animations.ANIMATIONS):
@@ -87,17 +108,20 @@ def build(out, quick=False):
         plotting.shrink_gif(path, GIF_WIDTH)
         doc = html.escape(_doc(animations.ANIMATIONS[name]))
         anims.append(
-            f'      <figure class="card"><img src="figures/{name}.gif" alt="{doc}" loading="lazy">'
-            f"<figcaption><strong>{name}</strong><span>{doc}</span>"
+            f'    <figure class="tile"><div class="tile-media"><img src="figures/{name}.gif" alt="{doc}" loading="lazy"></div>'
+            f"<figcaption><strong>{_pretty(name)}</strong><span>{doc}</span>"
             f"<code>qplay animate {name}</code></figcaption></figure>")
 
     notebooks = []
     if not quick:
         execute_notebooks(out / "notebooks")
-    for nb in sorted((ROOT / "notebooks").glob("*.ipynb")):
+    nb_paths = sorted((ROOT / "notebooks").glob("*.ipynb"))
+    for i, nb in enumerate(nb_paths, start=1):
         title, summary = notebook_info(nb)
+        title = re.sub(r"^\d+\s*[·.:-]\s*", "", title)  # the number is shown separately
         notebooks.append(
-            f'      <li><a href="notebooks/{nb.stem}.html">{html.escape(title)}</a>'
+            f'    <li><span class="num">{i:02d}</span>'
+            f'<a href="notebooks/{nb.stem}.html">{html.escape(title)}</a>'
             f"<p>{html.escape(summary)}</p></li>")
 
     explorer = out / "explorer"
@@ -109,6 +133,10 @@ def build(out, quick=False):
         gallery="\n".join(cards),
         animations="\n".join(anims),
         notebooks="\n".join(notebooks),
+        notebooks_heading=f"{_count_word(len(nb_paths))} notebooks, in order.",
+        n_notebooks=len(nb_paths),
+        n_figures=len(demos.DEMOS) + len(animations.ANIMATIONS),
+        n_modules=count_modules(),
         n_tests=count_tests(),
         commit=git_commit(),
         built=datetime.now(timezone.utc).strftime("%Y-%m-%d"),

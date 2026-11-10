@@ -74,6 +74,14 @@ python3 -m venv .venv
 | `03_maths_and_chaos` | Newton's method, Gibbs phenomenon, bifurcation diagram, fractals |
 | `04_orbitals_interference_and_phase_space` | hydrogen orbitals, double slit, Ising phase transition, Legendre transform, phase planes, complex functions, linear maps |
 
+## Lessons for A-level and IB
+
+Guided lessons in `lessons/`, each mapped to specification points, with exam-style questions that check your answers and worked solutions at the end. Every lesson and notebook has an **Open in Colab** button, so it runs in a browser with nothing to install.
+
+| Lesson | Covers |
+|---|---|
+| [`01_simple_harmonic_motion`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/01_simple_harmonic_motion.ipynb) | SHM equations and phase, spring and pendulum periods, energy, damping, resonance |
+
 ## Demos and animations
 
 `qplay list` shows everything. Twenty static figures (`qplay run NAME`), including `hydrogen`, `double-slit`, `ising`, `phase-portrait`, `domain-coloring` and `linear-map`, and five GIFs (`qplay animate NAME`): `double-pendulum`, `wavepacket`, `figure-eight`, `double-slit` and `ising`.

@@ -22,6 +22,6 @@ jobs:
       - name: Execute notebooks
         if: matrix.python-version == '3.12'
         run: |
-          for f in notebooks/*.ipynb; do
+          for f in notebooks/*.ipynb lessons/*.ipynb; do
             jupyter nbconvert --to notebook --execute --stdout "$f" > /dev/null
           done

@@ -29,6 +29,7 @@ from qplay import __version__, animations, demos, plotting  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 GIF_WIDTH = 420
+COLAB = "https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main"
 # Gallery order and layout: featured demos lead; wide figures span two columns.
 FEATURED = ["hydrogen", "double-slit", "ising", "phase-portrait", "mandelbrot", "domain-coloring"]
 WIDE = {"hydrogen", "double-slit", "ising", "phase-portrait"}
@@ -55,20 +56,36 @@ def _doc(fn):
 
 
 def notebook_info(path):
-    """Title from the first '# ' heading and a summary from the next paragraph."""
+    """Title from the first '# ' heading and a plain-text summary from the next paragraph."""
     nb = nbformat.read(path, as_version=4)
     for cell in nb.cells:
         if cell.cell_type == "markdown":
-            lines = [ln.strip() for ln in cell.source.splitlines() if ln.strip()]
+            lines = [ln.strip() for ln in cell.source.splitlines() if ln.strip() and not ln.strip().startswith("[![")]
             if lines and lines[0].startswith("# "):
-                return lines[0][2:].strip(), (lines[1] if len(lines) > 1 else "")
+                summary = lines[1].replace("**", "") if len(lines) > 1 else ""
+                return lines[0][2:].strip(), summary
     return path.stem, ""
 
 
-def execute_notebooks(out):
+def notebook_cards(folder):
+    """Numbered cards linking to the executed HTML and to Google Colab."""
+    cards = []
+    paths = sorted((ROOT / folder).glob("*.ipynb"))
+    for i, nb in enumerate(paths, start=1):
+        title, summary = notebook_info(nb)
+        title = re.sub(r"^(Lesson\s+)?\d+\s*[·.:-]\s*", "", title)  # the number is shown separately
+        cards.append(
+            f'    <li><span class="num">{i:02d}</span>'
+            f'<a href="{folder}/{nb.stem}.html">{html.escape(title)}</a>'
+            f"<p>{html.escape(summary)}</p>"
+            f'<a class="colab" href="{COLAB}/{folder}/{nb.name}">Run it in Colab</a></li>')
+    return paths, cards
+
+
+def execute_notebooks(folder, out):
     out.mkdir(parents=True, exist_ok=True)
     env = {k: v for k, v in os.environ.items() if k != "MPLBACKEND"}  # notebooks use inline figures
-    for nb in sorted((ROOT / "notebooks").glob("*.ipynb")):
+    for nb in sorted((ROOT / folder).glob("*.ipynb")):
         subprocess.run([sys.executable, "-m", "jupyter", "nbconvert", "--to", "html", "--execute",
                         "--output-dir", str(out), str(nb)], check=True, env=env)
 
@@ -112,17 +129,11 @@ def build(out, quick=False):
             f"<figcaption><strong>{_pretty(name)}</strong><span>{doc}</span>"
             f"<code>qplay animate {name}</code></figcaption></figure>")
 
-    notebooks = []
     if not quick:
-        execute_notebooks(out / "notebooks")
-    nb_paths = sorted((ROOT / "notebooks").glob("*.ipynb"))
-    for i, nb in enumerate(nb_paths, start=1):
-        title, summary = notebook_info(nb)
-        title = re.sub(r"^\d+\s*[·.:-]\s*", "", title)  # the number is shown separately
-        notebooks.append(
-            f'    <li><span class="num">{i:02d}</span>'
-            f'<a href="notebooks/{nb.stem}.html">{html.escape(title)}</a>'
-            f"<p>{html.escape(summary)}</p></li>")
+        for folder in ("notebooks", "lessons"):
+            execute_notebooks(folder, out / folder)
+    nb_paths, notebooks = notebook_cards("notebooks")
+    _, lessons = notebook_cards("lessons")
 
     explorer = out / "explorer"
     explorer.mkdir(parents=True)
@@ -133,6 +144,7 @@ def build(out, quick=False):
         gallery="\n".join(cards),
         animations="\n".join(anims),
         notebooks="\n".join(notebooks),
+        lessons="\n".join(lessons),
         notebooks_heading=f"{_count_word(len(nb_paths))} notebooks, in order.",
         n_notebooks=len(nb_paths),
         n_figures=len(demos.DEMOS) + len(animations.ANIMATIONS),

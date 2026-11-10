@@ -19,7 +19,7 @@ lab:
 
 # Execute every notebook top to bottom; fails if any cell raises.
 notebooks-check:
-	for f in notebooks/*.ipynb; do \
+	for f in notebooks/*.ipynb lessons/*.ipynb; do \
 	  env -u MPLBACKEND $(PY) -m jupyter nbconvert --to notebook --execute --stdout "$$f" > /dev/null || exit 1; \
 	done
 

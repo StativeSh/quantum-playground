@@ -8,3 +8,11 @@ dist/
 .pytest_cache/
 figures/
 _site/
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json

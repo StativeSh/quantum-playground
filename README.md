@@ -81,6 +81,7 @@ Guided lessons in `lessons/`, each mapped to specification points, with exam-sty
 | Lesson | Covers |
 |---|---|
 | [`01_simple_harmonic_motion`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/01_simple_harmonic_motion.ipynb) | SHM equations and phase, spring and pendulum periods, energy, damping, resonance |
+| [`02_projectile_motion`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/02_projectile_motion.ipynb) | independent horizontal and vertical motion, resolving velocity, time of flight, range and the 45° rule, launches from a height, air resistance |
 
 ## Demos and animations
 

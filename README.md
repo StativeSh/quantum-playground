@@ -37,7 +37,14 @@ make animations       # render every GIF into ./figures
 make lab              # open JupyterLab
 ```
 
-Or without `make`:
+Or just install the package from PyPI (the import name is `qplay`):
+
+```bash
+pip install quantum-playground
+qplay run double-slit
+```
+
+Or from a clone, without `make`:
 
 ```bash
 python3 -m venv .venv

@@ -16,6 +16,7 @@ def test_notebook_opens_in_colab_and_is_committed_clean(path):
     assert f"colab.research.google.com/github/StativeSh/quantum-playground/blob/main/{rel}" in nb.cells[0].source
     code = [c for c in nb.cells if c.cell_type == "code"]
     assert 'find_spec("qplay")' in code[0].source, "first code cell must install qplay when it is missing"
+    assert '"quantum-playground"' in code[0].source, "install the released package from PyPI (pip install quantum-playground)"
     assert all(not c.outputs and c.execution_count is None for c in code), "commit notebooks without outputs"
 
 

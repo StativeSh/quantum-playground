@@ -3,7 +3,7 @@
     python scripts/build_site.py [OUT_DIR] [--quick]
 
 Renders every demo and animation, executes every notebook to HTML, copies the
-interactive explorer, and fills ``site_src/index.html``. ``--quick`` skips the
+interactive explorer, builds the API reference with pdoc, and fills ``site_src/index.html``. ``--quick`` skips the
 notebooks and renders 3-frame animations (used by the test suite).
 """
 
@@ -90,6 +90,15 @@ def execute_notebooks(folder, out):
                         "--output-dir", str(out), str(nb)], check=True, env=env)
 
 
+def build_api_docs(out):
+    """API reference from the docstrings (LaTeX rendered by MathJax) into ``out``."""
+    import pdoc
+    import pdoc.render
+
+    pdoc.render.configure(math=True, docformat="markdown", footer_text=f"quantum-playground {__version__}")
+    pdoc.pdoc("qplay", output_directory=Path(out))
+
+
 def count_tests():
     res = subprocess.run([sys.executable, "-m", "pytest", "-o", "addopts=", "--collect-only", "-q", str(ROOT / "tests")],
                          capture_output=True, text=True, cwd=ROOT)
@@ -138,6 +147,7 @@ def build(out, quick=False):
     explorer = out / "explorer"
     explorer.mkdir(parents=True)
     shutil.copy(ROOT / "site_src" / "explorer.html", explorer / "index.html")
+    build_api_docs(out / "api")
 
     page = Template((ROOT / "site_src" / "index.html").read_text()).substitute(
         version=__version__,

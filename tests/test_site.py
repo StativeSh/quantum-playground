@@ -2,6 +2,8 @@ import importlib.util
 import re
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -12,6 +14,7 @@ def load_builder():
     return module
 
 
+@pytest.mark.slow
 def test_site_builds_with_every_page_and_asset(tmp_path):
     """One quick build (no notebook execution, 3-frame GIFs) checked end to end."""
     from qplay import animations, demos
@@ -32,5 +35,8 @@ def test_site_builds_with_every_page_and_asset(tmp_path):
             assert f"colab.research.google.com/github/StativeSh/quantum-playground/blob/main/{folder}/{nb.name}" in index
     assert (out / "explorer" / "index.html").read_text().startswith("<!doctype html>")
     assert (out / ".nojekyll").exists()
+    assert 'href="api/"' in index
+    for module in ("kinetic", "atomic", "nuclear", "circuits", "quantum"):
+        assert (out / "api" / "qplay" / f"{module}.html").exists()
     counts = re.findall(r"<dd>(\d+)</dd>", index)
     assert len(counts) == 4 and all(int(c) > 0 for c in counts), counts  # modules, figures, notebooks, tests

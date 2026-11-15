@@ -3,8 +3,8 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "qplay"
-version = "0.2.0"
+name = "quantum-playground"
+version = "0.3.0"
 description = "A physics and maths playground: simulations, symbolic maths and notebooks."
 readme = "README.md"
 license = "MIT"
@@ -13,7 +13,12 @@ requires-python = ">=3.10"
 dependencies = ["numpy", "scipy", "sympy", "matplotlib"]
 
 [project.optional-dependencies]
-dev = ["pytest", "jupyterlab", "ipykernel", "pandas", "nbconvert"]
+dev = ["pytest", "pytest-cov", "jupyterlab", "ipykernel", "pandas", "nbconvert", "pdoc", "build"]
+
+[project.urls]
+Homepage = "https://stativesh.github.io/quantum-playground/"
+Documentation = "https://stativesh.github.io/quantum-playground/api/"
+Source = "https://github.com/StativeSh/quantum-playground"
 
 [project.scripts]
 qplay = "qplay.__main__:main"
@@ -23,4 +28,14 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+# Slow tests (site build, big simulations) are skipped by default; `make test-all` or `pytest -m ""` runs them.
+addopts = "-q -m 'not slow'"
+markers = ["slow: takes more than a couple of seconds; skipped unless selected with -m \"\" or -m slow"]
+
+[tool.coverage.run]
+source = ["qplay"]
+
+[tool.coverage.report]
+fail_under = 95
+show_missing = true
+skip_covered = true

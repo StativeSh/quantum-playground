@@ -218,6 +218,7 @@ def test_double_slit_wall_does_not_leak():
     assert (np.abs(psi[-1][:, x > 1]) ** 2).sum() * dx * dx < 0.01
 
 
+@pytest.mark.slow
 def test_double_slit_dark_fringes_match_path_difference():
     run = quantum.double_slit_experiment(dt=0.02, t_max=16.0)
     y, screen, L = run["y"], run["screen"], run["screen_x"]

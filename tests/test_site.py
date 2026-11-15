@@ -22,7 +22,7 @@ def test_site_builds_with_every_page_and_asset(tmp_path):
     out = load_builder().build(tmp_path / "site", quick=True)
     index = (out / "index.html").read_text()
 
-    for placeholder in ("$version", "$gallery", "$animations", "$notebooks", "$lessons", "$notebooks_heading", "$n_notebooks",
+    for placeholder in ("$version", "$gallery", "$animations", "$notebooks", "$lessons", "$learning_path", "$notebooks_heading", "$n_notebooks",
                         "$n_figures", "$n_modules", "$n_tests", "$commit", "$built"):
         assert placeholder not in index
     for name in demos.DEMOS:
@@ -36,6 +36,8 @@ def test_site_builds_with_every_page_and_asset(tmp_path):
     assert (out / "explorer" / "index.html").read_text().startswith("<!doctype html>")
     assert (out / ".nojekyll").exists()
     assert 'href="api/"' in index
+    assert index.count('class="track"') == len(load_builder()._lesson_path().load()["tracks"])
+    assert "Builds on lessons 2, 3, 5" in index                       # lesson 6's prerequisites
     for module in ("kinetic", "atomic", "nuclear", "circuits", "quantum"):
         assert (out / "api" / "qplay" / f"{module}.html").exists()
     counts = re.findall(r"<dd>(\d+)</dd>", index)

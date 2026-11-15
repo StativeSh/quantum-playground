@@ -152,6 +152,13 @@ a.glass:hover, a.glass-dark:hover { text-decoration: none; filter: brightness(1.
 .notebooks p { color: var(--muted); font-size: 15px; }
 .notebooks p { flex: 1; }
 .notebooks a.colab { align-self: flex-start; font-family: var(--body); font-weight: 500; font-size: 14px; letter-spacing: 0; color: var(--accent); min-height: 44px; display: inline-flex; align-items: center; }
+.tracks { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px 24px; }
+.track h3 { font-family: var(--mono); font-size: 13px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+.track ol { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.track li { display: inline-flex; align-items: center; gap: 6px; }
+.track li + li::before { content: "→"; color: var(--muted); }
+.track a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 980px; border: 1px solid var(--card-edge); background: var(--card); color: var(--ink); font-size: 14px; }
+.notebooks .needs { font-size: 13px; color: var(--muted); }
 
 /* ---- Get started ---- */
 .start { position: relative; overflow: hidden; background: var(--chip); }
@@ -282,7 +289,10 @@ $animations
 <section class="wrap section" id="lessons" style="padding-top: 96px; padding-bottom: 0; gap: 36px;">
   <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px;">
     <h2 style="font-weight: 700; font-size: clamp(32px, 4vw, 44px); letter-spacing: -0.03em;">Lessons for A-level and IB.</h2>
-    <p style="color: var(--muted); max-width: 44ch;">Guided lessons with exam-style questions and worked solutions. Nothing to install: each one runs in your browser on Google Colab.</p>
+    <p style="color: var(--muted); max-width: 44ch;">Guided lessons with exam-style questions and worked solutions. Follow a route below: each lesson lists what it builds on. Nothing to install: each one runs in your browser on Google Colab.</p>
+  </div>
+  <div class="tracks" aria-label="Suggested routes through the lessons">
+$learning_path
   </div>
   <ol class="notebooks">
 $lessons

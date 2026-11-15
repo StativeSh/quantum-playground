@@ -3,13 +3,14 @@
     python scripts/build_site.py [OUT_DIR] [--quick]
 
 Renders every demo and animation, executes every notebook to HTML, copies the
-interactive explorer, and fills ``site_src/index.html``. ``--quick`` skips the
+interactive explorer, builds the API reference with pdoc, and fills ``site_src/index.html``. ``--quick`` skips the
 notebooks and renders 3-frame animations (used by the test suite).
 """
 
 from __future__ import annotations
 
 import html
+import importlib.util
 import os
 import re
 import shutil
@@ -67,19 +68,42 @@ def notebook_info(path):
     return path.stem, ""
 
 
+def _lesson_path():
+    spec = importlib.util.spec_from_file_location("lesson_path", ROOT / "scripts" / "lesson_path.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def notebook_cards(folder):
-    """Numbered cards linking to the executed HTML and to Google Colab."""
+    """Numbered cards linking to the executed HTML and to Google Colab (lessons also show prerequisites)."""
     cards = []
     paths = sorted((ROOT / folder).glob("*.ipynb"))
+    prereqs = _lesson_path().load()["lessons"] if folder == "lessons" else {}
     for i, nb in enumerate(paths, start=1):
         title, summary = notebook_info(nb)
         title = re.sub(r"^(Lesson\s+)?\d+\s*[·.:-]\s*", "", title)  # the number is shown separately
+        deps = [d["lesson"] for d in prereqs.get(nb.name[:2], {}).get("builds_on", [])]
+        needs = (f'<span class="needs">Builds on lesson{"s" if len(deps) > 1 else ""} {", ".join(str(int(d)) for d in deps)}</span>'
+                 if deps else ('<span class="needs">A starting point</span>' if folder == "lessons" else ""))
         cards.append(
             f'    <li><span class="num">{i:02d}</span>'
             f'<a href="{folder}/{nb.stem}.html">{html.escape(title)}</a>'
-            f"<p>{html.escape(summary)}</p>"
+            f"<p>{html.escape(summary)}</p>{needs}"
             f'<a class="colab" href="{COLAB}/{folder}/{nb.name}">Run it in Colab</a></li>')
     return paths, cards
+
+
+def learning_path():
+    """Suggested routes through the lessons, from lessons/path.json."""
+    lp = _lesson_path()
+    files = lp.lesson_files()
+    rows = []
+    for track in lp.load()["tracks"]:
+        steps = "".join(f'<li><a href="lessons/{files[n].stem}.html">{int(n)} · {html.escape(lp.title(files[n]))}</a></li>'
+                        for n in track["lessons"])
+        rows.append(f'    <div class="track"><h3>{html.escape(track["name"])}</h3><ol>{steps}</ol></div>')
+    return "\n".join(rows)
 
 
 def execute_notebooks(folder, out):
@@ -88,6 +112,15 @@ def execute_notebooks(folder, out):
     for nb in sorted((ROOT / folder).glob("*.ipynb")):
         subprocess.run([sys.executable, "-m", "jupyter", "nbconvert", "--to", "html", "--execute",
                         "--output-dir", str(out), str(nb)], check=True, env=env)
+
+
+def build_api_docs(out):
+    """API reference from the docstrings (LaTeX rendered by MathJax) into ``out``."""
+    import pdoc
+    import pdoc.render
+
+    pdoc.render.configure(math=True, docformat="markdown", footer_text=f"quantum-playground {__version__}")
+    pdoc.pdoc("qplay", output_directory=Path(out))
 
 
 def count_tests():
@@ -138,6 +171,7 @@ def build(out, quick=False):
     explorer = out / "explorer"
     explorer.mkdir(parents=True)
     shutil.copy(ROOT / "site_src" / "explorer.html", explorer / "index.html")
+    build_api_docs(out / "api")
 
     page = Template((ROOT / "site_src" / "index.html").read_text()).substitute(
         version=__version__,
@@ -145,6 +179,7 @@ def build(out, quick=False):
         animations="\n".join(anims),
         notebooks="\n".join(notebooks),
         lessons="\n".join(lessons),
+        learning_path=learning_path(),
         notebooks_heading=f"{_count_word(len(nb_paths))} notebooks, in order.",
         n_notebooks=len(nb_paths),
         n_figures=len(demos.DEMOS) + len(animations.ANIMATIONS),

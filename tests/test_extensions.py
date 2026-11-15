@@ -187,8 +187,75 @@ def test_gram_schmidt_orthonormal_and_drops_dependent():
 def test_power_iteration_dominant_eigenpair():
     A = np.array([[4.0, 1.0, 0.0], [1.0, 3.0, 1.0], [0.0, 1.0, 2.0]])
     lam, v = linalg.power_iteration(A)
-    assert lam == pytest.approx(np.linalg.eigvalsh(A).max(), abs=1e-9)
-    assert np.allclose(A @ v, lam * v, atol=1e-5)
+    assert lam == pytest.approx(np.linalg.eigvalsh(A).max(), abs=1e-11)
+    assert np.linalg.norm(A @ v - lam * v) <= 1e-12 * np.linalg.norm(A)
+    assert np.linalg.norm(v) == pytest.approx(1.0)
+
+
+def test_power_iteration_negative_and_nonsymmetric_dominant_eigenvalues():
+    lam, v = linalg.power_iteration(np.diag([-3.0, 1.0, 0.5]))
+    assert lam == pytest.approx(-3.0)
+    assert abs(v[0]) == pytest.approx(1.0)
+    A = np.array([[2.0, 1.0], [0.0, 1.0]])                 # eigenvalues 2 and 1, not symmetric
+    lam, v = linalg.power_iteration(A)
+    assert lam == pytest.approx(2.0)
+    assert np.allclose(A @ v, 2 * v, atol=1e-10)
+
+
+def test_power_iteration_zero_matrix():
+    lam, v = linalg.power_iteration(np.zeros((3, 3)))
+    assert lam == 0.0 and np.linalg.norm(v) == pytest.approx(1.0)
+
+
+def test_power_iteration_restarts_when_the_start_is_in_the_null_space():
+    # A v0 = 0 although the dominant eigenvalue is 1: (0, v0) is an eigenpair, but not the dominant one.
+    A = np.diag([1.0, 0.0])
+    lam, v = linalg.power_iteration(A, v0=[0.0, 1.0])
+    assert lam == pytest.approx(1.0)
+    assert np.allclose(np.abs(v), [1.0, 0.0])
+
+
+def test_power_iteration_does_not_accept_a_null_space_iterate_as_converged():
+    # From (0, 0, 1) the next iterate is (0, 1, 0), which A sends to zero: an exact eigenpair with
+    # eigenvalue 0, reached although the dominant eigenvalue is 2.
+    A = np.array([[2.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, 0.0, 0.0]])
+    lam, v = linalg.power_iteration(A, v0=[0.0, 0.0, 1.0])
+    assert lam == pytest.approx(2.0)
+    assert np.allclose(np.abs(v), [1.0, 0.0, 0.0])
+
+
+def test_power_iteration_reports_breakdown_for_a_nilpotent_matrix():
+    with pytest.raises(RuntimeError, match="breakdown"):
+        linalg.power_iteration(np.array([[0.0, 1.0], [0.0, 0.0]]))
+
+
+@pytest.mark.parametrize("s", [1e-170, 1e-300, 1e170, 1e300])
+def test_power_iteration_survives_extreme_scaling(s):
+    # Eigenvalues scale with the matrix; unscaled norms of these would underflow or overflow.
+    M = np.array([[4.0, 1.0], [1.0, 3.0]])
+    lam, v = linalg.power_iteration(s * M)
+    assert lam == pytest.approx(s * (7 + np.sqrt(5)) / 2, rel=1e-12)
+    assert np.allclose(M @ v, (7 + np.sqrt(5)) / 2 * v, atol=1e-10)
+
+
+@pytest.mark.parametrize("A", [linalg.rotation(0.7), np.diag([2.0, -2.0])], ids=["complex-pair", "plus-minus"])
+def test_power_iteration_raises_when_it_does_not_converge(A):
+    with pytest.raises(RuntimeError, match="did not converge"):
+        linalg.power_iteration(A, iters=500)
+
+
+def test_equal_magnitude_eigenvalues_can_still_converge_from_a_special_start():
+    lam, v = linalg.power_iteration(np.diag([2.0, -2.0]), v0=[1.0, 0.0])
+    assert lam == pytest.approx(2.0)
+
+
+def test_power_iteration_rejects_bad_input():
+    with pytest.raises(ValueError):
+        linalg.power_iteration(np.ones((2, 3)))
+    with pytest.raises(ValueError):
+        linalg.power_iteration([[1.0, np.nan], [0.0, 1.0]])
+    with pytest.raises(ValueError):
+        linalg.power_iteration(np.eye(2), v0=[0.0, 0.0])
 
 
 def test_unit_circle_image_semi_axes_are_singular_values():
@@ -218,6 +285,7 @@ def test_double_slit_wall_does_not_leak():
     assert (np.abs(psi[-1][:, x > 1]) ** 2).sum() * dx * dx < 0.01
 
 
+@pytest.mark.slow
 def test_double_slit_dark_fringes_match_path_difference():
     run = quantum.double_slit_experiment(dt=0.02, t_max=16.0)
     y, screen, L = run["y"], run["screen"], run["screen_x"]

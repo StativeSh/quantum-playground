@@ -100,6 +100,44 @@ def barrier_transmission(E, V0, a, m=1.0, hbar=1.0):
     return float(T[0]) if scalar else T
 
 
+# ---- harmonic oscillator and coherent states -------------------------------------
+
+def harmonic_state(n, x, omega=1.0, m=1.0, hbar=1.0):
+    r"""Oscillator eigenstate $\psi_n(x) = (2^n n!)^{-1/2}(m\omega/\pi\hbar)^{1/4}H_n(\xi)e^{-\xi^2/2}$,
+    $\xi = x\sqrt{m\omega/\hbar}$, with energy $E_n = (n+\tfrac12)\hbar\omega$.
+
+    Uses the stable recurrence $\psi_{k+1} = \sqrt{2/(k+1)}\,\xi\,\psi_k - \sqrt{k/(k+1)}\,\psi_{k-1}$.
+    """
+    xi = np.asarray(x, float) * np.sqrt(m * omega / hbar)
+    prev = np.zeros_like(xi)
+    cur = (m * omega / (np.pi * hbar)) ** 0.25 * np.exp(-xi**2 / 2)
+    for k in range(n):
+        prev, cur = cur, np.sqrt(2 / (k + 1)) * xi * cur - np.sqrt(k / (k + 1)) * prev
+    return cur
+
+
+def coherent_state(x, alpha, omega=1.0, m=1.0, hbar=1.0):
+    r"""Coherent state $|\alpha\rangle = e^{-|\alpha|^2/2}\sum_n \frac{\alpha^n}{\sqrt{n!}}|n\rangle$ in position space:
+
+    $$\psi_\alpha(x) = \left(\frac{m\omega}{\pi\hbar}\right)^{1/4}
+    \exp\!\left(-\frac{\xi^2}{2} + \sqrt2\,\alpha\xi - \frac{\alpha^2 + |\alpha|^2}{2}\right).$$
+
+    A Gaussian of width $\sigma_x = \sqrt{\hbar/2m\omega}$ centred on
+    $x_0 = \sqrt{2\hbar/m\omega}\,\mathrm{Re}\,\alpha$ with momentum $p_0 = \sqrt{2m\omega\hbar}\,\mathrm{Im}\,\alpha$.
+    Under $V = \tfrac12 m\omega^2x^2$ it stays this shape, with $\alpha \to \alpha e^{-i\omega t}$ and
+    an overall phase $e^{-i\omega t/2}$.
+    """
+    xi = np.asarray(x, float) * np.sqrt(m * omega / hbar)
+    alpha = complex(alpha)
+    return ((m * omega / (np.pi * hbar)) ** 0.25
+            * np.exp(-xi**2 / 2 + np.sqrt(2) * alpha * xi - (alpha**2 + abs(alpha) ** 2) / 2))
+
+
+def coherent_alpha(x0, p0, omega=1.0, m=1.0, hbar=1.0):
+    r"""$\alpha = \sqrt{m\omega/2\hbar}\,x_0 + i\,p_0/\sqrt{2m\omega\hbar}$ for a packet at $x_0$ with momentum $p_0$."""
+    return np.sqrt(m * omega / (2 * hbar)) * x0 + 1j * p0 / np.sqrt(2 * m * omega * hbar)
+
+
 # ---- hydrogen ------------------------------------------------------------------
 
 _RYDBERG_EV = constants.physical_constants["Rydberg constant times hc in eV"][0]

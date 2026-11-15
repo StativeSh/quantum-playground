@@ -9,7 +9,8 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 
-from . import chaos, complexplane, dynamics, em, linalg, mechanics, plotting, quantum, statmech, waves
+from . import (atomic, chaos, circuits, complexplane, dynamics, em, kinetic, linalg, mechanics, nuclear, plotting,
+               quantum, statmech, waves)
 
 DEMOS: dict = {}
 
@@ -342,4 +343,122 @@ def linear_map_demo():
     ax.set(aspect="equal", xlim=(-2.2, 2.2), ylim=(-2.2, 2.2),
            title=rf"$A$: $\sigma = {sigma[0]:.2f}, {sigma[1]:.2f}$; $\lambda = {vals[0]:.2f}, {vals[1]:.2f}$")
     ax.legend(fontsize=8, loc="lower right")
+    return fig
+
+
+@demo("maxwell-boltzmann")
+def maxwell_boltzmann_demo():
+    """Hard-sphere gas: one starting speed relaxes to the Maxwell-Boltzmann distribution."""
+    gas = kinetic.gas_box(n=400, dim=3, radius=0.02, t_max=6, save_every=20, seed=1)
+    kT = gas.temperature()
+    v = np.linalg.norm(gas.velocities, axis=-1)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+    bins = np.linspace(0, 2.5, 41)
+    for k, colour in [(1, "C1"), (5, "C2")]:
+        ax1.hist(v[k], bins=bins, density=True, histtype="step", color=colour, label=f"t = {gas.t[k]:.2f}")
+    ax1.hist(gas.speeds(len(gas.t) // 2), bins=bins, density=True, alpha=0.4, color="C0", label="t > 3 (averaged)")
+    vs = np.linspace(0, 2.5, 300)
+    ax1.plot(vs, kinetic.maxwell_boltzmann_speed(vs, kT), "k", label="Maxwell-Boltzmann")
+    ax1.axvline(1.0, color="0.5", ls=":", lw=1, label="initial speed")
+    ax1.set(xlabel="speed", ylabel="probability density", title="All molecules start at the same speed")
+    ax1.legend(fontsize=8)
+    ratio = (v**4).mean(1) / (v**2).mean(1) ** 2
+    ax2.plot(gas.t, ratio)
+    ax2.axhline(5 / 3, color="k", ls="--", label=r"Maxwell-Boltzmann: $5/3$")
+    Z = gas.pressure() * gas.volume / (gas.n_particles * kT)
+    ax2.set(xlabel="time", ylabel=r"$\langle v^4\rangle / \langle v^2\rangle^2$",
+            title=rf"Relaxation;  measured $pV/Nk_BT = {Z:.3f}$ (theory $1+4\eta = {1 + 4 * gas.packing_fraction:.3f}$)")
+    ax2.legend()
+    return fig
+
+
+@demo("coherent-state")
+def coherent_state_demo():
+    r"""A coherent state swings in $V = x^2/2$ like a classical particle, without spreading."""
+    x = np.linspace(-20, 20, 1024, endpoint=False)
+    alpha = quantum.coherent_alpha(4.0, 0.0)
+    times, psi = quantum.split_step(quantum.coherent_state(x, alpha), x, 0.5 * x**2, dt=0.01, steps=1600, save_every=4)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4), gridspec_kw={"width_ratios": [2, 1]})
+    ax1.imshow(np.abs(psi.T) ** 2, origin="lower", aspect="auto", cmap="magma",
+               extent=[times[0], times[-1], x[0], x[-1]])
+    ax1.plot(times, 4 * np.cos(times), "c--", lw=1, label=r"classical $x = 4\cos t$")
+    ax1.set(ylim=(-7, 7), xlabel="t", ylabel="x", title=r"$|\psi(x,t)|^2$ for a coherent state")
+    ax1.legend(loc="upper right", fontsize=8)
+    ax1.grid(False)
+    gauss = quantum.gaussian_wavepacket(x, 4.0, sigma=np.sqrt(0.5))
+    _, free = quantum.split_step(gauss, x, 0 * x, dt=0.01, steps=1600, save_every=4)
+    width = [np.sqrt(quantum.expectation(x**2, p, x) - quantum.expectation(x, p, x) ** 2) for p in psi]
+    width_free = [np.sqrt(quantum.expectation(x**2, p, x) - quantum.expectation(x, p, x) ** 2) for p in free]
+    ax2.plot(times, width, label="in the oscillator")
+    ax2.plot(times, width_free, label="free particle")
+    ax2.set(xlabel="t", ylabel=r"$\Delta x$", title="Width")
+    ax2.legend()
+    return fig
+
+
+@demo("zeeman")
+def zeeman_demo():
+    """Zeeman effect for a p electron: from Landé splitting to the Paschen-Back limit."""
+    l, xi = 1, 1.0
+    B = np.linspace(0, 3, 300)
+    E = atomic.zeeman_levels(l, xi, B)
+    fig, ax = plt.subplots(figsize=(7, 4.5))
+    ax.plot(B, E, color="C0")
+    for j in (0.5, 1.5):
+        for mj in np.arange(-j, j + 1):
+            e0 = atomic.spin_orbit_energy(l, j, xi)
+            ax.plot(B[:40], e0 + atomic.lande_g(l, j) * mj * B[:40], "k:", lw=1)
+    labels: dict = {}                                       # Paschen-Back levels; two coincide
+    for ml, ms in atomic.basis_labels(l):
+        labels.setdefault(round(B[-1] * (ml + 2 * ms) + xi * ml * ms, 6), []).append(rf"$({ml:+.0f}, {ms:+.1f})$")
+    for energy, names in labels.items():
+        ax.annotate(" ".join(names), (B[-1], energy), fontsize=7, xytext=(4, 0), textcoords="offset points", va="center")
+    ax.text(B[-1], E.max() + 0.4, r"$(m_l, m_s)$", fontsize=8, ha="left")
+    ax.set(xlabel=r"$\mu_B B / \xi$", ylabel=r"energy / $\xi$", xlim=(0, 4.1),
+           title=r"$p$ electron: $\xi\,\mathbf{L\cdot S} + \mu_B B(L_z + 2S_z)$; dotted = Landé $g_J m_j \mu_B B$")
+    return fig
+
+
+@demo("decay-chain")
+def decay_chain_demo():
+    """A three-step decay chain: Bateman solution against a Monte Carlo of individual nuclei."""
+    lambdas = [0.3, 0.8, 0.1, 0.0]
+    t = np.linspace(0, 30, 301)
+    N = nuclear.bateman(1.0, lambdas, t)
+    rng = np.random.default_rng(0)
+    counts = np.zeros((len(t), 4))
+    state = np.zeros(2000, dtype=int)                       # every nucleus starts as the parent
+    for k in range(len(t)):
+        counts[k] = np.bincount(state, minlength=4)
+        if k + 1 < len(t):
+            p = 1 - np.exp(-np.array(lambdas)[state] * (t[1] - t[0]))
+            state = state + (rng.random(state.size) < p)
+    fig, ax = plt.subplots(figsize=(7, 4.2))
+    for i, name in enumerate(["parent", "daughter 1", "daughter 2", "stable"]):
+        ax.plot(t, N[:, i], color=f"C{i}", label=rf"{name} ($\lambda={lambdas[i]}$)")
+        ax.plot(t[::10], counts[::10, i] / 2000, "o", color=f"C{i}", ms=3)
+    ax.set(xlabel="time", ylabel="fraction of nuclei", title="Decay chain: Bateman (lines), 2000 simulated nuclei (dots)")
+    ax.legend(fontsize=8)
+    return fig
+
+
+@demo("rlc-resonance")
+def rlc_resonance_demo():
+    """Series RLC circuit: resonance curves and the Q factor."""
+    L, C, V0 = 0.05, 2e-6, 1.0
+    w0 = circuits.resonant_frequency(L, C)
+    w = np.linspace(0.5 * w0, 1.5 * w0, 600)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+    for i, R in enumerate([5.0, 20.0, 60.0]):
+        ax1.plot(w / w0, 1e3 * circuits.current_amplitude(w, V0, R, L, C), color=f"C{i}",
+                 label=rf"$R = {R:g}\,\Omega$, $Q = {circuits.quality_factor(R, L, C):.0f}$")
+    ax1.set(xlabel=r"$\omega/\omega_0$", ylabel="current amplitude / mA", title="Driven series RLC")
+    ax1.legend(fontsize=8)
+    R = 20.0
+    t, _, I = circuits.rlc_series(R, L, C, V=lambda t: V0 * np.cos(w0 * t), t_max=0.08, n=4000)
+    ax2.plot(1e3 * t, 1e3 * I, lw=0.8)
+    amp = 1e3 * circuits.current_amplitude(w0, V0, R, L, C)
+    ax2.plot(1e3 * t, amp * (1 - np.exp(-R * t / (2 * L))), "k--", lw=1, label=r"envelope $I_0(1-e^{-Rt/2L})$")
+    ax2.set(xlabel="t / ms", ylabel="I / mA", title="Switching on at resonance")
+    ax2.legend(fontsize=8)
     return fig

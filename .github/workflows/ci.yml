@@ -18,7 +18,14 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - run: pip install -e ".[dev]"
-      - run: pytest
+      - name: Install Chromium for the explorer's browser tests
+        if: matrix.python-version == '3.12'
+        run: |
+          pip install -e ".[browser]"
+          python -m playwright install --with-deps chromium
+          echo "QPLAY_REQUIRE_BROWSER=1" >> "$GITHUB_ENV"
+      - name: Run every test, including the slow ones, with coverage
+        run: pytest -m "" --cov=qplay --cov-report=term-missing
       - name: Execute notebooks
         if: matrix.python-version == '3.12'
         run: |

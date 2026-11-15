@@ -1,0 +1,32 @@
+{
+  "about": "Prerequisites and suggested routes through the lessons. scripts/sync_lesson_path.py copies this into each lesson's first cell; tests/test_notebooks.py checks they agree.",
+  "lessons": {
+    "01": {"assumes": "GCSE forces, energy and motion graphs", "builds_on": []},
+    "02": {"assumes": "the suvat equations and resolving a vector into components", "builds_on": []},
+    "03": {"assumes": "Newton's laws and kinetic and potential energy",
+           "builds_on": [{"lesson": "02", "for": "splitting motion into perpendicular components"}]},
+    "04": {"assumes": "the wave equation v = f lambda",
+           "builds_on": [{"lesson": "01", "for": "oscillations, amplitude and phase"}]},
+    "05": {"assumes": "charge, current and potential difference from GCSE",
+           "builds_on": [{"lesson": "03", "for": "inverse-square fields, potential and energy in a field"}]},
+    "06": {"assumes": "Fleming's left-hand rule",
+           "builds_on": [{"lesson": "02", "for": "the parabola from a constant sideways force"},
+                         {"lesson": "03", "for": "centripetal force"},
+                         {"lesson": "05", "for": "uniform fields between plates"}]},
+    "07": {"assumes": "the electromagnetic spectrum and the electronvolt",
+           "builds_on": [{"lesson": "04", "for": "superposition and path difference"},
+                         {"lesson": "05", "for": "energy gained moving through a potential difference, W = qV"}]},
+    "08": {"assumes": "momentum and kinetic energy",
+           "builds_on": [{"lesson": "02", "for": "adding velocities and changing frame"},
+                         {"lesson": "05", "for": "the energy eV gained across a potential difference"}]},
+    "09": {"assumes": "momentum, kinetic energy and the kelvin scale",
+           "builds_on": [{"lesson": "03", "for": "force as rate of change of momentum and kinetic energy"}]}
+  },
+  "tracks": [
+    {"name": "Mechanics", "lessons": ["02", "03", "01"]},
+    {"name": "Waves to quantum", "lessons": ["01", "04", "07"]},
+    {"name": "Fields", "lessons": ["03", "05", "06"]},
+    {"name": "Modern physics", "lessons": ["05", "07", "08"]},
+    {"name": "Thermal physics", "lessons": ["03", "09"]}
+  ]
+}

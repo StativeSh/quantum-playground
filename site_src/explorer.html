@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Quantum Playground Explorer</title>
-<meta name="description" content="Interactive pendulum, quantum tunnelling and double-slit experiments.">
+<meta name="description" content="Interactive pendulum, quantum tunnelling, double-slit, Kepler orbit, Lorenz attractor and Ising model experiments.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -145,7 +145,7 @@ img { max-width: 100%; }
   <header>
     <nav class="glassbar" aria-label="Site"><a class="brand" href="../">← quantum-playground</a><span class="eyebrow">Interactive explorer</span></nav>
     <h1>Quantum Playground Explorer</h1>
-    <p class="lede">Three experiments from the <a href="https://github.com/StativeSh/quantum-playground">quantum-playground</a> Python package, recomputed live as you drag. Each one puts an exact result next to the approximation it replaces.</p>
+    <p class="lede">Six experiments from the <a href="https://github.com/StativeSh/quantum-playground">quantum-playground</a> Python package, recomputed live as you drag. Each one puts an exact result next to the approximation it replaces.</p>
   </header>
 
   <!-- ===================== Pendulum ===================== -->
@@ -264,8 +264,121 @@ img { max-width: 100%; }
     </div>
   </section>
 
+  <!-- ===================== Kepler orbits ===================== -->
+  <section class="experiment" aria-labelledby="orb-h">
+    <div class="side">
+      <h2 id="orb-h">Kepler orbits</h2>
+      <p>A planet starts at distance 1 moving sideways. At exactly the circular speed it goes round in a circle; any other speed gives an ellipse, and from <math><msqrt><mn>2</mn></msqrt></math> times the circular speed upwards it escapes.</p>
+      <div class="control">
+        <label for="orb-v">Launch speed / circular speed <output id="orb-v-out" for="orb-v"></output></label>
+        <input type="range" id="orb-v" min="0.4" max="1.5" step="0.01" value="1.2">
+      </div>
+      <dl class="readouts">
+        <dt>Eccentricity e</dt><dd id="orb-e"></dd>
+        <dt>Semi-major axis a</dt><dd id="orb-a"></dd>
+        <dt>Kepler period</dt><dd id="orb-T"></dd>
+        <dt>Measured period</dt><dd id="orb-Tm"></dd>
+      </dl>
+      <div class="formula" aria-label="Kepler's third law">
+        <math display="block"><msup><mi>T</mi><mn>2</mn></msup><mo>=</mo><mfrac><mrow><mn>4</mn><msup><mi>π</mi><mn>2</mn></msup></mrow><mrow><mi>G</mi><mi>M</mi></mrow></mfrac><msup><mi>a</mi><mn>3</mn></msup></math>
+      </div>
+      <button type="button" id="orb-play" aria-pressed="true">Pause</button>
+    </div>
+    <div class="plots two">
+      <div style="display:grid;gap:8px;min-width:0">
+        <canvas id="orb-anim" class="c-square" role="img" aria-label="Planet orbiting a star, with the predicted ellipse"></canvas>
+        <div class="legend">
+          <span class="key"><span class="swatch" style="border-color:var(--accent)"></span>simulated path</span>
+          <span class="key"><span class="swatch dash" style="border-color:var(--accent-2)"></span>predicted ellipse</span>
+        </div>
+      </div>
+      <div style="display:grid;gap:8px;min-width:0">
+        <canvas id="orb-curve" class="c-square" role="img" aria-label="Period against semi-major axis, with Kepler's third law"></canvas>
+        <p class="legend">Every completed orbit adds a dot: they all sit on <math><mi>T</mi><mo>∝</mo><msup><mi>a</mi><mrow><mn>3</mn><mo>/</mo><mn>2</mn></mrow></msup></math></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Lorenz ===================== -->
+  <section class="experiment" aria-labelledby="lor-h">
+    <div class="side">
+      <h2 id="lor-h">Lorenz attractor</h2>
+      <p>Two copies of the Lorenz system start on the attractor, <math><msup><mn>10</mn><mrow><mo>−</mo><mn>8</mn></mrow></msup></math> apart. While the motion is chaotic the gap grows exponentially until it is as big as the attractor itself.</p>
+      <div class="control">
+        <label for="lor-rho">ρ <output id="lor-rho-out" for="lor-rho"></output></label>
+        <input type="range" id="lor-rho" min="10" max="40" step="0.1" value="28">
+      </div>
+      <div class="control">
+        <label for="lor-sigma">σ <output id="lor-sigma-out" for="lor-sigma"></output></label>
+        <input type="range" id="lor-sigma" min="5" max="16" step="0.1" value="10">
+      </div>
+      <div class="control">
+        <label for="lor-beta">β <output id="lor-beta-out" for="lor-beta"></output></label>
+        <input type="range" id="lor-beta" min="1" max="4" step="0.01" value="2.67">
+      </div>
+      <span class="badge" id="lor-regime"></span>
+      <dl class="readouts">
+        <dt>Time</dt><dd id="lor-t"></dd>
+        <dt>Separation</dt><dd id="lor-sep"></dd>
+        <dt>Chaos sets in at ρ_H</dt><dd id="lor-rhoH"></dd>
+      </dl>
+      <div class="formula" aria-label="Lorenz equations">
+        <math display="block"><mtable columnalign="left"><mtr><mtd><mover><mi>x</mi><mo>˙</mo></mover><mo>=</mo><mi>σ</mi><mo>(</mo><mi>y</mi><mo>−</mo><mi>x</mi><mo>)</mo></mtd></mtr><mtr><mtd><mover><mi>y</mi><mo>˙</mo></mover><mo>=</mo><mi>x</mi><mo>(</mo><mi>ρ</mi><mo>−</mo><mi>z</mi><mo>)</mo><mo>−</mo><mi>y</mi></mtd></mtr><mtr><mtd><mover><mi>z</mi><mo>˙</mo></mover><mo>=</mo><mi>x</mi><mi>y</mi><mo>−</mo><mi>β</mi><mi>z</mi></mtd></mtr></mtable></math>
+      </div>
+      <button type="button" id="lor-play" aria-pressed="true">Pause</button>
+    </div>
+    <div class="plots two">
+      <div style="display:grid;gap:8px;min-width:0">
+        <canvas id="lor-anim" class="c-square" role="img" aria-label="Two Lorenz trajectories in the x-z plane"></canvas>
+        <div class="legend">
+          <span class="key"><span class="swatch" style="border-color:var(--accent)"></span>trajectory A</span>
+          <span class="key"><span class="swatch" style="border-color:var(--accent-2)"></span>trajectory B</span>
+        </div>
+      </div>
+      <div style="display:grid;gap:8px;min-width:0">
+        <canvas id="lor-curve" class="c-square" role="img" aria-label="Logarithm of the separation against time"></canvas>
+        <p class="legend">Dashed: slope of the largest Lyapunov exponent, 0.906, for the classic ρ = 28, σ = 10, β = 8/3</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Ising ===================== -->
+  <section class="experiment" aria-labelledby="ising-h">
+    <div class="side">
+      <h2 id="ising-h">Ising model</h2>
+      <p>Each square is a tiny magnet pointing up or down that prefers to match its neighbours. Heat fights that order. Below the critical temperature large domains form; above it the magnetisation averages to zero.</p>
+      <div class="control">
+        <label for="ising-T">Temperature T <output id="ising-T-out" for="ising-T"></output></label>
+        <input type="range" id="ising-T" min="1" max="4" step="0.01" value="2.0">
+      </div>
+      <dl class="readouts">
+        <dt>T / T_c</dt><dd id="ising-ratio"></dd>
+        <dt>Measured |m|</dt><dd id="ising-m"></dd>
+        <dt>Onsager (exact)</dt><dd id="ising-exact"></dd>
+      </dl>
+      <div class="formula" aria-label="Onsager's magnetisation">
+        <math display="block"><mi>m</mi><mo>=</mo><msup><mrow><mo>(</mo><mn>1</mn><mo>−</mo><msup><mi>sinh</mi><mrow><mo>−</mo><mn>4</mn></mrow></msup><mfrac><mn>2</mn><mi>T</mi></mfrac><mo>)</mo></mrow><mrow><mn>1</mn><mo>/</mo><mn>8</mn></mrow></msup><mo>,</mo><mspace width="0.4em"/><msub><mi>T</mi><mi>c</mi></msub><mo>=</mo><mfrac><mn>2</mn><mrow><mi>ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><msqrt><mn>2</mn></msqrt><mo>)</mo></mrow></mfrac></math>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" id="ising-play" aria-pressed="true">Pause</button>
+        <button type="button" id="ising-hot">Randomise</button>
+        <button type="button" id="ising-cold">All up</button>
+      </div>
+    </div>
+    <div class="plots two">
+      <div style="display:grid;gap:8px;min-width:0">
+        <canvas id="ising-lattice" class="c-square" role="img" aria-label="Lattice of up and down spins" style="image-rendering:pixelated"></canvas>
+        <p class="legend">96 × 96 spins, Metropolis updates</p>
+      </div>
+      <div style="display:grid;gap:8px;min-width:0">
+        <canvas id="ising-curve" class="c-square" role="img" aria-label="Magnetisation against temperature with Onsager's exact curve"></canvas>
+        <p class="legend">Line: Onsager's exact result. Dot: this lattice, averaged over the last few hundred sweeps</p>
+      </div>
+    </div>
+  </section>
+
   <footer>
-    <p>Everything is computed in your browser. The same physics lives in Python as <code>mechanics.pendulum_period</code>, <code>quantum.barrier_transmission</code> and <code>quantum.double_slit_experiment</code>, where it is checked against these analytic results by the test suite.</p>
+    <p>Everything is computed in your browser. The same physics lives in Python as <code>mechanics.pendulum_period</code>, <code>quantum.barrier_transmission</code>, <code>quantum.double_slit_experiment</code>, <code>mechanics.nbody</code>, <code>chaos.lorenz</code> and <code>statmech.ising</code>, where it is checked against these analytic results by the test suite.</p>
     <p>The tunnelling plot is the exact stationary state, matched across both barrier edges. The double-slit pattern uses the Fraunhofer (far-field) formula.</p>
   </footer>
 </div>
@@ -539,16 +652,234 @@ img { max-width: 100%; }
   }
   ["slit-lam", "slit-d", "slit-w", "slit-L"].forEach((id) => $(id).addEventListener("input", slitParams));
 
+  // ---------- shared animation driver: one requestAnimationFrame loop for every running experiment ----------
+  const sims = {};
+  let simLast = null;
+  function simLoop(ts) {
+    const running = Object.values(sims).filter((s) => s.playing);
+    if (!running.length) { simLast = null; return; }
+    const dt = simLast === null ? 0 : Math.min(0.05, (ts - simLast) / 1000);
+    simLast = ts;
+    running.forEach((s) => { s.step(dt); s.draw(); });
+    requestAnimationFrame(simLoop);
+  }
+  function registerSim(name, btn, step, draw) {
+    sims[name] = { playing: false, step, draw };
+    const set = (on) => {
+      const was = Object.values(sims).some((s) => s.playing);
+      sims[name].playing = on;
+      $(btn).textContent = on ? "Pause" : "Play";
+      $(btn).setAttribute("aria-pressed", String(on));
+      if (on && !was) requestAnimationFrame(simLoop);
+    };
+    $(btn).addEventListener("click", () => set(!sims[name].playing));
+    return set;
+  }
+
+  // ---------- Kepler orbits (GM = 1, start at r = 1) ----------
+  const orb = { x: 1, y: 0, vx: 0, vy: 1, t: 0, trail: [], lastCross: null, measured: null, points: [] };
+  function orbElements(f) {
+    const v = f, energy = v * v / 2 - 1, h = v;                 // r0 = 1, velocity perpendicular
+    const e = Math.sqrt(Math.max(0, 1 + 2 * energy * h * h));
+    const a = energy < 0 ? -1 / (2 * energy) : Infinity;
+    return { e, a, T: energy < 0 ? 2 * Math.PI * Math.pow(a, 1.5) : Infinity };
+  }
+  function orbParams() {
+    const f = +$("orb-v").value, el = orbElements(f);
+    Object.assign(orb, { x: 1, y: 0, vx: 0, vy: f, t: 0, trail: [], lastCross: null, measured: null, f, el });
+    $("orb-v-out").textContent = f.toFixed(2);
+    $("orb-e").textContent = fmt(el.e);
+    $("orb-a").textContent = Number.isFinite(el.a) ? fmt(el.a) : "∞ (escapes)";
+    $("orb-T").textContent = Number.isFinite(el.T) ? fmt(el.T, 2) : "–";
+    $("orb-Tm").textContent = "waiting…";
+    drawOrb(); drawOrbCurve();
+  }
+  function stepOrb(dt) {                                       // velocity Verlet, small fixed substeps
+    const n = Math.max(1, Math.ceil(dt * 3 / 0.0005)), h = dt * 3 / n;   // 3 time units per second
+    for (let i = 0; i < n; i++) {
+      let r3 = Math.pow(orb.x * orb.x + orb.y * orb.y, 1.5);
+      orb.vx -= 0.5 * h * orb.x / r3; orb.vy -= 0.5 * h * orb.y / r3;
+      const yOld = orb.y;
+      orb.x += h * orb.vx; orb.y += h * orb.vy;
+      r3 = Math.pow(orb.x * orb.x + orb.y * orb.y, 1.5);
+      orb.vx -= 0.5 * h * orb.x / r3; orb.vy -= 0.5 * h * orb.y / r3;
+      orb.t += h;
+      if (yOld < 0 && orb.y >= 0 && orb.x > 0) {             // crossed the +x axis going up: one full orbit
+        const tc = orb.t - h * orb.y / (orb.y - yOld);
+        orb.measured = tc;
+        if (orb.lastCross === null) {
+          orb.points = orb.points.filter((p) => Math.abs(p[0] - orb.el.a) > 1e-6).concat([[orb.el.a, tc]]).slice(-12);
+          $("orb-Tm").textContent = fmt(tc, 2);
+          drawOrbCurve();
+        }
+        orb.lastCross = tc;
+      }
+    }
+    orb.trail.push([orb.x, orb.y]);
+    if (orb.trail.length > 600) orb.trail.shift();
+  }
+  function drawOrb() {
+    const { ctx, w, h } = prep($("orb-anim"));
+    const el = orb.el, span = Number.isFinite(el.a) ? Math.max(1.15, el.a * (1 + el.e) * 1.08) : 4;
+    const cx = w / 2;
+    const S = Math.min(w, h) / (2 * span), X = (x) => cx + (x - (Number.isFinite(el.a) ? 1 - el.a : 0)) * S, Y = (y) => h / 2 - y * S;
+    if (Number.isFinite(el.a) && el.e < 1) {                  // predicted ellipse: perihelion or aphelion at (1, 0)
+      const b = el.a * Math.sqrt(1 - el.e * el.e), c = 1 - el.a;   // centre at x = 1 - a
+      const pts = [];
+      for (let i = 0; i <= 200; i++) { const th = 2 * Math.PI * i / 200; pts.push([X(c + el.a * Math.cos(th)), Y(b * Math.sin(th))]); }
+      line(ctx, pts, tok("--accent-2"), 1.2, [5, 4]);
+    }
+    line(ctx, orb.trail.map(([x, y]) => [X(x), Y(y)]), tok("--accent"), 2);
+    dot(ctx, X(0), Y(0), 7, tok("--accent-2"));
+    if (Math.hypot(orb.x, orb.y) < 3 * span) dot(ctx, X(orb.x), Y(orb.y), 6, tok("--accent"));
+    ctx.fillStyle = tok("--muted"); ctx.font = `12px ${tok("--font-mono")}`; ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillText(`t = ${orb.t.toFixed(1)}`, 8, 8);
+  }
+  function drawOrbCurve() {
+    const { ctx, w, h } = prep($("orb-curve"));
+    const { X, Y } = axes(ctx, w, h, [0, 8], [0, 140], { xlabel: "semi-major axis a", ylabel: "period T", nx: 4, ny: 4, l: 40 });
+    const pts = [];
+    for (let i = 1; i <= 200; i++) { const a = 8 * i / 200; pts.push([X(a), Y(2 * Math.PI * Math.pow(a, 1.5))]); }
+    line(ctx, pts, tok("--accent"), 2);
+    orb.points.forEach(([a, T]) => dot(ctx, X(a), Y(T), 5, tok("--accent-2")));
+  }
+  $("orb-v").addEventListener("input", orbParams);
+  const setOrb = registerSim("orb", "orb-play", stepOrb, drawOrb);
+
+  // ---------- Lorenz attractor ----------
+  const lor = { a: [1, 1, 1], b: [1 + 1e-8, 1, 1], t: 0, ta: [], tb: [], seps: [] };
+  function lorRHS(s, p) { return [p.sigma * (s[1] - s[0]), s[0] * (p.rho - s[2]) - s[1], s[0] * s[1] - p.beta * s[2]]; }
+  function rk4(s, p, h) {
+    const k1 = lorRHS(s, p), k2 = lorRHS(s.map((v, i) => v + h / 2 * k1[i]), p),
+      k3 = lorRHS(s.map((v, i) => v + h / 2 * k2[i]), p), k4 = lorRHS(s.map((v, i) => v + h * k3[i]), p);
+    return s.map((v, i) => v + h / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]));
+  }
+  function lorParams() {
+    const p = { rho: +$("lor-rho").value, sigma: +$("lor-sigma").value, beta: +$("lor-beta").value };
+    let start = [1, 1, 1];                                     // run onto the attractor first
+    for (let i = 0; i < 5000; i++) start = rk4(start, p, 0.004);
+    Object.assign(lor, { p, a: start, b: [start[0] + 1e-8, start[1], start[2]], t: 0, ta: [], tb: [], seps: [] });
+    $("lor-rho-out").textContent = p.rho.toFixed(1);
+    $("lor-sigma-out").textContent = p.sigma.toFixed(1);
+    $("lor-beta-out").textContent = p.beta.toFixed(2);
+    const den = p.sigma - p.beta - 1, rhoH = den > 0 ? p.sigma * (p.sigma + p.beta + 3) / den : Infinity;
+    $("lor-rhoH").textContent = Number.isFinite(rhoH) ? fmt(rhoH, 2) : "never";
+    const chaotic = p.rho > rhoH, badge = $("lor-regime");
+    badge.textContent = p.rho < 1 ? "ρ < 1 · decays to rest" : chaotic ? "ρ > ρ_H · chaotic" : "ρ < ρ_H · settles on a fixed point";
+    badge.style.color = chaotic ? tok("--accent-2") : tok("--accent");
+    $("lor-t").textContent = "0.0"; $("lor-sep").textContent = "1e-8";
+    drawLor(); drawLorCurve();
+  }
+  function stepLor(dt) {
+    const h = 0.004, n = Math.max(1, Math.round(dt / 0.016 * 4));
+    for (let i = 0; i < n; i++) {
+      lor.a = rk4(lor.a, lor.p, h); lor.b = rk4(lor.b, lor.p, h); lor.t += h;
+      lor.ta.push([lor.a[0], lor.a[2]]); lor.tb.push([lor.b[0], lor.b[2]]);
+    }
+    if (lor.ta.length > 1500) { lor.ta.splice(0, lor.ta.length - 1500); lor.tb.splice(0, lor.tb.length - 1500); }
+    const sep = Math.hypot(lor.a[0] - lor.b[0], lor.a[1] - lor.b[1], lor.a[2] - lor.b[2]);
+    if (lor.t < 40) lor.seps.push([lor.t, Math.log10(Math.max(sep, 1e-16))]);
+    $("lor-t").textContent = lor.t.toFixed(1); $("lor-sep").textContent = sep.toExponential(1);
+    drawLorCurve();
+  }
+  function drawLor() {
+    const { ctx, w, h } = prep($("lor-anim"));
+    const zmax = Math.max(50, lor.p.rho * 1.8), xm = Math.max(25, Math.sqrt(lor.p.beta * Math.max(lor.p.rho - 1, 1)) * 2.4);
+    const X = (x) => w / 2 + x / xm * (w / 2 - 8), Y = (z) => h - 8 - z / zmax * (h - 16);
+    line(ctx, lor.ta.map(([x, z]) => [X(x), Y(z)]), tok("--accent"), 2.6);    // wider, so it shows under B until they part
+    line(ctx, lor.tb.map(([x, z]) => [X(x), Y(z)]), tok("--accent-2"), 1);
+    dot(ctx, X(lor.a[0]), Y(lor.a[2]), 4, tok("--accent"));
+    dot(ctx, X(lor.b[0]), Y(lor.b[2]), 4, tok("--accent-2"));
+    ctx.fillStyle = tok("--muted"); ctx.font = `12px ${tok("--font-mono")}`; ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillText("x → , z ↑", 8, 8);
+  }
+  function drawLorCurve() {
+    const { ctx, w, h } = prep($("lor-curve"));
+    const { X, Y } = axes(ctx, w, h, [0, 40], [-9, 2], { xlabel: "time", ylabel: "log₁₀ separation", nx: 4, ny: 5, l: 36 });
+    line(ctx, [[X(0), Y(-8)], [X(40), Y(-8 + 0.906 * 40 / Math.LN10)]].map(([x, y]) => [x, Math.max(y, Y(2))]), tok("--muted"), 1, [4, 4]);
+    line(ctx, lor.seps.map(([t, s]) => [X(t), Y(s)]), tok("--accent"), 1.5);
+  }
+  ["lor-rho", "lor-sigma", "lor-beta"].forEach((id) => $(id).addEventListener("input", lorParams));
+  const setLor = registerSim("lor", "lor-play", stepLor, drawLor);
+
+  // ---------- Ising model (checkerboard Metropolis, J = 1) ----------
+  const N = 96, TC = 2 / Math.log(1 + Math.SQRT2);
+  const spins = new Int8Array(N * N);
+  const ising = { T: 2, mags: [], img: null };
+  const onsager = (T) => (T >= TC ? 0 : Math.pow(1 - Math.pow(Math.sinh(2 / T), -4), 1 / 8));
+  function isingFill(hot) { for (let i = 0; i < N * N; i++) spins[i] = hot ? (Math.random() < 0.5 ? 1 : -1) : 1; ising.mags = []; }
+  function sweep() {
+    const T = ising.T, boltz = [Math.exp(-4 / T), Math.exp(-8 / T)];
+    for (let colour = 0; colour < 2; colour++) {
+      for (let y = 0; y < N; y++) {
+        const up = ((y + N - 1) % N) * N, dn = ((y + 1) % N) * N, row = y * N;
+        for (let x = (y + colour) % 2; x < N; x += 2) {
+          const s = spins[row + x];
+          const nb = spins[row + (x + 1) % N] + spins[row + (x + N - 1) % N] + spins[up + x] + spins[dn + x];
+          const dE = 2 * s * nb;                                 // 0, 4 or 8 when it would cost energy
+          if (dE <= 0 || Math.random() < boltz[dE / 4 - 1]) spins[row + x] = -s;
+        }
+      }
+    }
+    let m = 0; for (let i = 0; i < N * N; i++) m += spins[i];
+    ising.mags.push(Math.abs(m) / (N * N));
+    if (ising.mags.length > 300) ising.mags.shift();
+  }
+  function isingParams() {
+    ising.T = +$("ising-T").value;
+    ising.mags = [];
+    $("ising-T-out").textContent = ising.T.toFixed(2);
+    $("ising-ratio").textContent = fmt(ising.T / TC);
+    $("ising-exact").textContent = fmt(onsager(ising.T));
+    drawIsing(); drawIsingCurve();
+  }
+  function stepIsing() { sweep(); sweep(); }
+  function drawIsing() {
+    const cv = $("ising-lattice");
+    if (cv.width !== N) { cv.width = N; cv.height = N; }
+    const ctx = cv.getContext("2d");
+    if (!ising.img) ising.img = ctx.createImageData(N, N);
+    const up = tok("--fg"), d = ising.img.data;
+    const hex = (c) => { const v = c.startsWith("#") ? c.slice(1) : "000000"; return [0, 2, 4].map((i) => parseInt(v.slice(i, i + 2), 16)); };
+    const [r1, g1, b1] = hex(up), [r0, g0, b0] = hex(tok("--panel"));
+    for (let i = 0; i < N * N; i++) {
+      const on = spins[i] > 0;
+      d[4 * i] = on ? r1 : r0; d[4 * i + 1] = on ? g1 : g0; d[4 * i + 2] = on ? b1 : b0; d[4 * i + 3] = 255;
+    }
+    ctx.putImageData(ising.img, 0, 0);
+    if (ising.mags.length) {
+      const avg = ising.mags.slice(-200).reduce((a, b) => a + b, 0) / Math.min(200, ising.mags.length);
+      $("ising-m").textContent = fmt(avg);
+      if (ising.mags.length % 10 === 0) drawIsingCurve(avg);
+    } else $("ising-m").textContent = "–";
+  }
+  function drawIsingCurve(avg) {
+    const { ctx, w, h } = prep($("ising-curve"));
+    const { X, Y } = axes(ctx, w, h, [1, 4], [0, 1.05], { xlabel: "temperature T", ylabel: "|m|", nx: 6, ny: 4, l: 36 });
+    const pts = [];
+    for (let i = 0; i <= 300; i++) { const T = 1 + 3 * i / 300; pts.push([X(T), Y(onsager(T))]); }
+    line(ctx, pts, tok("--accent"), 2);
+    line(ctx, [[X(TC), Y(0)], [X(TC), Y(1.05)]], tok("--muted"), 1, [2, 4]);
+    ctx.fillStyle = tok("--muted"); ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText("T_c", X(TC) + 4, Y(1.0));
+    if (avg !== undefined) dot(ctx, X(ising.T), Y(avg), 6, tok("--accent-2"));
+  }
+  $("ising-T").addEventListener("input", isingParams);
+  $("ising-hot").addEventListener("click", () => { isingFill(true); drawIsing(); });
+  $("ising-cold").addEventListener("click", () => { isingFill(false); drawIsing(); });
+  const setIsing = registerSim("ising", "ising-play", stepIsing, drawIsing);
+  isingFill(false);                                           // ordered start: no stuck stripe domains
+
   // ---------- redraw on resize and theme change ----------
-  function redrawAll() { pendParams(); tunParams(); slitParams(); }
+  function redrawAll() { pendParams(); tunParams(); slitParams(); orbParams(); lorParams(); isingParams(); }
   let raf = 0;
-  const schedule = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { drawPendCurve(); drawPend(); tunParams(); slitParams(); }); };
+  const schedule = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { drawPendCurve(); drawPend(); tunParams(); slitParams(); drawOrb(); drawOrbCurve(); drawLor(); drawLorCurve(); drawIsing(); drawIsingCurve(); }); };
   new ResizeObserver(schedule).observe(document.querySelector(".wrap"));
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", schedule);
   new MutationObserver(schedule).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
   redrawAll();
   setPlaying(!reduceMotion.matches);
+  [setOrb, setLor, setIsing].forEach((set) => set(!reduceMotion.matches));
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
 
 })();

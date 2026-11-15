@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import PowerNorm
 
-from . import mechanics, plotting, quantum, statmech
+from . import kinetic, mechanics, plotting, quantum, statmech
 
 ANIMATIONS: dict = {}
 
@@ -137,3 +137,36 @@ def ising_anim(n_frames):
         title.set_text(rf"Ising at $T_c$, sweep {i + 1}")
 
     return fig, update, range(n_frames)
+
+
+@animation("gas")
+def gas_anim(n_frames):
+    """Discs in a box: every one starts at the same speed and the speeds spread into Maxwell-Boltzmann."""
+    gas = kinetic.gas_box(n=400, dim=2, radius=0.009, t_max=8, save_every=2, seed=4)
+    stride = max(1, (len(gas.t) - 1) // max(1, n_frames - 1))
+    idx = np.arange(0, len(gas.t), stride)[:n_frames]
+    speeds = np.linalg.norm(gas.velocities, axis=-1)
+    kT = gas.temperature()
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7.6, 3.8), gridspec_kw={"width_ratios": [1, 1]})
+    ax1.set(xlim=(0, 1), ylim=(0, 1), aspect="equal", xticks=[], yticks=[])
+    ax1.grid(False)
+    dots = ax1.scatter(*gas.positions[0].T, s=9, c=speeds[0], cmap="plasma", vmin=0, vmax=2.5)
+    bins = np.linspace(0, 3, 31)
+    vs = np.linspace(0, 3, 200)
+    ax2.plot(vs, kinetic.maxwell_boltzmann_speed(vs, kT, dim=2), "k", lw=1.2, label="Maxwell-Boltzmann (2D)")
+    bars = ax2.bar(bins[:-1], np.zeros(30), width=bins[1] - bins[0], align="edge", color="C0", alpha=0.6)
+    ax2.set(xlim=(0, 3), ylim=(0, 2.2), xlabel="speed", yticks=[])
+    ax2.legend(loc="upper right", fontsize=8)
+    label = ax2.set_title("")
+
+    def update(frame):
+        k = idx[frame]
+        dots.set_offsets(gas.positions[k])
+        dots.set_array(speeds[k])
+        window = speeds[max(0, k - 40):k + 1].ravel()       # smooth the histogram over recent steps
+        hist, _ = np.histogram(window, bins=bins, density=True)
+        for bar, h in zip(bars, hist):
+            bar.set_height(h)
+        label.set_text(f"t = {gas.t[k]:.2f}")
+
+    return fig, update, range(len(idx))

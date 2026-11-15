@@ -69,3 +69,16 @@ def test_cyclotron_radius():
     _, r, _ = em.charged_particle(q, m, [0, 0, 0], [0, 0, B], [0, 0, 0], [v, 0, 0], T, n=4001)
     assert np.ptp(r[:, 1]) / 2 == pytest.approx(m * v / (q * B), rel=1e-6)
     assert np.allclose(r[-1], 0, atol=1e-6)
+
+
+def test_point_charge_field_is_minus_gradient_of_potential():
+    x = np.linspace(-3, 3, 601)
+    X, Y = np.meshgrid(x, x)
+    charges, positions = [1.0, -2.0], [(-1.05, 0.3), (1.15, -0.4)]
+    V = em.point_charge_potential(charges, positions, X, Y)
+    Ex, Ey = em.point_charge_field(charges, positions, X, Y)
+    dVdy, dVdx = np.gradient(V, x, x)
+    far = (np.hypot(X + 1.05, Y - 0.3) > 0.5) & (np.hypot(X - 1.15, Y + 0.4) > 0.5)
+    far[[0, -1], :] = far[:, [0, -1]] = False          # np.gradient is only first order on the edges
+    assert np.allclose(-dVdx[far], Ex[far], rtol=1e-3, atol=1e-3)
+    assert np.allclose(-dVdy[far], Ey[far], rtol=1e-3, atol=1e-3)

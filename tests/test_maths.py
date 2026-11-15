@@ -85,3 +85,43 @@ def test_plotting_save_and_gif(tmp_path):
     (line,) = ax.plot([0, 1], [0, 1])
     gif = plotting.save_gif(fig, lambda i: line.set_ydata([0, i]), range(3), tmp_path / "a.gif", fps=5)
     assert gif.stat().st_size > 0
+
+
+# ---- root finding: edge cases -----------------------------------------------------
+
+@pytest.mark.parametrize("a,b,root", [(0, 1, 0.0), (-1, 0, 0.0), (0.5, 3, 0.5), (-2, 0.25, 0.25)])
+def test_bisect_returns_an_exact_endpoint_root(a, b, root):
+    assert numerics.bisect(lambda x: x - root, a, b) == root
+
+
+def test_bisect_accepts_reversed_bracket():
+    assert numerics.bisect(lambda x: x * x - 2, 2, 0) == pytest.approx(np.sqrt(2))
+
+
+def test_bisect_is_not_fooled_by_underflow():
+    # f(a) * f(m) underflows to -0.0 here, which used to send the search the wrong way.
+    assert numerics.bisect(lambda x: 1e-200 * (x - 0.3), 0, 1) == pytest.approx(0.3, abs=1e-11)
+
+
+def test_bisect_rejects_non_finite_values():
+    with pytest.raises(ValueError, match="not finite"):
+        numerics.bisect(lambda x: float("nan"), 0, 1)
+    with pytest.raises(ValueError, match="not finite"):
+        numerics.bisect(lambda x: 1 / (x - 0.5) if x != 0.5 else float("inf"), 0, 1)
+
+
+def test_bisect_reports_too_few_iterations():
+    with pytest.raises(RuntimeError, match="did not reach"):
+        numerics.bisect(lambda x: x - 0.3, 0, 1, max_iter=5)
+
+
+def test_bisect_stops_at_float_resolution_for_tiny_tol():
+    root = numerics.bisect(lambda x: x - 1e6 * np.sqrt(2), 0, 2e6, tol=1e-30)
+    assert root == pytest.approx(1e6 * np.sqrt(2), rel=1e-15)
+
+
+def test_newton_flags_zero_derivative_and_divergence():
+    with pytest.raises(ZeroDivisionError):
+        numerics.newton(lambda x: x * x - 2, lambda x: 2 * x, 0.0)
+    with pytest.raises(RuntimeError):
+        numerics.newton(lambda x: x * x + 1, lambda x: 2 * x, 0.5, max_iter=50)   # no real root

@@ -187,8 +187,39 @@ def test_gram_schmidt_orthonormal_and_drops_dependent():
 def test_power_iteration_dominant_eigenpair():
     A = np.array([[4.0, 1.0, 0.0], [1.0, 3.0, 1.0], [0.0, 1.0, 2.0]])
     lam, v = linalg.power_iteration(A)
-    assert lam == pytest.approx(np.linalg.eigvalsh(A).max(), abs=1e-9)
-    assert np.allclose(A @ v, lam * v, atol=1e-5)
+    assert lam == pytest.approx(np.linalg.eigvalsh(A).max(), abs=1e-11)
+    assert np.linalg.norm(A @ v - lam * v) <= 1e-12 * np.linalg.norm(A)
+    assert np.linalg.norm(v) == pytest.approx(1.0)
+
+
+def test_power_iteration_negative_and_nonsymmetric_dominant_eigenvalues():
+    lam, v = linalg.power_iteration(np.diag([-3.0, 1.0, 0.5]))
+    assert lam == pytest.approx(-3.0)
+    assert abs(v[0]) == pytest.approx(1.0)
+    A = np.array([[2.0, 1.0], [0.0, 1.0]])                 # eigenvalues 2 and 1, not symmetric
+    lam, v = linalg.power_iteration(A)
+    assert lam == pytest.approx(2.0)
+    assert np.allclose(A @ v, 2 * v, atol=1e-10)
+
+
+@pytest.mark.parametrize("A", [np.zeros((3, 3)), np.array([[0.0, 1.0], [0.0, 0.0]])], ids=["zero", "nilpotent"])
+def test_power_iteration_all_zero_eigenvalues(A):
+    lam, v = linalg.power_iteration(A)
+    assert lam == 0.0
+    assert np.allclose(A @ v, 0) and np.linalg.norm(v) == pytest.approx(1.0)
+
+
+@pytest.mark.parametrize("A", [linalg.rotation(0.7), np.diag([2.0, -2.0])], ids=["complex-pair", "plus-minus"])
+def test_power_iteration_raises_when_no_eigenvalue_dominates(A):
+    with pytest.raises(RuntimeError, match="did not converge"):
+        linalg.power_iteration(A, iters=500)
+
+
+def test_power_iteration_rejects_bad_input():
+    with pytest.raises(ValueError):
+        linalg.power_iteration(np.ones((2, 3)))
+    with pytest.raises(ValueError):
+        linalg.power_iteration([[1.0, np.nan], [0.0, 1.0]])
 
 
 def test_unit_circle_image_semi_axes_are_singular_values():

@@ -14,6 +14,8 @@ dependencies = ["numpy", "scipy", "sympy", "matplotlib"]
 
 [project.optional-dependencies]
 dev = ["pytest", "pytest-cov", "jupyterlab", "ipykernel", "pandas", "nbconvert", "pdoc", "build"]
+# Browser tests of the explorer (tests/test_explorer.py); also run `python -m playwright install chromium`.
+browser = ["playwright"]
 
 [project.urls]
 Homepage = "https://stativesh.github.io/quantum-playground/"

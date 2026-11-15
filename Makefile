@@ -1,6 +1,6 @@
 PY ?= .venv/bin/python
 
-.PHONY: install test test-all coverage demos animations lab notebooks-check clean readme-media site api dist
+.PHONY: install test test-all test-browser coverage demos animations lab notebooks-check clean readme-media site api dist
 
 install:
 	python3 -m venv .venv
@@ -15,6 +15,10 @@ test:
 # Everything, as CI runs it.
 test-all:
 	$(PY) -m pytest -m ""
+
+# Only the explorer's browser tests (needs: pip install -e ".[browser]" && python -m playwright install chromium).
+test-browser:
+	QPLAY_REQUIRE_BROWSER=1 $(PY) -m pytest -m "" tests/test_explorer.py
 
 # Everything, with a line-by-line coverage report (fails under the threshold in pyproject.toml).
 coverage:

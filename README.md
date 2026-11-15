@@ -6,7 +6,7 @@
 
 A physics and maths playground in Python: simulations, symbolic mechanics and Jupyter notebooks, with tests that check every solver against known analytic results.
 
-**[Website](https://stativesh.github.io/quantum-playground/)**: every figure and animation, the executed notebooks, and an [interactive explorer](https://stativesh.github.io/quantum-playground/explorer/) with sliders for the pendulum, quantum tunnelling and the double slit.
+**[Website](https://stativesh.github.io/quantum-playground/)**: every figure and animation, the executed notebooks and lessons, the [API reference](https://stativesh.github.io/quantum-playground/api/), and an [interactive explorer](https://stativesh.github.io/quantum-playground/explorer/) with live experiments: the pendulum, quantum tunnelling, the double slit, Kepler orbits, the Lorenz attractor and the Ising model.
 
 <table>
   <tr>
@@ -53,7 +53,11 @@ python3 -m venv .venv
 | `qplay.mechanics` | damped/driven oscillator, nonlinear and double pendulum, projectile with drag, N-body gravity (figure-eight orbit) |
 | `qplay.waves` | 1D wave equation, heat equation (Crank-Nicolson), Fourier series, spectra |
 | `qplay.em` | point-charge fields, Laplace solver, charged particle in $\mathbf E$ and $\mathbf B$ fields |
-| `qplay.quantum` | Schrödinger eigenstates for any 1D potential, split-step dynamics in 1D and 2D with absorbing edges, tunnelling, the double-slit experiment, hydrogen orbitals $R_{nl}Y_l^m$, spin-1/2 |
+| `qplay.quantum` | Schrödinger eigenstates for any 1D potential, split-step dynamics in 1D and 2D with absorbing edges, tunnelling, the double-slit experiment, hydrogen orbitals $R_{nl}Y_l^m$, spin-1/2, oscillator eigenstates and coherent states |
+| `qplay.atomic` | angular momentum matrices, spin-orbit coupling, Zeeman effect from Landé $g_J$ to Paschen-Back, hydrogen fine structure against the Dirac energy |
+| `qplay.kinetic` | hard-sphere gas in a box: Maxwell-Boltzmann distribution emerging from collisions, pressure from wall impulses, $pV = Nk_BT$ with the hard-sphere correction |
+| `qplay.nuclear` | half-life, Bateman decay chains, matrix-exponential chains, Monte Carlo decay |
+| `qplay.circuits` | RC charging and discharging, series RLC circuit, impedance, resonance and $Q$ factor |
 | `qplay.statmech` | 2D Ising model (Metropolis), Onsager's exact magnetisation and $T_c = 2/\ln(1+\sqrt2)$ |
 | `qplay.relativity` | time dilation, length contraction, velocity addition, Lorentz boosts |
 | `qplay.chaos` | Lorenz system, logistic map, Lyapunov exponent, Mandelbrot and Julia sets |
@@ -82,10 +86,17 @@ Guided lessons in `lessons/`, each mapped to specification points, with exam-sty
 |---|---|
 | [`01_simple_harmonic_motion`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/01_simple_harmonic_motion.ipynb) | SHM equations and phase, spring and pendulum periods, energy, damping, resonance |
 | [`02_projectile_motion`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/02_projectile_motion.ipynb) | independent horizontal and vertical motion, resolving velocity, time of flight, range and the 45° rule, launches from a height, air resistance |
+| [`03_circular_motion_and_orbits`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/03_circular_motion_and_orbits.ipynb) | centripetal acceleration, orbital speed and period, geostationary orbits, Kepler's third law on a log-log plot, orbital energy and escape velocity |
+| [`04_stationary_waves`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/04_stationary_waves.ipynb) | nodes and antinodes, harmonics on a string, why a plucked string is missing some harmonics, open and closed pipes, Fourier series |
+| [`05_electric_fields`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/05_electric_fields.ipynb) | Coulomb's law, field lines and equipotentials, $E = -dV/dr$, uniform fields between plates and edge effects |
+| [`06_charged_particles_in_fields`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/06_charged_particles_in_fields.ipynb) | parabolic paths in $E$, circles in $B$ with $r = mv/BQ$, cyclotron period, velocity selector, mass spectrometer, helices |
+| [`07_wave_particle_duality`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/07_wave_particle_duality.ipynb) | photoelectric effect, Young's double slit, de Broglie wavelength, a simulated electron through two slits, building the pattern one particle at a time |
+| [`08_special_relativity`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/08_special_relativity.ipynb) | postulates, time dilation and the muon experiment, length contraction, velocity addition, relativity of simultaneity, $E = \gamma mc^2$ |
+| [`09_ideal_gases_and_kinetic_theory`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/09_ideal_gases_and_kinetic_theory.ipynb) | gas laws, a simulated gas relaxing to Maxwell-Boltzmann, pressure from collisions, temperature as molecular kinetic energy, when gases stop being ideal |
 
 ## Demos and animations
 
-`qplay list` shows everything. Twenty static figures (`qplay run NAME`), including `hydrogen`, `double-slit`, `ising`, `phase-portrait`, `domain-coloring` and `linear-map`, and five GIFs (`qplay animate NAME`): `double-pendulum`, `wavepacket`, `figure-eight`, `double-slit` and `ising`.
+`qplay list` shows everything. Twenty-five static figures (`qplay run NAME`), including `hydrogen`, `double-slit`, `ising`, `maxwell-boltzmann`, `coherent-state`, `zeeman`, `decay-chain` and `rlc-resonance`, and six GIFs (`qplay animate NAME`): `double-pendulum`, `wavepacket`, `figure-eight`, `double-slit`, `ising` and `gas`.
 
 ## Example
 
@@ -120,9 +131,12 @@ It appears in `qplay list` and is covered by the test suite automatically. Anima
 
 ## Development
 
-See `CLAUDE.md` for conventions. CI runs the tests on Python 3.10, 3.12 and 3.13 and executes the notebooks.
+See `CLAUDE.md` for conventions.
 
-The website is built by `.github/workflows/pages.yml` on every push to `main`: `scripts/build_site.py` renders all demos and animations, executes the notebooks to HTML and copies the explorer from `site_src/`. Build it locally with `make site` (output in `_site/`). The README images live in `docs/images/` and are regenerated with `make readme-media`.
+- `make test` is the fast loop: it skips tests marked `slow` (the site build and the biggest simulations). `make test-all` runs everything, and `make coverage` adds a line-by-line coverage report that fails below 95%.
+- CI runs every test with coverage on Python 3.10, 3.12 and 3.13, and executes the notebooks and lessons.
+- The website is built by `.github/workflows/pages.yml` on every push to `main`: `scripts/build_site.py` renders all demos and animations, executes the notebooks to HTML, builds the API reference from the docstrings with pdoc, and copies the explorer from `site_src/`. Build it locally with `make site` (output in `_site/`), or just the API reference with `make api`. The README images live in `docs/images/` and are regenerated with `make readme-media`.
+- Releases: the distribution is called `quantum-playground` (the import name is still `qplay`; the name `qplay` is taken on PyPI). Pushing a tag such as `v0.3.0` runs `.github/workflows/release.yml`, which checks the tag matches `qplay.__version__`, runs the tests, builds the wheel and publishes it to PyPI through a trusted publisher. `make dist` builds the same files locally.
 
 ## License
 

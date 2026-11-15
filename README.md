@@ -82,6 +82,18 @@ python3 -m venv .venv
 
 Guided lessons in `lessons/`, each mapped to specification points, with exam-style questions that check your answers and worked solutions at the end. Every lesson and notebook has an **Open in Colab** button, so it runs in a browser with nothing to install.
 
+Each lesson opens by saying which earlier lessons it builds on (and why) and which it leads to. Suggested routes:
+
+| Route | Lessons, in order |
+|---|---|
+| Mechanics | 2 projectile motion → 3 circular motion and orbits → 1 simple harmonic motion |
+| Waves to quantum | 1 simple harmonic motion → 4 stationary waves → 7 wave–particle duality |
+| Fields | 3 circular motion and orbits → 5 electric fields → 6 charged particles in fields |
+| Modern physics | 5 electric fields → 7 wave–particle duality → 8 special relativity |
+| Thermal physics | 3 circular motion and orbits → 9 ideal gases and kinetic theory |
+
+The prerequisites and routes live in `lessons/path.json`; `python scripts/lesson_path.py --write` copies them into the lesson headers, and the tests check that the two agree.
+
 | Lesson | Covers |
 |---|---|
 | [`01_simple_harmonic_motion`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/01_simple_harmonic_motion.ipynb) | SHM equations and phase, spring and pendulum periods, energy, damping, resonance |
@@ -133,7 +145,8 @@ It appears in `qplay list` and is covered by the test suite automatically. Anima
 
 See `CLAUDE.md` for conventions.
 
-- `make test` is the fast loop: it skips tests marked `slow` (the site build and the biggest simulations). `make test-all` runs everything, and `make coverage` adds a line-by-line coverage report that fails below 95%.
+- `make test` is the fast loop: it skips tests marked `slow` (the site build, the biggest simulations and the browser tests). `make test-all` runs everything, and `make coverage` adds a line-by-line coverage report that fails below 95%.
+- `tests/test_explorer.py` drives the explorer in headless Chromium: it moves sliders and checks every readout against the Python package or an analytic formula, and lets the animations run to check what they converge to (orbital period, Lorenz separation, Ising magnetisation). Install with `pip install -e ".[browser]"` and `python -m playwright install chromium`, then `make test-browser`. Without Playwright these tests are skipped; CI installs it and fails if the browser is missing.
 - CI runs every test with coverage on Python 3.10, 3.12 and 3.13, and executes the notebooks and lessons.
 - The website is built by `.github/workflows/pages.yml` on every push to `main`: `scripts/build_site.py` renders all demos and animations, executes the notebooks to HTML, builds the API reference from the docstrings with pdoc, and copies the explorer from `site_src/`. Build it locally with `make site` (output in `_site/`), or just the API reference with `make api`. The README images live in `docs/images/` and are regenerated with `make readme-media`.
 - Releases: the distribution is called `quantum-playground` (the import name is still `qplay`; the name `qplay` is taken on PyPI). Pushing a tag such as `v0.3.0` runs `.github/workflows/release.yml`, which checks the tag matches `qplay.__version__`, runs the tests, builds the wheel and publishes it to PyPI through a trusted publisher. `make dist` builds the same files locally.

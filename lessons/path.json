@@ -20,13 +20,19 @@
            "builds_on": [{"lesson": "02", "for": "adding velocities and changing frame"},
                          {"lesson": "05", "for": "the energy eV gained across a potential difference"}]},
     "09": {"assumes": "momentum, kinetic energy and the kelvin scale",
-           "builds_on": [{"lesson": "03", "for": "force as rate of change of momentum and kinetic energy"}]}
+           "builds_on": [{"lesson": "03", "for": "force as rate of change of momentum and kinetic energy"}]},
+    "10": {"assumes": "the structure of the nucleus and alpha, beta and gamma radiation",
+           "builds_on": [{"lesson": "01", "for": "exponential decay, first met in damped oscillations"}]},
+    "11": {"assumes": "current, resistance and Kirchhoff's laws",
+           "builds_on": [{"lesson": "05", "for": "potential difference, W = qV and the field between parallel plates"},
+                         {"lesson": "10", "for": "exponential decay, half-life and finding a constant from a log graph"}]}
   },
   "tracks": [
     {"name": "Mechanics", "lessons": ["02", "03", "01"]},
     {"name": "Waves to quantum", "lessons": ["01", "04", "07"]},
-    {"name": "Fields", "lessons": ["03", "05", "06"]},
-    {"name": "Modern physics", "lessons": ["05", "07", "08"]},
-    {"name": "Thermal physics", "lessons": ["03", "09"]}
+    {"name": "Fields", "lessons": ["03", "05", "06", "11"]},
+    {"name": "Modern physics", "lessons": ["05", "07", "08", "10"]},
+    {"name": "Thermal physics", "lessons": ["03", "09"]},
+    {"name": "Exponential change", "lessons": ["01", "10", "11"]}
   ]
 }

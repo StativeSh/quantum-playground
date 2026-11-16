@@ -1,5 +1,6 @@
 """Structural checks on notebooks and lessons (they are executed separately by `make notebooks-check`)."""
 import importlib.util
+import re
 from pathlib import Path
 
 import nbformat
@@ -54,3 +55,54 @@ def test_learning_path_checker_catches_mistakes():
     found = lp.problems(data)
     assert any("does not come before it" in m for m in found)
     assert any("before its prerequisite" in m for m in found)
+
+
+PREDICT = re.compile(r"^\*\*Predict \(P(\d+)\)\.\*\* ")
+EXPLAIN = re.compile(r"^\*\*Explain \(P(\d+)\)\.\*\* ")
+
+
+def predict_explain_structure(cells):
+    """Problems with a lesson's predict-run-explain prompts (empty list if they are well formed)."""
+    problems, numbers = [], []
+    for i, cell in enumerate(cells):
+        m = PREDICT.match(cell.source) if cell.cell_type == "markdown" else None
+        if not m:
+            continue
+        n = int(m.group(1))
+        numbers.append(n)
+        nxt = cells[i + 1] if i + 1 < len(cells) else None
+        after = cells[i + 2] if i + 2 < len(cells) else None
+        if nxt is None or nxt.cell_type != "code":
+            problems.append(f"P{n}: the Predict box must come straight before the experiment's code cell")
+        if after is None or after.cell_type != "markdown" or not (EXPLAIN.match(after.source) and EXPLAIN.match(after.source).group(1) == str(n)):
+            problems.append(f"P{n}: an Explain (P{n}) box must follow the experiment's code cell")
+    if len(numbers) < 2:
+        problems.append(f"needs at least two Predict boxes, found {len(numbers)}")
+    if numbers != list(range(1, len(numbers) + 1)):
+        problems.append(f"Predict boxes must be numbered P1, P2, ... in order, found {numbers}")
+    text = "\n".join(c.source for c in cells)
+    solutions = text.split("## Worked solutions", 1)[-1]
+    if "### Predict and explain: answers" not in solutions:
+        problems.append("missing '### Predict and explain: answers' after the worked solutions")
+    for n in numbers:
+        if f"**P{n}.**" not in solutions.split("### Predict and explain: answers", 1)[-1]:
+            problems.append(f"no answer for P{n}")
+    return problems
+
+
+@pytest.mark.parametrize("path", sorted(ROOT.glob("lessons/*.ipynb")), ids=lambda p: p.name)
+def test_lessons_have_predict_run_explain_prompts(path):
+    """Before key experiments students commit to a prediction, run it, then explain; answers come at the end."""
+    assert predict_explain_structure(nbformat.read(path, as_version=4).cells) == []
+
+
+def test_predict_explain_checker_catches_mistakes():
+    md, code = nbformat.v4.new_markdown_cell, nbformat.v4.new_code_cell
+    good = [md("**Predict (P1).** a?"), code("x = 1"), md("**Explain (P1).** why?"),
+            md("**Predict (P2).** b?"), code("y = 2"), md("**Explain (P2).** why?"),
+            md("## Worked solutions"), md("### Predict and explain: answers\n\n**P1.** a\n\n**P2.** b")]
+    assert predict_explain_structure(good) == []
+    assert any("straight before" in p for p in predict_explain_structure([good[0], good[2]] + good[3:]))
+    assert any("Explain (P2)" in p for p in predict_explain_structure(good[:5] + good[6:]))
+    assert any("no answer for P2" in p for p in predict_explain_structure(good[:7] + [md("### Predict and explain: answers\n\n**P1.** a")]))
+    assert any("at least two" in p for p in predict_explain_structure(good[:3] + good[6:]))

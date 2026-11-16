@@ -89,15 +89,16 @@ python3 -m venv .venv
 
 Guided lessons in `lessons/`, each mapped to specification points, with exam-style questions that check your answers and worked solutions at the end. Every lesson and notebook has an **Open in Colab** button, so it runs in a browser with nothing to install.
 
-Each lesson opens by saying which earlier lessons it builds on (and why) and which it leads to. Suggested routes:
+Each lesson opens by saying which earlier lessons it builds on (and why) and which it leads to. Before key experiments a **Predict** box asks students to commit to an answer; after the cell runs, an **Explain** box asks them to account for what happened, with answers at the end. Suggested routes:
 
 | Route | Lessons, in order |
 |---|---|
 | Mechanics | 2 projectile motion → 3 circular motion and orbits → 1 simple harmonic motion |
 | Waves to quantum | 1 simple harmonic motion → 4 stationary waves → 7 wave–particle duality |
-| Fields | 3 circular motion and orbits → 5 electric fields → 6 charged particles in fields |
-| Modern physics | 5 electric fields → 7 wave–particle duality → 8 special relativity |
+| Fields | 3 circular motion and orbits → 5 electric fields → 6 charged particles in fields → 11 capacitors |
+| Modern physics | 5 electric fields → 7 wave–particle duality → 8 special relativity → 10 radioactive decay |
 | Thermal physics | 3 circular motion and orbits → 9 ideal gases and kinetic theory |
+| Exponential change | 1 simple harmonic motion → 10 radioactive decay → 11 capacitors |
 
 The prerequisites and routes live in `lessons/path.json`; `python scripts/lesson_path.py --write` copies them into the lesson headers, and the tests check that the two agree.
 
@@ -112,6 +113,8 @@ The prerequisites and routes live in `lessons/path.json`; `python scripts/lesson
 | [`07_wave_particle_duality`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/07_wave_particle_duality.ipynb) | photoelectric effect, Young's double slit, de Broglie wavelength, a simulated electron through two slits, building the pattern one particle at a time |
 | [`08_special_relativity`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/08_special_relativity.ipynb) | postulates, time dilation and the muon experiment, length contraction, velocity addition, relativity of simultaneity, $E = \gamma mc^2$ |
 | [`09_ideal_gases_and_kinetic_theory`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/09_ideal_gases_and_kinetic_theory.ipynb) | gas laws, a simulated gas relaxing to Maxwell-Boltzmann, pressure from collisions, temperature as molecular kinetic energy, when gases stop being ideal |
+| [`10_radioactive_decay`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/10_radioactive_decay.ipynb) | randomness of single decays, $N = N_0e^{-\lambda t}$, half-life from a log graph, counting statistics, decay chains and secular equilibrium, carbon dating |
+| [`11_capacitors`](https://colab.research.google.com/github/StativeSh/quantum-playground/blob/main/lessons/11_capacitors.ipynb) | $Q = CV$, parallel plates and dielectrics, energy as the area under $Q$–$V$, discharging and charging through a resistor, the time constant, why half the energy is lost |
 
 ## Demos and animations
 

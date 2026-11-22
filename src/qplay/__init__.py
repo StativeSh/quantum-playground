@@ -26,4 +26,4 @@ demos        ready-made figures, run with ``python -m qplay run <name>``
 animations   GIFs, run with ``python -m qplay animate <name>``
 """
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"

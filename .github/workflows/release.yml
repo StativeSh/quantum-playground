@@ -22,6 +22,17 @@ jobs:
           test "v$version" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME but qplay.__version__ is $version"; exit 1; }
       - run: pytest -m ""
       - run: python -m build
+      - name: Exercise the built wheel in a clean environment
+        run: |
+          work=$(mktemp -d)
+          python -m venv "$work/venv"
+          source "$work/venv/bin/activate"
+          pip install dist/*.whl ipykernel nbconvert matplotlib-inline
+          cp lessons/01_simple_harmonic_motion.ipynb "$work/"
+          cd "$work"
+          qplay list
+          python -m ipykernel install --sys-prefix --name wheel-smoke
+          jupyter nbconvert --to notebook --execute --ExecutePreprocessor.kernel_name=wheel-smoke --stdout 01_simple_harmonic_motion.ipynb > /dev/null
       - uses: actions/upload-artifact@v4
         with:
           name: dist

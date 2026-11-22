@@ -295,3 +295,9 @@ def test_double_slit_dark_fringes_match_path_difference():
     predicted = y[(y > 0) & (y < 15)][np.argmin(np.abs(path_diff[(y > 0) & (y < 15)] - lam / 2))]
     assert first_dark == pytest.approx(predicted, abs=0.6)
     assert screen[np.argmin(np.abs(y))] == pytest.approx(1.0, abs=0.02)   # bright centre
+
+
+def test_power_iteration_from_subdominant_eigenvector():
+    lam, v = linalg.power_iteration(np.diag([3., 2.]), v0=[0., 1.])
+    assert lam == pytest.approx(3)
+    assert abs(v[0]) == pytest.approx(1)

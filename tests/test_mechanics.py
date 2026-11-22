@@ -78,3 +78,8 @@ def test_verlet_energy_bounded_over_long_run():
     x, v = integrators.velocity_verlet(lambda x: -x, [1.0], [0.0], t)
     energy = 0.5 * v[:, 0] ** 2 + 0.5 * x[:, 0] ** 2
     assert np.ptp(energy) < 1e-3
+
+
+def test_solve_complex_rotation():
+    t, y = integrators.solve(lambda t, y: 1j * y, [1 + 1j], (0, 2))
+    np.testing.assert_allclose(y[:, 0], (1 + 1j) * np.exp(1j * t), rtol=1e-9)

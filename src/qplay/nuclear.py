@@ -13,7 +13,7 @@ $$N_k(t) = N_0\left(\prod_{i=1}^{k-1}\lambda_i\right)\sum_{i=1}^{k}
 from __future__ import annotations
 
 import numpy as np
-from scipy.linalg import expm
+from scipy.sparse.linalg import expm_multiply
 
 
 def decay_constant(half_life):
@@ -41,12 +41,20 @@ def bateman(N0, lambdas, t):
     if len(np.unique(lam)) != len(lam):
         raise ValueError("Bateman's formula needs distinct decay constants; use decay_chain")
     t = np.atleast_1d(np.asarray(t, float))
-    N = np.zeros((len(t), len(lam)))
+    N = np.empty((len(t), len(lam)))
     for k in range(len(lam)):
-        prefactor = N0 * np.prod(lam[:k])
-        for i in range(k + 1):
-            denom = np.prod([lam[j] - lam[i] for j in range(k + 1) if j != i])
-            N[:, k] += prefactor * np.exp(-lam[i] * t) / denom
+        rates = lam[:k + 1]
+        weights = np.empty(k + 1)
+        for i, rate in enumerate(rates):
+            gaps = rates[rates != rate] - rate
+            with np.errstate(over="ignore", invalid="ignore"):
+                weights[i] = np.prod(lam[:k] / gaps)
+        # For nonnegative times and rates, sum(abs(weights)) bounds the
+        # amplification of rounding errors relative to the initial population.
+        # Switch evaluators before losing more than about three decimal digits.
+        if not np.all(np.isfinite(weights)) or np.sum(np.abs(weights)) > 1000:
+            return decay_chain(N0, lam, t)
+        N[:, k] = N0 * (np.exp(-t[:, None] * rates) @ weights)
     return N
 
 
@@ -63,7 +71,8 @@ def decay_chain(N0, lambdas, t):
     else:
         n0[:] = N0
     M = np.diag(-lam) + np.diag(lam[:-1], -1)
-    return np.array([expm(M * ti) @ n0 for ti in np.atleast_1d(np.asarray(t, float))])
+    times = np.atleast_1d(np.asarray(t, float))
+    return np.array([expm_multiply(M * ti, n0) for ti in times]).reshape(len(times), len(lam))
 
 
 def simulate_decay(N0, lam, t, trials=1, seed=None):

@@ -52,6 +52,11 @@ def power_iteration(A, iters=10_000, tol=1e-12, seed=0, v0=None, restarts=3):
       typical when no single real eigenvalue dominates (a complex pair such as a rotation; or
       $\lambda$ and $-\lambda$, where only special starting vectors converge).
 
+    A supplied start can lie entirely in a subdominant eigenspace. Its converged
+    pair is cross-checked with an independent random start unless its magnitude
+    already reaches the maximum absolute row-sum bound. As with any finite set
+    of starts, the residual alone cannot certify dominance.
+
     ``v0`` is the starting vector (random from ``seed`` if omitted). Raises ``ValueError`` for a
     non-square or non-finite matrix.
     """
@@ -82,6 +87,11 @@ def power_iteration(A, iters=10_000, tol=1e-12, seed=0, v0=None, restarts=3):
             continue
         lam = v @ Bv
         if np.linalg.norm(Bv - lam * v) <= tol * scale:
+            if v0 is not None and abs(lam) + tol * scale < np.linalg.norm(B, ord=np.inf):
+                other_lam, other_v = power_iteration(B, iters=iters, tol=tol,
+                                                     seed=rng, restarts=restarts)
+                if abs(other_lam) > abs(lam):
+                    return s * other_lam, other_v
             return s * lam, v
         v = _unit(Bv)
     raise RuntimeError(f"power iteration did not converge in {iters} steps; "

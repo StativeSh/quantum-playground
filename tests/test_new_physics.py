@@ -280,3 +280,14 @@ def test_decay_chain_from_daughter_only_is_a_single_exponential():
     assert np.allclose(N[:, 0], 0)
     assert np.allclose(N[:, 1], 100 * np.exp(-0.9 * t))
     assert np.allclose(N[:, 1] + N[:, 2], 100)
+
+
+def test_bateman_nearly_equal_rates_with_stable_product():
+    t = np.array([0., 1., 3.])
+    N = nuclear.bateman(1, [1, 1 + 1e-9, 1 + 2e-9, 0], t)
+    # The first three populations approach the equal-rate Poisson solution.
+    expected = np.exp(-t[:, None]) * np.column_stack((np.ones_like(t), t, t**2 / 2))
+    np.testing.assert_allclose(N[:, :3], expected, atol=2e-9, rtol=0)
+    np.testing.assert_array_equal(N[0], [1, 0, 0, 0])
+    np.testing.assert_allclose(N.sum(axis=1), 1, atol=1e-13, rtol=0)
+    assert np.all(N >= 0)

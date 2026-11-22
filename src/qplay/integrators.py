@@ -12,10 +12,11 @@ from scipy.integrate import solve_ivp
 def solve(f, y0, t_span, n=1000, method="DOP853", rtol=1e-10, atol=1e-12, **kwargs):
     """Adaptive integration of ``y' = f(t, y)``, sampled at ``n`` evenly spaced times.
 
+    Supply complex initial values for complex dynamics and a method supporting them.
     Returns ``(t, y)`` with ``y.shape == (n, len(y0))``.
     """
     t_eval = np.linspace(t_span[0], t_span[1], n)
-    sol = solve_ivp(f, t_span, np.atleast_1d(np.asarray(y0, float)), t_eval=t_eval,
+    sol = solve_ivp(f, t_span, np.atleast_1d(np.asarray(y0)), t_eval=t_eval,
                     method=method, rtol=rtol, atol=atol, **kwargs)
     if not sol.success:
         raise RuntimeError(sol.message)

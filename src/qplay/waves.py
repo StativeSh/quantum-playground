@@ -83,5 +83,8 @@ def fourier_sum(a0, a, b, x, period):
 def spectrum(signal, dt):
     """One-sided amplitude spectrum. Returns ``(frequencies, amplitudes)``."""
     signal = np.asarray(signal, float)
-    amp = np.abs(np.fft.rfft(signal)) * 2 / len(signal)
+    amp = np.abs(np.fft.rfft(signal)) / len(signal)
+    # Only positive frequencies with a distinct negative partner are doubled.
+    paired_end = -1 if len(signal) % 2 == 0 else None
+    amp[1:paired_end] *= 2
     return np.fft.rfftfreq(len(signal), dt), amp

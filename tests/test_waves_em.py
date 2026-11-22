@@ -82,3 +82,12 @@ def test_point_charge_field_is_minus_gradient_of_potential():
     far[[0, -1], :] = far[:, [0, -1]] = False          # np.gradient is only first order on the edges
     assert np.allclose(-dVdx[far], Ex[far], rtol=1e-3, atol=1e-3)
     assert np.allclose(-dVdy[far], Ey[far], rtol=1e-3, atol=1e-3)
+
+
+@pytest.mark.parametrize("n", [7, 8])
+def test_spectrum_constant_and_highest_bin(n):
+    k = n // 2
+    signal = 2 + 3 * np.cos(2 * np.pi * k * np.arange(n) / n)
+    freqs, amplitude = waves.spectrum(signal, 1)
+    assert freqs[-1] == pytest.approx(k / n)
+    np.testing.assert_allclose(amplitude[[0, -1]], [2, 3])

@@ -149,13 +149,14 @@ img { max-width: 100%; }
   </header>
 
   <!-- ===================== Pendulum ===================== -->
-  <section class="experiment" aria-labelledby="pend-h">
+  <section class="experiment" id="pendulum" aria-labelledby="pend-h">
     <div class="side">
       <h2 id="pend-h">Pendulum period</h2>
-      <p>The familiar <math><msub><mi>T</mi><mn>0</mn></msub><mo>=</mo><mn>2</mn><mi>π</mi><msqrt><mrow><mi>L</mi><mo>/</mo><mi>g</mi></mrow></msqrt></math> assumes small swings. Raise the amplitude and the real pendulum falls behind.</p>
+      <p>One period is the time for a full swing out and back. Predict what will happen to the exact period when you double the starting angle from 5° to 10°.</p>
+      <p>Keep the length at 1 m. Read the exact period at 5°, then move the amplitude slider to 10°. Now try 60° and compare it with 5°. At which angle does the small-angle period come closest?</p>
       <div class="control">
         <label for="pend-amp">Amplitude <output id="pend-amp-out" for="pend-amp"></output></label>
-        <input type="range" id="pend-amp" min="1" max="178" step="1" value="120">
+        <input type="range" id="pend-amp" min="1" max="178" step="1" value="5">
       </div>
       <div class="control">
         <label for="pend-len">Length <output id="pend-len-out" for="pend-len"></output></label>
@@ -166,6 +167,7 @@ img { max-width: 100%; }
         <dt>Small-angle period</dt><dd id="pend-T0"></dd>
         <dt>Ratio</dt><dd id="pend-ratio"></dd>
       </dl>
+      <p><a href="../lessons/01_simple_harmonic_motion.html#2.-Two-systems-you-must-know">Explore the small-angle approximation in the simple harmonic motion lesson</a>. Why does it predict the period more accurately at 5° than at 60°?</p>
       <div class="formula" aria-label="Exact period formula">
         <math display="block"><mi>T</mi><mo>=</mo><mn>4</mn><msqrt><mfrac><mi>L</mi><mi>g</mi></mfrac></msqrt><mspace width="0.2em"/><mi>K</mi><mo>(</mo><msup><mi>sin</mi><mn>2</mn></msup><mfrac><msub><mi>θ</mi><mn>0</mn></msub><mn>2</mn></mfrac><mo>)</mo></math>
       </div>

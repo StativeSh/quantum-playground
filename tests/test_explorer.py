@@ -122,7 +122,7 @@ def test_reduced_motion_starts_paused(browser):
 
 # ---- pendulum ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("degrees,length", [(10, 1.5), (90, 1.0), (170, 0.5)])
+@pytest.mark.parametrize("degrees,length", [(5, 1.0), (10, 1.0), (60, 1.0), (10, 1.5), (90, 1.0), (170, 0.5)])
 def test_pendulum_period_matches_python(page, degrees, length):
     set_slider(page, "pend-amp", degrees)
     set_slider(page, "pend-len", length)

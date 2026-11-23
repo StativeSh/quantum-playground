@@ -160,6 +160,30 @@ def test_tunnelling_transmission_matches_exact_formula(page, E, V0, a):
 
 # ---- double slit ------------------------------------------------------------------------
 
+def test_double_slit_saved_measurement(page):
+    assert page.is_disabled("#slit-save")
+    page.click("#slit-mark")
+    page.click("#slit-mark")
+    first = number(page, "slit-measured")
+    assert first == pytest.approx(2.128, rel=0.02)
+    page.click("#slit-save")
+    reference = text(page, "slit-reference")
+
+    set_slider(page, "slit-d", 0.50)
+    assert text(page, "slit-reference") == reference
+    assert page.is_disabled("#slit-save")
+    assert text(page, "slit-comparison") == ""
+    page.click("#slit-mark")
+    page.click("#slit-mark")
+    ratio = number(page, "slit-measured") / first
+    assert ratio == pytest.approx(0.5, abs=0.01)
+    assert number(page, "slit-comparison") == pytest.approx(ratio, abs=0.001)
+    assert "prediction 0.500" in text(page, "slit-comparison")
+    page.click("#slit-save")
+    assert text(page, "slit-reference") != reference
+    assert number(page, "slit-comparison") == 1
+
+
 # (532, 0.40, 0.08) has d/w = 5 exactly: the 5th-order fringe sits on the envelope zero and must not count.
 @pytest.mark.parametrize("lam_nm,d_mm,w_mm,L", [(600, 0.30, 0.05, 2.0), (450, 0.80, 0.03, 1.0), (700, 0.12, 0.08, 3.0), (532, 0.40, 0.08, 1.0)])
 def test_double_slit_readouts(page, lam_nm, d_mm, w_mm, L):

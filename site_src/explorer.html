@@ -117,7 +117,8 @@ button {
   justify-self: start; font: inherit; font-size: 14px; font-weight: 500; color: var(--fg);
   background: transparent; border: 1px solid var(--grid); border-radius: 980px; padding: 8px 18px; min-height: 40px; cursor: pointer;
 }
-button:hover { border-color: var(--accent); color: var(--accent); }
+button:disabled { opacity: .55; cursor: default; }
+button:hover:enabled { border-color: var(--accent); color: var(--accent); }
 footer { color: var(--muted); font-size: 13px; max-width: 72ch; display: grid; gap: 6px; }
 code { font-family: var(--font-mono); font-size: 0.92em; }
 
@@ -227,10 +228,10 @@ img { max-width: 100%; }
   </section>
 
   <!-- ===================== Double slit ===================== -->
-  <section class="experiment" aria-labelledby="slit-h">
+  <section class="experiment" id="double-slit" aria-labelledby="slit-h">
     <div class="side">
       <h2 id="slit-h">Young's double slit</h2>
-      <p>Laser light through two slits. Each slit's own diffraction sets the envelope; their interference sets the fine fringes.</p>
+      <p>Predict what will happen to the spacing of the bright fringes if you double the slit separation from 0.25 to 0.50 mm. Will they move closer together, move farther apart, or stay put?</p>
       <div class="control">
         <label for="slit-lam">Wavelength λ <output id="slit-lam-out" for="slit-lam"></output></label>
         <input type="range" id="slit-lam" min="400" max="700" step="1" value="532">
@@ -258,6 +259,17 @@ img { max-width: 100%; }
     </div>
     <div class="plots">
       <canvas id="slit-band" class="c-band" role="img" aria-label="Fringe pattern on the screen in the light's colour"></canvas>
+      <div>
+        <p>Tap the central bright fringe, then its neighbour on the right, or use the marker button. Save their spacing, change only the slit separation, then mark the pair again.</p>
+        <button type="button" id="slit-mark">Mark central fringe</button>
+        <button type="button" id="slit-save" disabled>Save reference</button>
+        <div aria-live="polite">
+          <p id="slit-measured"></p>
+          <p id="slit-reference"></p>
+          <p id="slit-comparison"></p>
+        </div>
+        <a href="../lessons/07_wave_particle_duality.html#young-fringe-spacing">Reproduce the fringe-spacing comparison in Python</a>
+      </div>
       <canvas id="slit-curve" class="c-plot" role="img" aria-label="Intensity across the screen with the single-slit envelope"></canvas>
       <div class="legend">
         <span class="key"><span class="swatch" style="border-color:var(--accent)"></span>intensity</span>
@@ -616,6 +628,25 @@ img { max-width: 100%; }
     const env = Math.abs(beta) < 1e-12 ? 1 : (Math.sin(beta) / beta) ** 2;
     return { I: Math.cos(alpha) ** 2 * env, env };
   }
+  let markedFringes = 0;
+  let measuredSpacing = null;
+  let slitReference = null;
+
+  // Locate the first off-centre maximum of the displayed intensity profile.
+  function firstBrightFringe(s, ymax) {
+    const step = ymax / 12000;
+    let previous = 1, current = intensity(step, s).I;
+    for (let i = 1; i < 12000; i++) {
+      const next = intensity((i + 1) * step, s).I;
+      if (current > previous && current >= next) return i * step;
+      previous = current;
+      current = next;
+    }
+    return null;
+  }
+  function slitScreenLimit(s) {
+    return Math.min(80, 2.2 * s.lam * s.L / s.w * 1e3);
+  }
   function slitParams() {
     const s = slitState();
     $("slit-lam-out").textContent = `${$("slit-lam").value} nm`;
@@ -626,10 +657,22 @@ img { max-width: 100%; }
     $("slit-dy").textContent = `${fmt(dy, 2)} mm`;
     $("slit-env").textContent = `±${fmt(env, 1)} mm`;
     $("slit-n").textContent = `${2 * Math.floor(s.d / s.w - 1e-9) + 1}`;
-    const ymax = Math.min(80, 2.2 * env);
-    drawBand(s, ymax); drawSlitCurve(s, ymax);
+    const ymax = slitScreenLimit(s);
+    const spacing = measuredSpacing;
+    $("slit-mark").disabled = markedFringes === 2;
+    $("slit-mark").textContent = ["Mark central fringe", "Mark next bright fringe", "Both fringes marked"][markedFringes];
+    $("slit-save").disabled = spacing === null;
+    $("slit-save").textContent = slitReference ? "Replace reference" : "Save reference";
+    $("slit-measured").textContent = spacing !== null ? `Measured spacing: ${fmt(spacing, 3)} mm` :
+      markedFringes === 1 ? "Central fringe marked at 0 mm." : "";
+    $("slit-comparison").textContent = "";
+    if (spacing !== null && slitReference) {
+      const predictedRatio = dy / slitReference.predicted;
+      $("slit-comparison").textContent = `Current / reference: measured ${fmt(spacing / slitReference.spacing)} ×; small-angle prediction ${fmt(predictedRatio)} ×.`;
+    }
+    drawBand(s, ymax, spacing); drawSlitCurve(s, ymax);
   }
-  function drawBand(s, ymax) {
+  function drawBand(s, ymax, spacing) {
     const cv = $("slit-band"), { ctx, w, h } = prep(cv);
     const [r, g2, b] = wavelengthRGB(s.lam * 1e9);
     ctx.fillStyle = tok("--screen"); ctx.fillRect(0, 0, w, h);
@@ -639,6 +682,15 @@ img { max-width: 100%; }
       const v = Math.pow(intensity(y, s).I, 0.6);
       ctx.fillStyle = `rgba(${r},${g2},${b},${v})`;
       ctx.fillRect(i, 0, 1.2, h);
+    }
+    if (markedFringes) {
+      ctx.fillStyle = "white";
+      for (const y of spacing === null ? [0] : [0, spacing]) {
+        const x = (1 + y / ymax) * w / 2;
+        ctx.beginPath();
+        ctx.moveTo(x, h - 10); ctx.lineTo(x - 4, h); ctx.lineTo(x + 4, h);
+        ctx.fill();
+      }
     }
   }
   function drawSlitCurve(s, ymax) {
@@ -652,7 +704,41 @@ img { max-width: 100%; }
     line(ctx, E, tok("--accent-2"), 1.2, [5, 4]);
     line(ctx, I, tok("--accent"), 1.6);
   }
-  ["slit-lam", "slit-d", "slit-w", "slit-L"].forEach((id) => $(id).addEventListener("input", slitParams));
+  function markFringe() {
+    markedFringes++;
+    if (markedFringes === 2) {
+      const s = slitState();
+      measuredSpacing = firstBrightFringe(s, slitScreenLimit(s));
+    }
+    slitParams();
+  }
+  $("slit-mark").addEventListener("click", markFringe);
+  $("slit-band").addEventListener("click", (event) => {
+    if (markedFringes === 2) return;
+    const s = slitState(), limit = slitScreenLimit(s);
+    const rect = event.currentTarget.getBoundingClientRect();
+    const position = (2 * (event.clientX - rect.left) / rect.width - 1) * limit;
+    const adjacent = firstBrightFringe(s, limit);
+    const target = markedFringes === 0 ? 0 : adjacent;
+    if (adjacent !== null && Math.abs(position - target) <= adjacent / 2) {
+      markFringe();
+    } else {
+      $("slit-measured").textContent = markedFringes === 0 ?
+        "Start at the bright fringe in the centre." : "Choose the first bright fringe to the right of centre.";
+    }
+  });
+  $("slit-save").addEventListener("click", () => {
+    const s = slitState();
+    const spacing = measuredSpacing;
+    slitReference = { spacing, predicted: s.lam * s.L / s.d * 1e3 };
+    $("slit-reference").textContent = `Reference: ${fmt(spacing)} mm at d = ${fmt(s.d * 1e3, 2)} mm, λ = ${$("slit-lam").value} nm, L = ${fmt(s.L, 2)} m, w = ${fmt(s.w * 1e3)} mm.`;
+    slitParams();
+  });
+  ["slit-lam", "slit-d", "slit-w", "slit-L"].forEach((id) => $(id).addEventListener("input", () => {
+    markedFringes = 0;
+    measuredSpacing = null;
+    slitParams();
+  }));
 
   // ---------- shared animation driver: one requestAnimationFrame loop for every running experiment ----------
   const sims = {};

@@ -9,6 +9,11 @@ import numpy as np
 
 from .integrators import solve
 
+__all__ = [
+    "lorenz", "logistic_map", "bifurcation", "lyapunov_logistic", "escape_time", "mandelbrot",
+    "julia",
+]
+
 
 def lorenz(state0=(1.0, 1.0, 1.0), sigma=10.0, rho=28.0, beta=8 / 3, t_max=40.0, n=4000):
     """Lorenz system. Returns ``(t, y)`` with columns ``x, y, z``."""

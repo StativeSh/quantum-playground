@@ -13,6 +13,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import root
 
+__all__ = [
+    "jacobian", "classify_fixed_point", "fixed_points", "phase_portrait",
+]
+
 
 def jacobian(f, x, h=1e-6):
     """Central-difference Jacobian of ``f`` at ``x``."""

@@ -302,7 +302,8 @@ $lessons
 <section class="wrap section" id="notebooks" style="padding-top: 96px; padding-bottom: 120px; gap: 36px;">
   <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px;">
     <h2 style="font-weight: 700; font-size: clamp(32px, 4vw, 44px); letter-spacing: -0.03em;">$notebooks_heading</h2>
-    <p style="color: var(--muted); max-width: 40ch;">Rebuilt from scratch on every push, so the outputs always match the code.</p>
+    <p>Numerical methods route: <a href="notebooks/01_classical_mechanics.html">integration</a> → <a href="notebooks/03_maths_and_chaos.html">convergence</a> → <a href="notebooks/02_quantum_mechanics.html">eigenstates</a> → <a href="notebooks/04_orbitals_interference_and_phase_space.html">phase space</a>.</p>
+      <p style="color: var(--muted); max-width: 40ch;">Rebuilt from scratch on every push, so the outputs always match the code.</p>
   </div>
   <ol class="notebooks">
 $notebooks
@@ -327,6 +328,8 @@ cd quantum-playground &amp;&amp; make install
     <span>quantum-playground v$version · MIT licensed · built $built from <code>$commit</code></span>
     <span class="links">
       <a href="https://github.com/StativeSh/quantum-playground">GitHub</a>
+      <a href="migration.html">API migration</a>
+      <a href="integrators.html">Which integrator?</a>
       <a href="explorer/">Explorer</a>
       <a href="api/">API reference</a>
       <a href="#notebooks">Notebooks</a>

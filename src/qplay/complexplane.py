@@ -9,6 +9,10 @@ from __future__ import annotations
 import numpy as np
 from matplotlib.colors import hsv_to_rgb
 
+__all__ = [
+    "complex_grid", "domain_coloring", "winding_number",
+]
+
 
 def complex_grid(xlim=(-2, 2), ylim=(-2, 2), n=500):
     X, Y = np.meshgrid(np.linspace(*xlim, n), np.linspace(*ylim, n))

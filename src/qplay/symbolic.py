@@ -16,6 +16,10 @@ from __future__ import annotations
 import numpy as np
 import sympy as sp
 
+__all__ = [
+    "euler_lagrange", "accelerations", "energy_function", "to_numeric_rhs",
+]
+
 
 def euler_lagrange(L, qs, t):
     """Euler-Lagrange expressions (each equal to zero) for coordinates ``qs(t)``."""

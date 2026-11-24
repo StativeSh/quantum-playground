@@ -1,38 +1,233 @@
 {
   "about": "Prerequisites and suggested routes through the lessons. scripts/sync_lesson_path.py copies this into each lesson's first cell; tests/test_notebooks.py checks they agree.",
   "lessons": {
-    "01": {"assumes": "GCSE forces, energy and motion graphs", "builds_on": []},
-    "02": {"assumes": "the suvat equations and resolving a vector into components", "builds_on": []},
-    "03": {"assumes": "Newton's laws and kinetic and potential energy",
-           "builds_on": [{"lesson": "02", "for": "splitting motion into perpendicular components"}]},
-    "04": {"assumes": "the wave equation v = f lambda",
-           "builds_on": [{"lesson": "01", "for": "oscillations, amplitude and phase"}]},
-    "05": {"assumes": "charge, current and potential difference from GCSE",
-           "builds_on": [{"lesson": "03", "for": "inverse-square fields, potential and energy in a field"}]},
-    "06": {"assumes": "Fleming's left-hand rule",
-           "builds_on": [{"lesson": "02", "for": "the parabola from a constant sideways force"},
-                         {"lesson": "03", "for": "centripetal force"},
-                         {"lesson": "05", "for": "uniform fields between plates"}]},
-    "07": {"assumes": "the electromagnetic spectrum and the electronvolt",
-           "builds_on": [{"lesson": "04", "for": "superposition and path difference"},
-                         {"lesson": "05", "for": "energy gained moving through a potential difference, W = qV"}]},
-    "08": {"assumes": "momentum and kinetic energy",
-           "builds_on": [{"lesson": "02", "for": "adding velocities and changing frame"},
-                         {"lesson": "05", "for": "the energy eV gained across a potential difference"}]},
-    "09": {"assumes": "momentum, kinetic energy and the kelvin scale",
-           "builds_on": [{"lesson": "03", "for": "force as rate of change of momentum and kinetic energy"}]},
-    "10": {"assumes": "the structure of the nucleus and alpha, beta and gamma radiation",
-           "builds_on": [{"lesson": "01", "for": "exponential decay, first met in damped oscillations"}]},
-    "11": {"assumes": "current, resistance and Kirchhoff's laws",
-           "builds_on": [{"lesson": "05", "for": "potential difference, W = qV and the field between parallel plates"},
-                         {"lesson": "10", "for": "exponential decay, half-life and finding a constant from a log graph"}]}
+    "01": {
+      "assumes": "GCSE forces, energy and motion graphs",
+      "builds_on": []
+    },
+    "02": {
+      "assumes": "the suvat equations and resolving a vector into components",
+      "builds_on": []
+    },
+    "03": {
+      "assumes": "Newton's laws and kinetic and potential energy",
+      "builds_on": [
+        {
+          "lesson": "02",
+          "for": "splitting motion into perpendicular components"
+        }
+      ]
+    },
+    "04": {
+      "assumes": "the wave equation v = f lambda",
+      "builds_on": [
+        {
+          "lesson": "01",
+          "for": "oscillations, amplitude and phase"
+        }
+      ]
+    },
+    "05": {
+      "assumes": "charge, current and potential difference from GCSE",
+      "builds_on": [
+        {
+          "lesson": "03",
+          "for": "inverse-square fields, potential and energy in a field"
+        }
+      ]
+    },
+    "06": {
+      "assumes": "Fleming's left-hand rule",
+      "builds_on": [
+        {
+          "lesson": "02",
+          "for": "the parabola from a constant sideways force"
+        },
+        {
+          "lesson": "03",
+          "for": "centripetal force"
+        },
+        {
+          "lesson": "05",
+          "for": "uniform fields between plates"
+        }
+      ]
+    },
+    "07": {
+      "assumes": "the electromagnetic spectrum and the electronvolt",
+      "builds_on": [
+        {
+          "lesson": "04",
+          "for": "superposition and path difference"
+        },
+        {
+          "lesson": "05",
+          "for": "energy gained moving through a potential difference, W = qV"
+        }
+      ]
+    },
+    "08": {
+      "assumes": "momentum and kinetic energy",
+      "builds_on": [
+        {
+          "lesson": "02",
+          "for": "adding velocities and changing frame"
+        },
+        {
+          "lesson": "05",
+          "for": "the energy eV gained across a potential difference"
+        }
+      ]
+    },
+    "09": {
+      "assumes": "momentum, kinetic energy and the kelvin scale",
+      "builds_on": [
+        {
+          "lesson": "03",
+          "for": "force as rate of change of momentum and kinetic energy"
+        }
+      ]
+    },
+    "10": {
+      "assumes": "the structure of the nucleus and alpha, beta and gamma radiation",
+      "builds_on": [
+        {
+          "lesson": "01",
+          "for": "exponential decay, first met in damped oscillations"
+        }
+      ]
+    },
+    "11": {
+      "assumes": "current, resistance and Kirchhoff's laws",
+      "builds_on": [
+        {
+          "lesson": "05",
+          "for": "potential difference, W = qV and the field between parallel plates"
+        },
+        {
+          "lesson": "10",
+          "for": "exponential decay, half-life and finding a constant from a log graph"
+        }
+      ]
+    },
+    "12": {
+      "assumes": "resolving velocity into components",
+      "builds_on": [
+        {
+          "lesson": "02",
+          "for": "resolving velocity into components"
+        }
+      ]
+    },
+    "13": {
+      "assumes": "circular motion and centripetal acceleration",
+      "builds_on": [
+        {
+          "lesson": "03",
+          "for": "circular motion and centripetal acceleration"
+        }
+      ]
+    },
+    "14": {
+      "assumes": "magnetic forces and field direction",
+      "builds_on": [
+        {
+          "lesson": "06",
+          "for": "magnetic forces and field direction"
+        }
+      ]
+    },
+    "15": {
+      "assumes": "interference and path difference",
+      "builds_on": [
+        {
+          "lesson": "07",
+          "for": "interference and path difference"
+        }
+      ]
+    },
+    "16": {
+      "assumes": "thermal energy and temperature",
+      "builds_on": [
+        {
+          "lesson": "09",
+          "for": "thermal energy and temperature"
+        }
+      ]
+    },
+    "17": {
+      "assumes": "proton and nucleon numbers",
+      "builds_on": [
+        {
+          "lesson": "10",
+          "for": "proton and nucleon numbers"
+        }
+      ]
+    }
   },
   "tracks": [
-    {"name": "Mechanics", "lessons": ["02", "03", "01"]},
-    {"name": "Waves to quantum", "lessons": ["01", "04", "07"]},
-    {"name": "Fields", "lessons": ["03", "05", "06", "11"]},
-    {"name": "Modern physics", "lessons": ["05", "07", "08", "10"]},
-    {"name": "Thermal physics", "lessons": ["03", "09"]},
-    {"name": "Exponential change", "lessons": ["01", "10", "11"]}
+    {
+      "name": "Mechanics",
+      "lessons": [
+        "02",
+        "03",
+        "01",
+        "12",
+        "13"
+      ]
+    },
+    {
+      "name": "Waves to quantum",
+      "lessons": [
+        "01",
+        "04",
+        "07",
+        "15"
+      ]
+    },
+    {
+      "name": "Fields",
+      "lessons": [
+        "03",
+        "05",
+        "06",
+        "11"
+      ]
+    },
+    {
+      "name": "Modern physics",
+      "lessons": [
+        "05",
+        "07",
+        "08",
+        "10",
+        "17"
+      ]
+    },
+    {
+      "name": "Thermal physics",
+      "lessons": [
+        "03",
+        "09",
+        "16"
+      ]
+    },
+    {
+      "name": "Exponential change",
+      "lessons": [
+        "01",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "name": "Electromagnetism",
+      "lessons": [
+        "05",
+        "06",
+        "14",
+        "11"
+      ]
+    }
   ]
 }

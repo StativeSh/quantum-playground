@@ -11,6 +11,10 @@ from __future__ import annotations
 import numpy as np
 import sympy as sp
 
+__all__ = [
+    "hamilton_equations", "legendre_transform", "to_numeric_rhs", "to_numeric_energy",
+]
+
 
 def hamilton_equations(H, qs, ps):
     """Return ``(qdot, pdot)`` as lists of SymPy expressions."""

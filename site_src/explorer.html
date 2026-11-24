@@ -146,7 +146,7 @@ img { max-width: 100%; }
   <header>
     <nav class="glassbar" aria-label="Site"><a class="brand" href="../">← quantum-playground</a><span class="eyebrow">Interactive explorer</span></nav>
     <h1>Quantum Playground Explorer</h1>
-    <p class="lede">Six experiments from the <a href="https://github.com/StativeSh/quantum-playground">quantum-playground</a> Python package, recomputed live as you drag. Each one puts an exact result next to the approximation it replaces.</p>
+    <p class="lede">Eight experiments from the <a href="https://github.com/StativeSh/quantum-playground">quantum-playground</a> Python package, recomputed live as you drag. Each one puts an exact result next to the approximation it replaces.</p>
   </header>
 
   <!-- ===================== Pendulum ===================== -->
@@ -194,6 +194,7 @@ img { max-width: 100%; }
     <div class="side">
       <h2 id="tun-h">Quantum tunnelling</h2>
       <p>A particle of energy <math><mi>E</mi></math> meets a barrier of height <math><msub><mi>V</mi><mn>0</mn></msub></math> and width <math><mi>a</mi></math>. Classically it bounces whenever <math><mi>E</mi><mo>&lt;</mo><msub><mi>V</mi><mn>0</mn></msub></math>. Units with <math><mi>ℏ</mi><mo>=</mo><mi>m</mi><mo>=</mo><mn>1</mn></math>.</p>
+      <p>Hold E at 1.2 and the height at 2. Predict the effect of doubling the width from 1 to 2. Compare transmitted fractions and explain the change. <a href="../notebooks/02_quantum_mechanics.html">Investigate in Python</a>.</p>
       <div class="control">
         <label for="tun-E">Energy E <output id="tun-E-out" for="tun-E"></output></label>
         <input type="range" id="tun-E" min="0.05" max="6" step="0.01" value="1.2">
@@ -283,6 +284,7 @@ img { max-width: 100%; }
     <div class="side">
       <h2 id="orb-h">Kepler orbits</h2>
       <p>A planet starts at distance 1 moving sideways. At exactly the circular speed it goes round in a circle; any other speed gives an ellipse, and from <math><msqrt><mn>2</mn></msqrt></math> times the circular speed upwards it escapes.</p>
+      <p>Compare launch speeds 1.0 and 1.2. Predict the change in period, then let each orbit complete and compare the measured period with Kepler’s prediction. <a href="../lessons/03_circular_motion_and_orbits.html">Investigate in Python</a>.</p>
       <div class="control">
         <label for="orb-v">Launch speed / circular speed <output id="orb-v-out" for="orb-v"></output></label>
         <input type="range" id="orb-v" min="0.4" max="1.5" step="0.01" value="1.2">
@@ -318,6 +320,7 @@ img { max-width: 100%; }
     <div class="side">
       <h2 id="lor-h">Lorenz attractor</h2>
       <p>Two copies of the Lorenz system start on the attractor, <math><msup><mn>10</mn><mrow><mo>−</mo><mn>8</mn></mrow></msup></math> apart. While the motion is chaotic the gap grows exponentially until it is as big as the attractor itself.</p>
+      <p>Compare ρ = 10 and 28 with σ and β fixed. Predict which pair of trajectories will separate. Run each and compare how their separation changes. <a href="../notebooks/03_maths_and_chaos.html">Investigate in Python</a>.</p>
       <div class="control">
         <label for="lor-rho">ρ <output id="lor-rho-out" for="lor-rho"></output></label>
         <input type="range" id="lor-rho" min="10" max="40" step="0.1" value="28">
@@ -361,6 +364,7 @@ img { max-width: 100%; }
     <div class="side">
       <h2 id="ising-h">Ising model</h2>
       <p>Each square is a tiny magnet pointing up or down that prefers to match its neighbours. Heat fights that order. Below the critical temperature large domains form; above it the magnetisation averages to zero.</p>
+      <p>Start with all spins up. Predict which temperature maintains order, 1.5 or 3.0. Run each from the same initial state and compare the fluctuating magnetisation with Onsager’s curve. <a href="../notebooks/04_orbitals_interference_and_phase_space.html">Investigate in Python</a>.</p>
       <div class="control">
         <label for="ising-T">Temperature T <output id="ising-T-out" for="ising-T"></output></label>
         <input type="range" id="ising-T" min="1" max="4" step="0.01" value="2.0">
@@ -391,6 +395,28 @@ img { max-width: 100%; }
     </div>
   </section>
 
+  <section class="experiment" aria-labelledby="coil-h">
+    <div class="side">
+      <h2 id="coil-h">A rotating coil</h2>
+      <p>A 100-turn coil of area 0.010 m² turns at 10 rad/s in a 0.20 T field. Where is the induced voltage largest? Compare the flux linkage and emf at 0°, 90° and 180°.</p>
+      <label for="coil-angle">Rotation angle <output id="coil-angle-out"></output></label>
+      <input id="coil-angle" type="range" min="0" max="360" value="0">
+      <dl class="readouts"><dt>Flux linkage</dt><dd id="coil-flux"></dd><dt>Induced emf</dt><dd id="coil-emf"></dd></dl>
+      <a href="../lessons/14_electromagnetic_induction.html">Explain the sign using Faraday’s law</a>
+    </div>
+    <div class="plots"><canvas class="c-plot" id="coil-plot" role="img" aria-label="Induced voltage against rotation angle with the selected point marked"></canvas></div>
+  </section>
+  <section class="experiment" aria-labelledby="grating-h">
+    <div class="side">
+      <h2 id="grating-h">Diffraction orders</h2>
+      <p>Shine 500 nm light on a grating at normal incidence. Predict how many maxima are possible when the line density doubles from 400 to 800 lines/mm. Count both sides of the central ray.</p>
+      <label for="grating-density">Line density <output id="grating-density-out"></output></label>
+      <input id="grating-density" type="range" min="200" max="1600" step="10" value="400">
+      <dl class="readouts"><dt>First-order angle</dt><dd id="grating-angle"></dd><dt>Allowed orders including grazing rays</dt><dd id="grating-count"></dd></dl>
+      <a href="../lessons/15_diffraction_gratings_and_optics.html">Derive the angles in Python</a>
+    </div>
+    <div class="plots"><canvas class="c-plot" id="grating-plot" role="img" aria-label="Fan of allowed diffracted rays at normal incidence"></canvas></div>
+  </section>
   <footer>
     <p>Everything is computed in your browser. The same physics lives in Python as <code>mechanics.pendulum_period</code>, <code>quantum.barrier_transmission</code>, <code>quantum.double_slit_experiment</code>, <code>mechanics.nbody</code>, <code>chaos.lorenz</code> and <code>statmech.ising</code>, where it is checked against these analytic results by the test suite.</p>
     <p>The tunnelling plot is the exact stationary state, matched across both barrier edges. The double-slit pattern uses the Fraunhofer (far-field) formula.</p>
@@ -958,9 +984,39 @@ img { max-width: 100%; }
   isingFill(false);                                           // ordered start: no stuck stripe domains
 
   // ---------- redraw on resize and theme change ----------
-  function redrawAll() { pendParams(); tunParams(); slitParams(); orbParams(); lorParams(); isingParams(); }
+  function drawCoil() {
+    const angle = Number($("coil-angle").value);
+    const emf = deg => 2 * Math.sin(deg * Math.PI / 180);
+    $("coil-angle-out").textContent = angle + "°";
+    $("coil-flux").textContent = fmt(0.2 * Math.cos(angle * Math.PI / 180)) + " Wb turns";
+    $("coil-emf").textContent = fmt(emf(angle)) + " V";
+    const {ctx, w, h} = prep($("coil-plot"));
+    const {X, Y} = axes(ctx, w, h, [0, 360], [-2.2, 2.2], {xlabel: "angle (°)", ylabel: "emf (V)"});
+    const curve = Array.from({length: 181}, (_, i) => [X(2*i), Y(emf(2*i))]);
+    line(ctx, curve, tok("--accent"), 2);
+    ctx.fillStyle = tok("--accent-2");
+    ctx.beginPath(); ctx.arc(X(angle), Y(emf(angle)), 5, 0, 2*Math.PI); ctx.fill();
+  }
+  function drawGrating() {
+    const density = Number($("grating-density").value);
+    const ratio = density / 2000; // wavelength divided by grating period
+    const limit = Math.floor(2000 / density);
+    $("grating-density-out").textContent = density + " lines/mm";
+    $("grating-angle").textContent = fmt(Math.asin(ratio) * 180 / Math.PI, 2) + "°";
+    $("grating-count").textContent = 2 * limit + 1;
+    const {ctx, w, h} = prep($("grating-plot"));
+    const radius = Math.min(w/2 - 10, h - 34);
+    const origin = [w/2, h-12];
+    for (let m = -limit; m <= limit; m++) {
+      const angle = Math.asin(Math.max(-1, Math.min(1, m * ratio)));
+      line(ctx, [origin, [origin[0]+radius*Math.sin(angle), origin[1]-radius*Math.cos(angle)]], tok("--accent"), 2);
+    }
+  }
+  $("coil-angle").addEventListener("input", drawCoil);
+  $("grating-density").addEventListener("input", drawGrating);
+  function redrawAll() { drawCoil(); drawGrating(); pendParams(); tunParams(); slitParams(); orbParams(); lorParams(); isingParams(); }
   let raf = 0;
-  const schedule = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { drawPendCurve(); drawPend(); tunParams(); slitParams(); drawOrb(); drawOrbCurve(); drawLor(); drawLorCurve(); drawIsing(); drawIsingCurve(); }); };
+  const schedule = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { drawCoil(); drawGrating(); drawPendCurve(); drawPend(); tunParams(); slitParams(); drawOrb(); drawOrbCurve(); drawLor(); drawLorCurve(); drawIsing(); drawIsingCurve(); }); };
   new ResizeObserver(schedule).observe(document.querySelector(".wrap"));
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", schedule);
   new MutationObserver(schedule).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });

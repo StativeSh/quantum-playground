@@ -4,16 +4,23 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quantum-playground"
-version = "0.3.1"
+version = "1.0.0"
 description = "A physics and maths playground: simulations, symbolic maths and notebooks."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
-dependencies = ["numpy", "scipy", "sympy", "matplotlib"]
+dependencies = ["numpy>=2.0.2", "scipy>=1.13.1", "sympy>=1.13.3", "matplotlib>=3.9.2"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Education",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Programming Language :: Python :: 3",
+    "Typing :: Typed",
+]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-cov", "jupyterlab", "ipykernel", "pandas", "nbconvert", "pdoc", "build"]
+dev = ["pytest", "pytest-cov", "jupyterlab", "ipykernel", "pandas", "nbconvert", "markdown2", "pdoc", "build"]
 # Browser tests of the explorer (tests/test_explorer.py); also run `python -m playwright install chromium`.
 browser = ["playwright"]
 
@@ -24,6 +31,9 @@ Source = "https://github.com/StativeSh/quantum-playground"
 
 [project.scripts]
 qplay = "qplay.__main__:main"
+
+[tool.setuptools.package-data]
+qplay = ["py.typed"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

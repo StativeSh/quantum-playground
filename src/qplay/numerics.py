@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import numpy as np
 
+__all__ = [
+    "bisect", "newton", "central_difference", "simpson", "monte_carlo_pi",
+]
+
 
 def bisect(f, a, b, tol=1e-12, max_iter=200):
     r"""Root of ``f`` in ``[a, b]`` by bisection.

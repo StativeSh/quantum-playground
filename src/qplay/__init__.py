@@ -26,4 +26,11 @@ demos        ready-made figures, run with ``python -m qplay run <name>``
 animations   GIFs, run with ``python -m qplay animate <name>``
 """
 
-__version__ = "0.3.1"
+__all__ = [
+    "__version__", "animations", "atomic", "chaos", "circuits", "complexplane", "demos",
+    "dynamics", "em", "gravity", "hamiltonian", "integrators", "kinetic", "linalg", "mechanics",
+    "nuclear", "numerics", "plotting", "quantum", "relativity", "statmech", "symbolic", "thermal",
+    "waves",
+]
+
+__version__ = "1.0.0"

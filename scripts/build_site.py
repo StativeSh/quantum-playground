@@ -39,7 +39,7 @@ NON_TOPIC = {"__init__", "__main__", "integrators", "plotting", "demos", "animat
 
 
 def _pretty(name):
-    return name.replace("-", " ").capitalize()
+    return name.replace("-", " ").replace("_", " ").capitalize()
 
 
 def _count_word(n):
@@ -171,6 +171,17 @@ def build(out, quick=False):
     explorer = out / "explorer"
     explorer.mkdir(parents=True)
     shutil.copy(ROOT / "site_src" / "explorer.html", explorer / "index.html")
+    import markdown2
+    for name in ("migration", "integrators"):
+        guide = (ROOT / "docs" / f"{name}.md").read_text(encoding="utf-8")
+        title = html.escape(guide.splitlines()[0].removeprefix("# "))
+        body = markdown2.markdown(guide, extras=["tables", "fenced-code-blocks"])
+        (out / f"{name}.html").write_text(
+            f'<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+            f'<title>{title}</title><style>body{{max-width:72ch;margin:3rem auto;padding:0 1rem;font:18px/1.6 system-ui}}'
+            f'td,th{{text-align:left;padding:.4em}}</style><nav><a href="./">Quantum Playground</a></nav><main>{body}</main></html>',
+            encoding="utf-8",
+        )
     build_api_docs(out / "api")
 
     page = Template((ROOT / "site_src" / "index.html").read_text()).substitute(

@@ -11,6 +11,10 @@ import argparse
 
 from . import __version__, animations, demos
 
+__all__ = [
+    "main",
+]
+
 
 def _summary(fn):
     doc = (fn.__doc__ or "").strip().splitlines()

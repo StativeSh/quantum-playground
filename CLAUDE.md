@@ -37,3 +37,9 @@ Physics and maths playground: a small Python package (`qplay`) plus notebooks.
 - Explorer changes need a behavioural test in `tests/test_explorer.py` (Playwright): set sliders with `set_slider`, compare readouts with the Python package or an analytic result. `make test-browser` runs them.
 - Lessons use predict-run-explain: before at least two key experiments, a markdown cell `**Predict (Pn).** ...` sits directly above the code cell and `**Explain (Pn).** ...` directly below it, numbered P1, P2, ... in order; answers go in `### Predict and explain: answers` (`**Pn.** ...`) after the worked solutions. Do not state the result in the text above a Predict box. `tests/test_notebooks.py` checks the structure.
 - Lessons (`lessons/NN_topic.ipynb`) target A-level and IB: state the specification points and "You will be able to" objectives up front, end with `## Exercises` and `## Worked solutions`, and compute every exercise answer in code rather than typing numbers in.
+
+## Public API and units
+
+Declare supported public symbols in each module’s explicit `__all__`. Annotate new public functions and ship the PEP 561 marker. Use SI and radians unless the name or docstring explicitly specifies another unit. Unit suffixes on converted quantities (for example eV and nm) identify the returned unit. Preserve existing normalised and natural-unit defaults.
+
+New deterministic particle and circuit trajectory APIs return `(t, y)` with shape `(n_times, n_dim)` and documented column order. Spatial fields, ensembles and derived observables retain their physically meaningful axes. Preserve old signatures and return shapes throughout 1.x, issue DeprecationWarning for replaced interfaces and document the migration.

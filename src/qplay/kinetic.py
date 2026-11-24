@@ -21,6 +21,11 @@ import numpy as np
 from scipy.spatial import cKDTree
 from scipy.special import gamma as gamma_fn
 
+__all__ = [
+    "maxwell_boltzmann_speed", "mean_speed", "rms_speed", "kinetic_temperature", "GasRun",
+    "gas_box",
+]
+
 
 def maxwell_boltzmann_speed(v, kT, m=1.0, dim=3):
     r"""Maxwell-Boltzmann speed distribution $f(v)$ in ``dim`` dimensions (normalised on $v\ge0$)."""

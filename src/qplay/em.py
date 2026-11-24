@@ -5,11 +5,19 @@ Laplace: $\nabla^2 V = 0$.  Lorentz force: $m\dot{\mathbf v} = q(\mathbf E + \ma
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy import constants, sparse
 from scipy.sparse.linalg import spsolve
 
 from .integrators import solve
+
+__all__ = [
+    "K_E", "point_charge_field", "point_charge_potential", "solve_laplace", "particle_trajectory",
+    "charged_particle", "rod_emf", "coil_emf", "wire_field", "solenoid_field",
+]
 
 K_E = 1 / (4 * np.pi * constants.epsilon_0)  # Coulomb constant, N m^2 / C^2
 
@@ -67,8 +75,14 @@ def solve_laplace(nx, ny, top=0.0, bottom=0.0, left=0.0, right=0.0):
     return V
 
 
-def charged_particle(q, m, E, B, r0, v0, t_max, n=1000):
-    """Non-relativistic motion in uniform fields. Returns ``(t, r, v)``, each ``(n, 3)`` for r, v."""
+def particle_trajectory(
+    q: float, m: float, E: ArrayLike, B: ArrayLike, r0: ArrayLike, v0: ArrayLike, t_max: float, n:
+    int = 1000,
+) -> tuple[np.ndarray, np.ndarray]:
+    r"""Non-relativistic motion in uniform fields.
+
+    Return time and a state matrix with columns for x, y, z, vx, vy, vz.
+    """
     E = np.asarray(E, float)
     B = np.asarray(B, float)
 
@@ -77,4 +91,35 @@ def charged_particle(q, m, E, B, r0, v0, t_max, n=1000):
         return np.concatenate([v, (q / m) * (E + np.cross(v, B))])
 
     t, y = solve(rhs, np.concatenate([r0, v0]), (0, t_max), n)
+    return t, y
+
+
+def charged_particle(q, m, E, B, r0, v0, t_max, n=1000):
+    """Compatibility interface. Use :func:`particle_trajectory` for time and a state matrix."""
+    warnings.warn("charged_particle is deprecated; use particle_trajectory", DeprecationWarning, stacklevel=2)
+    t, y = particle_trajectory(q, m, E, B, r0, v0, t_max, n)
     return t, y[:, :3], y[:, 3:]
+
+
+def rod_emf(field: float, length: float, speed: float) -> float:
+    r"""Motional emf in volts, $\varepsilon=B\ell v$, for mutually perpendicular rod, velocity and field."""
+    return field * length * speed
+
+
+def coil_emf(turns: int, field: float, area: float, omega: float, time: ArrayLike) -> float | np.ndarray:
+    r"""Instantaneous volts, $\varepsilon=NBA\omega\sin(\omega t)$, starting at maximum flux."""
+    return turns * field * area * omega * np.sin(omega * np.asarray(time))
+
+
+def wire_field(current: float, radius: float) -> float:
+    r"""Azimuthal field (tesla) outside a long straight wire, $B=\mu_0 I/(2\pi r)$."""
+    from scipy.constants import mu_0
+    if radius <= 0:
+        raise ValueError("radius must be positive")
+    return mu_0 * current / (2 * np.pi * radius)
+
+
+def solenoid_field(turns_per_metre: float, current: float) -> float:
+    r"""Interior axial field of a long air-core solenoid, $B=\mu_0 nI$ in tesla."""
+    from scipy.constants import mu_0
+    return mu_0 * turns_per_metre * current

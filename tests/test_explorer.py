@@ -275,3 +275,21 @@ def test_ising_magnetisation_approaches_onsager(page):
 
 def test_python_and_page_use_the_same_critical_temperature():
     assert statmech.T_CRITICAL == pytest.approx(2 / np.log(1 + np.sqrt(2)))
+
+
+@pytest.mark.parametrize("angle", [0, 90, 210])
+def test_rotating_coil(page, angle):
+    from qplay import em
+    set_slider(page, "coil-angle", angle)
+    expected = em.coil_emf(100, 0.2, 0.01, 10, math.radians(angle)/10)
+    assert number(page, "coil-emf") == pytest.approx(expected, abs=.001)
+    assert number(page, "coil-flux") == pytest.approx(.2*math.cos(math.radians(angle)), abs=.001)
+
+
+@pytest.mark.parametrize("density", [400, 800, 1500])
+def test_grating_orders(page, density):
+    from qplay import waves
+    set_slider(page, "grating-density", density)
+    angles = [waves.grating_angle(m, 500e-9, 1e-3/density) for m in range(-10, 11)]
+    assert number(page, "grating-count") == sum(a is not None for a in angles)
+    assert number(page, "grating-angle") == pytest.approx(math.degrees(angles[11]), abs=.006)

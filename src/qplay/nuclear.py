@@ -15,6 +15,11 @@ from __future__ import annotations
 import numpy as np
 from scipy.sparse.linalg import expm_multiply
 
+__all__ = [
+    "decay_constant", "half_life", "remaining", "bateman", "decay_chain", "simulate_decay",
+    "binding_energy_per_nucleon",
+]
+
 
 def decay_constant(half_life):
     r"""$\lambda = \ln 2 / t_{1/2}$."""
@@ -87,3 +92,17 @@ def simulate_decay(N0, lam, t, trials=1, seed=None):
         p = 1 - np.exp(-lam * (t[k] - t[k - 1]))
         N[:, k] = N[:, k - 1] - rng.binomial(N[:, k - 1], p)
     return N
+
+
+def binding_energy_per_nucleon(A: int, Z: int) -> float:
+    r"""Liquid-drop estimate in MeV per nucleon, not a mass-table measurement.
+
+    $B=a_v A-a_s A^{2/3}-a_c Z(Z-1)/A^{1/3}-a_a(A-2Z)^2/A+\delta$.
+    Pairing is positive for even-even nuclei, negative for odd-odd and zero for odd A.
+    The semi-empirical fit is most useful for medium and heavy nuclei.
+    """
+    if not isinstance(A, (int, np.integer)) or not isinstance(Z, (int, np.integer)) or not 0 < Z < A:
+        raise ValueError("require integer mass and proton numbers with 0 < Z < A")
+    pairing = 0 if A % 2 else (-1)**int(Z % 2) * 12 / np.sqrt(A)
+    return (15.75*A - 17.8*A**(2/3) - 0.711*Z*(Z-1)/A**(1/3)
+            - 23.7*(A-2*Z)**2/A + pairing) / A

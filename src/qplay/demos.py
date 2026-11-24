@@ -23,6 +23,8 @@ __all__ = [
 ]
 
 DEMOS: dict = {}
+# Earlier names that still work after a rename; `qplay list` shows only the current name.
+_ALIASES = {"energy_drift": "energy-drift"}
 
 
 def demo(name):
@@ -35,6 +37,7 @@ def demo(name):
 
 def run(name, outdir="figures"):
     """Run one demo and save its figure. Returns the file path."""
+    name = _ALIASES.get(name, name)
     if name not in DEMOS:
         raise KeyError(f"unknown demo {name!r}; available: {', '.join(sorted(DEMOS))}")
     return plotting.save(DEMOS[name](), name, outdir)
@@ -45,7 +48,8 @@ def pendulum_demo() -> Figure:
     """Large-amplitude pendulum vs the small-angle approximation."""
     theta0, g, L = 2.5, 9.81, 1.0
     T = mechanics.pendulum_period(theta0, g, L)
-    t, th, _ = mechanics.pendulum(theta0, 0.0, g, L, t_max=2 * T, n=800)
+    t, state = mechanics.pendulum_trajectory(theta0, 0.0, g, L, t_max=2 * T, n=800)
+    th = state[:, 0]
     fig, ax = plt.subplots(figsize=(7, 4))
     ax.plot(t, th, label="nonlinear")
     ax.plot(t, theta0 * np.cos(np.sqrt(g / L) * t), "--", label="small-angle approximation")
@@ -73,10 +77,10 @@ def projectile_demo() -> Figure:
     """Projectile trajectories with and without air drag."""
     fig, ax = plt.subplots(figsize=(7, 4))
     for angle in (15, 30, 45, 60, 75):
-        _, x, y = mechanics.projectile(30, angle)
-        ax.plot(x, y, color=f"C{angle // 15 - 1}", label=f"{angle}°")
-        _, xd, yd = mechanics.projectile(30, angle, drag=0.02)
-        ax.plot(xd, yd, "--", color=f"C{angle // 15 - 1}")
+        _, s = mechanics.projectile_trajectory(30, angle)
+        ax.plot(s[:, 0], s[:, 1], color=f"C{angle // 15 - 1}", label=f"{angle}°")
+        _, sd = mechanics.projectile_trajectory(30, angle, drag=0.02)
+        ax.plot(sd[:, 0], sd[:, 1], "--", color=f"C{angle // 15 - 1}")
     ax.set(xlabel="x [m]", ylabel="y [m]", title="Projectiles: vacuum (solid) vs quadratic drag (dashed)")
     ax.legend(ncol=5, fontsize=8)
     return fig
@@ -86,7 +90,8 @@ def projectile_demo() -> Figure:
 def orbits_demo() -> Figure:
     """Three-body figure-eight choreography."""
     fe = mechanics.FIGURE_EIGHT
-    _, pos, _ = mechanics.nbody(fe["masses"], fe["pos0"], fe["vel0"], fe["period"], n=600)
+    _, state = mechanics.nbody_trajectory(fe["masses"], fe["pos0"], fe["vel0"], fe["period"], n=600)
+    pos = state[:, : state.shape[1] // 2].reshape(len(state), *np.shape(fe["pos0"]))
     fig, ax = plt.subplots(figsize=(6, 4.5))
     for i in range(3):
         (line,) = ax.plot(pos[:, i, 0], pos[:, i, 1], lw=2 - 0.5 * i, alpha=0.6, label=f"body {i + 1}")
@@ -465,7 +470,8 @@ def rlc_resonance_demo() -> Figure:
     ax1.set(xlabel=r"$\omega/\omega_0$", ylabel="current amplitude / mA", title="Driven series RLC")
     ax1.legend(fontsize=8)
     R = 20.0
-    t, _, I = circuits.rlc_series(R, L, C, V=lambda t: V0 * np.cos(w0 * t), t_max=0.08, n=4000)
+    t, state = circuits.rlc_trajectory(R, L, C, V=lambda t: V0 * np.cos(w0 * t), t_max=0.08, n=4000)
+    I = state[:, 1]
     ax2.plot(1e3 * t, 1e3 * I, lw=0.8)
     amp = 1e3 * circuits.current_amplitude(w0, V0, R, L, C)
     ax2.plot(1e3 * t, amp * (1 - np.exp(-R * t / (2 * L))), "k--", lw=1, label=r"envelope $I_0(1-e^{-Rt/2L})$")
@@ -474,7 +480,7 @@ def rlc_resonance_demo() -> Figure:
     return fig
 
 
-@demo("energy_drift")
+@demo("energy-drift")
 def energy_drift_demo() -> Figure:
     r"""Oscillator energy drift, $E=(v^2+x^2)/2$, over twenty periods at a fixed step."""
     from . import integrators

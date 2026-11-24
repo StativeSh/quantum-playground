@@ -13,6 +13,7 @@ $$N_k(t) = N_0\left(\prod_{i=1}^{k-1}\lambda_i\right)\sum_{i=1}^{k}
 from __future__ import annotations
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from scipy.sparse.linalg import expm_multiply
 
 __all__ = [
@@ -94,15 +95,22 @@ def simulate_decay(N0, lam, t, trials=1, seed=None):
     return N
 
 
-def binding_energy_per_nucleon(A: int, Z: int) -> float:
+def binding_energy_per_nucleon(A: ArrayLike, Z: ArrayLike) -> float | NDArray[np.float64]:
     r"""Liquid-drop estimate in MeV per nucleon, not a mass-table measurement.
 
     $B=a_v A-a_s A^{2/3}-a_c Z(Z-1)/A^{1/3}-a_a(A-2Z)^2/A+\delta$.
     Pairing is positive for even-even nuclei, negative for odd-odd and zero for odd A.
     The semi-empirical fit is most useful for medium and heavy nuclei.
+
+    ``A`` and ``Z`` are integers or integer arrays that broadcast together, so a whole
+    curve can be computed at once. Scalar inputs return a float.
     """
-    if not isinstance(A, (int, np.integer)) or not isinstance(Z, (int, np.integer)) or not 0 < Z < A:
+    A, Z = np.asarray(A), np.asarray(Z)
+    if not (np.issubdtype(A.dtype, np.integer) and np.issubdtype(Z.dtype, np.integer)) \
+            or np.any((Z <= 0) | (Z >= A)):
         raise ValueError("require integer mass and proton numbers with 0 < Z < A")
-    pairing = 0 if A % 2 else (-1)**int(Z % 2) * 12 / np.sqrt(A)
-    return (15.75*A - 17.8*A**(2/3) - 0.711*Z*(Z-1)/A**(1/3)
-            - 23.7*(A-2*Z)**2/A + pairing) / A
+    a, z = A.astype(float), Z.astype(float)
+    pairing = np.where(A % 2 == 1, 0.0, np.where(Z % 2 == 1, -12.0, 12.0) / np.sqrt(a))
+    energy = (15.75*a - 17.8*a**(2/3) - 0.711*z*(z-1)/a**(1/3)
+              - 23.7*(a-2*z)**2/a + pairing) / a
+    return float(energy) if energy.ndim == 0 else energy

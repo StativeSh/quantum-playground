@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quantum-playground"
-version = "1.0.0"
+version = "1.0.1"
 description = "A physics and maths playground: simulations, symbolic maths and notebooks."
 readme = "README.md"
 license = "MIT"
@@ -43,6 +43,9 @@ testpaths = ["tests"]
 # Slow tests (site build, big simulations) are skipped by default; `make test-all` or `pytest -m ""` runs them.
 addopts = "-q -m 'not slow'"
 markers = ["slow: takes more than a couple of seconds; skipped unless selected with -m \"\" or -m slow"]
+# The package, demos and tests use the 1.0 API. Calling a deprecated 0.3 name is an error,
+# except inside pytest.warns, where the compatibility tests check those names still work.
+filterwarnings = ["error:.* is deprecated; use :DeprecationWarning"]
 
 [tool.coverage.run]
 source = ["qplay"]

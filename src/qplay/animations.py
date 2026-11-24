@@ -88,7 +88,8 @@ def wavepacket_anim(n_frames):
 def figure_eight_anim(n_frames):
     """Three equal masses chasing each other around a figure-eight."""
     fe = mechanics.FIGURE_EIGHT
-    _, pos, _ = mechanics.nbody(fe["masses"], fe["pos0"], fe["vel0"], fe["period"], n=n_frames)
+    _, state = mechanics.nbody_trajectory(fe["masses"], fe["pos0"], fe["vel0"], fe["period"], n=n_frames)
+    pos = state[:, : state.shape[1] // 2].reshape(len(state), *np.shape(fe["pos0"]))
     fig, ax = plt.subplots(figsize=(5, 2.8))
     ax.plot(pos[:, 0, 0], pos[:, 0, 1], color="0.85", lw=1)
     ax.set(xlim=(-1.2, 1.2), ylim=(-0.45, 0.45), aspect="equal", xticks=[], yticks=[])

@@ -88,4 +88,4 @@ jobs:
           pip install --only-binary=:all: dist/*.whl
           cd "$RUNNER_TEMP"
           qplay --version
-          MPLBACKEND=Agg qplay run energy_drift
+          MPLBACKEND=Agg qplay run energy-drift

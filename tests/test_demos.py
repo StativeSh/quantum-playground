@@ -49,3 +49,9 @@ def test_package_version_matches_installed_distribution():
     import qplay
 
     assert importlib.metadata.version("quantum-playground") == qplay.__version__
+
+
+def test_renamed_demo_keeps_its_old_name(tmp_path):
+    assert "energy-drift" in demos.DEMOS and "energy_drift" not in demos.DEMOS
+    assert demos.run("energy_drift", tmp_path).name == "energy-drift.png"
+    assert main(["run", "energy_drift", "--out", str(tmp_path)]) == 0

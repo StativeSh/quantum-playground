@@ -128,7 +128,7 @@ During 1.x, public names in module `__all__` retain compatible calling conventio
 
 ![Relative energy drift for Euler, RK4 and Verlet](docs/images/energy_drift.png)
 
-`qplay list` shows everything. Twenty-six static figures (`qplay run NAME`), including `energy_drift`, `hydrogen`, `double-slit`, `ising`, `maxwell-boltzmann`, `coherent-state`, `zeeman`, `decay-chain` and `rlc-resonance`, and six GIFs (`qplay animate NAME`): `double-pendulum`, `wavepacket`, `figure-eight`, `double-slit`, `ising` and `gas`.
+`qplay list` shows everything. Twenty-six static figures (`qplay run NAME`), including `energy-drift`, `hydrogen`, `double-slit`, `ising`, `maxwell-boltzmann`, `coherent-state`, `zeeman`, `decay-chain` and `rlc-resonance`, and six GIFs (`qplay animate NAME`): `double-pendulum`, `wavepacket`, `figure-eight`, `double-slit`, `ising` and `gas`.
 
 ## Example
 

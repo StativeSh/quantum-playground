@@ -12,9 +12,17 @@ $Z = R + i\left(\omega L - \frac{1}{\omega C}\right)$.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+import warnings
+
 import numpy as np
 
 from .integrators import solve
+
+__all__ = [
+    "rc_discharge", "rc_charge", "rc_trajectory", "rc_circuit", "rlc_trajectory", "rlc_series",
+    "resonant_frequency", "quality_factor", "impedance", "current_amplitude",
+]
 
 
 def _source(V):
@@ -31,19 +39,35 @@ def rc_charge(t, V0, R, C):
     return V0 * -np.expm1(-np.asarray(t, float) / (R * C))
 
 
-def rc_circuit(R, C, V=0.0, q0=0.0, t_max=1.0, n=500):
+def rc_trajectory(
+    R: float, C: float, V: float | Callable[[float], float] = 0.0, q0: float = 0.0,
+    t_max: float = 1.0, n: int = 500,
+) -> tuple[np.ndarray, np.ndarray]:
     r"""Integrate $R\dot q + q/C = V(t)$. ``V`` is a number or a function of $t$.
 
-    Returns ``(t, q, I)``.
+    Return time and a state matrix with columns for charge and current.
     """
     src = _source(V)
     t, y = solve(lambda t, q: [(src(t) - q[0] / C) / R], [q0], (0, t_max), n)
     q = y[:, 0]
-    return t, q, (np.array([src(ti) for ti in t]) - q / C) / R
+    return t, np.column_stack((q, (np.array([src(ti) for ti in t]) - q / C) / R))
 
 
-def rlc_series(R, L, C, V=0.0, q0=0.0, i0=0.0, t_max=1.0, n=1000):
-    r"""Integrate $L\ddot q + R\dot q + q/C = V(t)$. Returns ``(t, q, I)``."""
+def rc_circuit(R, C, V=0.0, q0=0.0, t_max=1.0, n=500):
+    """Compatibility interface. Use :func:`rc_trajectory` for time and a state matrix."""
+    warnings.warn("rc_circuit is deprecated; use rc_trajectory", DeprecationWarning, stacklevel=2)
+    t, y = rc_trajectory(R, C, V, q0, t_max, n)
+    return t, y[:, 0], y[:, 1]
+
+
+def rlc_trajectory(
+    R: float, L: float, C: float, V: float | Callable[[float], float] = 0.0, q0: float = 0.0, i0:
+    float = 0.0, t_max: float = 1.0, n: int = 1000,
+) -> tuple[np.ndarray, np.ndarray]:
+    r"""Integrate $L\ddot q + R\dot q + q/C = V(t)$.
+
+    Return time and a state matrix with columns for charge and current.
+    """
     src = _source(V)
 
     def rhs(t, y):
@@ -51,6 +75,13 @@ def rlc_series(R, L, C, V=0.0, q0=0.0, i0=0.0, t_max=1.0, n=1000):
         return [i, (src(t) - R * i - q / C) / L]
 
     t, y = solve(rhs, [q0, i0], (0, t_max), n)
+    return t, y
+
+
+def rlc_series(R, L, C, V=0.0, q0=0.0, i0=0.0, t_max=1.0, n=1000):
+    """Compatibility interface. Use :func:`rlc_trajectory` for time and a state matrix."""
+    warnings.warn("rlc_series is deprecated; use rlc_trajectory", DeprecationWarning, stacklevel=2)
+    t, y = rlc_trajectory(R, L, C, V, q0, i0, t_max, n)
     return t, y[:, 0], y[:, 1]
 
 

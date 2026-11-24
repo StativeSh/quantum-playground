@@ -6,11 +6,21 @@ Add one by decorating a function with ``@demo("name")``; it then shows up in
 
 from __future__ import annotations
 
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
 
 from . import (atomic, chaos, circuits, complexplane, dynamics, em, kinetic, linalg, mechanics, nuclear, plotting,
                quantum, statmech, waves)
+
+__all__ = [
+    "DEMOS", "demo", "run", "pendulum_demo", "double_pendulum_demo", "projectile_demo",
+    "orbits_demo", "wave_demo", "heat_demo", "fourier_demo", "tise_demo", "wavepacket_demo",
+    "laplace_demo", "lorenz_demo", "mandelbrot_demo", "bifurcation_demo", "hydrogen_demo",
+    "double_slit_demo", "ising_demo", "phase_portrait_demo", "pendulum_phase_space_demo",
+    "domain_coloring_demo", "linear_map_demo", "maxwell_boltzmann_demo", "coherent_state_demo",
+    "zeeman_demo", "decay_chain_demo", "rlc_resonance_demo", "energy_drift_demo",
+]
 
 DEMOS: dict = {}
 
@@ -31,7 +41,7 @@ def run(name, outdir="figures"):
 
 
 @demo("pendulum")
-def pendulum_demo():
+def pendulum_demo() -> Figure:
     """Large-amplitude pendulum vs the small-angle approximation."""
     theta0, g, L = 2.5, 9.81, 1.0
     T = mechanics.pendulum_period(theta0, g, L)
@@ -46,7 +56,7 @@ def pendulum_demo():
 
 
 @demo("double-pendulum")
-def double_pendulum_demo():
+def double_pendulum_demo() -> Figure:
     """Sensitive dependence on initial conditions in a double pendulum."""
     fig, ax = plt.subplots(figsize=(7, 4))
     for eps, style in [(0.0, "-"), (1e-6, "--")]:
@@ -59,7 +69,7 @@ def double_pendulum_demo():
 
 
 @demo("projectile")
-def projectile_demo():
+def projectile_demo() -> Figure:
     """Projectile trajectories with and without air drag."""
     fig, ax = plt.subplots(figsize=(7, 4))
     for angle in (15, 30, 45, 60, 75):
@@ -73,7 +83,7 @@ def projectile_demo():
 
 
 @demo("orbits")
-def orbits_demo():
+def orbits_demo() -> Figure:
     """Three-body figure-eight choreography."""
     fe = mechanics.FIGURE_EIGHT
     _, pos, _ = mechanics.nbody(fe["masses"], fe["pos0"], fe["vel0"], fe["period"], n=600)
@@ -87,7 +97,7 @@ def orbits_demo():
 
 
 @demo("wave")
-def wave_demo():
+def wave_demo() -> Figure:
     """1D wave equation: a pulse splitting and reflecting off fixed ends."""
     x = np.linspace(0, 10, 401)
     t, u = waves.wave_1d(np.exp(-((x - 5) ** 2) / 0.1), x, c=1.0, t_max=8.0)
@@ -101,7 +111,7 @@ def wave_demo():
 
 
 @demo("heat")
-def heat_demo():
+def heat_demo() -> Figure:
     """Diffusion of a top-hat temperature profile."""
     x = np.linspace(0, 1, 201)
     t, u = waves.heat_1d(np.where(np.abs(x - 0.5) < 0.2, 1.0, 0.0), x, alpha=0.01, t_max=0.5, nt=400)
@@ -114,7 +124,7 @@ def heat_demo():
 
 
 @demo("fourier")
-def fourier_demo():
+def fourier_demo() -> Figure:
     """Square wave built from Fourier partial sums (Gibbs phenomenon)."""
     period = 2 * np.pi
     f = lambda s: np.sign(np.sin(s))  # noqa: E731
@@ -129,7 +139,7 @@ def fourier_demo():
 
 
 @demo("tise")
-def tise_demo():
+def tise_demo() -> Figure:
     """Quantum harmonic oscillator eigenstates from a finite-difference solver."""
     x = np.linspace(-6, 6, 1200)
     E, psi = quantum.solve_tise(lambda s: 0.5 * s**2, x, n_states=5)
@@ -144,7 +154,7 @@ def tise_demo():
 
 
 @demo("wavepacket")
-def wavepacket_demo():
+def wavepacket_demo() -> Figure:
     """Gaussian wavepacket tunnelling through a barrier (split-step Fourier)."""
     x = np.linspace(-60, 60, 2048, endpoint=False)
     V0, width, k0 = 2.0, 2.0, 1.5
@@ -165,7 +175,7 @@ def wavepacket_demo():
 
 
 @demo("laplace")
-def laplace_demo():
+def laplace_demo() -> Figure:
     """Electrostatic potential in a box by solving Laplace's equation."""
     V = em.solve_laplace(101, 101, top=1.0)
     fig, ax = plt.subplots(figsize=(5, 4.5))
@@ -178,7 +188,7 @@ def laplace_demo():
 
 
 @demo("lorenz")
-def lorenz_demo():
+def lorenz_demo() -> Figure:
     """The Lorenz strange attractor."""
     _, y = chaos.lorenz(t_max=50, n=8000)
     fig, ax = plt.subplots(figsize=(6, 4.5))
@@ -188,7 +198,7 @@ def lorenz_demo():
 
 
 @demo("mandelbrot")
-def mandelbrot_demo():
+def mandelbrot_demo() -> Figure:
     """The Mandelbrot set."""
     counts = chaos.mandelbrot(width=700, height=470, max_iter=120)
     fig, ax = plt.subplots(figsize=(7, 4.8))
@@ -199,7 +209,7 @@ def mandelbrot_demo():
 
 
 @demo("bifurcation")
-def bifurcation_demo():
+def bifurcation_demo() -> Figure:
     """Bifurcation diagram of the logistic map."""
     r, x = chaos.bifurcation(np.linspace(2.8, 4.0, 1200))
     fig, ax = plt.subplots(figsize=(7, 4.5))
@@ -209,7 +219,7 @@ def bifurcation_demo():
 
 
 @demo("hydrogen")
-def hydrogen_demo():
+def hydrogen_demo() -> Figure:
     """Hydrogen orbital probability densities in the xz-plane."""
     states = [(1, 0, 0), (2, 0, 0), (2, 1, 0), (3, 1, 0), (3, 2, 0), (3, 2, 1), (4, 2, 0), (4, 3, 1)]
     fig, axes = plt.subplots(2, 4, figsize=(11, 5.6))
@@ -227,7 +237,7 @@ def hydrogen_demo():
 
 
 @demo("double-slit")
-def double_slit_demo():
+def double_slit_demo() -> Figure:
     """Quantum double-slit interference from a 2D wavepacket simulation."""
     run = quantum.double_slit_experiment()
     x, y, psi = run["x"], run["y"], run["psi"]
@@ -251,7 +261,7 @@ def double_slit_demo():
 
 
 @demo("ising")
-def ising_demo():
+def ising_demo() -> Figure:
     """2D Ising model: lattice snapshots and magnetisation vs Onsager's exact result."""
     fig = plt.figure(figsize=(11, 4))
     grid = fig.add_gridspec(1, 4)
@@ -274,7 +284,7 @@ def ising_demo():
 
 
 @demo("phase-portrait")
-def phase_portrait_demo():
+def phase_portrait_demo() -> Figure:
     """Phase planes with automatically classified fixed points."""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.5))
 
@@ -294,7 +304,7 @@ def phase_portrait_demo():
 
 
 @demo("pendulum-phase-space")
-def pendulum_phase_space_demo():
+def pendulum_phase_space_demo() -> Figure:
     r"""Pendulum energy contours $H = p^2/2 - \cos q$ with the separatrix."""
     q, p = np.meshgrid(np.linspace(-2 * np.pi, 2 * np.pi, 400), np.linspace(-3, 3, 300))
     H = p**2 / 2 - np.cos(q)
@@ -307,7 +317,7 @@ def pendulum_phase_space_demo():
 
 
 @demo("domain-coloring")
-def domain_coloring_demo():
+def domain_coloring_demo() -> Figure:
     r"""Domain colouring of $f(z) = (z^2-1)(z-2-i)^2/(z^2+2+2i)$."""
     def f(z):
         return (z**2 - 1) * (z - 2 - 1j) ** 2 / (z**2 + 2 + 2j)
@@ -324,7 +334,7 @@ def domain_coloring_demo():
 
 
 @demo("linear-map")
-def linear_map_demo():
+def linear_map_demo() -> Figure:
     """A 2x2 matrix maps the unit circle to an ellipse along its singular vectors."""
     A = np.array([[1.6, 0.9], [0.3, 0.8]])
     sigma, U = linalg.singular_axes(A)
@@ -347,7 +357,7 @@ def linear_map_demo():
 
 
 @demo("maxwell-boltzmann")
-def maxwell_boltzmann_demo():
+def maxwell_boltzmann_demo() -> Figure:
     """Hard-sphere gas: one starting speed relaxes to the Maxwell-Boltzmann distribution."""
     gas = kinetic.gas_box(n=400, dim=3, radius=0.02, t_max=6, save_every=20, seed=1)
     kT = gas.temperature()
@@ -373,7 +383,7 @@ def maxwell_boltzmann_demo():
 
 
 @demo("coherent-state")
-def coherent_state_demo():
+def coherent_state_demo() -> Figure:
     r"""A coherent state swings in $V = x^2/2$ like a classical particle, without spreading."""
     x = np.linspace(-20, 20, 1024, endpoint=False)
     alpha = quantum.coherent_alpha(4.0, 0.0)
@@ -397,7 +407,7 @@ def coherent_state_demo():
 
 
 @demo("zeeman")
-def zeeman_demo():
+def zeeman_demo() -> Figure:
     """Zeeman effect for a p electron: from Landé splitting to the Paschen-Back limit."""
     l, xi = 1, 1.0
     B = np.linspace(0, 3, 300)
@@ -420,7 +430,7 @@ def zeeman_demo():
 
 
 @demo("decay-chain")
-def decay_chain_demo():
+def decay_chain_demo() -> Figure:
     """A three-step decay chain: Bateman solution against a Monte Carlo of individual nuclei."""
     lambdas = [0.3, 0.8, 0.1, 0.0]
     t = np.linspace(0, 30, 301)
@@ -443,7 +453,7 @@ def decay_chain_demo():
 
 
 @demo("rlc-resonance")
-def rlc_resonance_demo():
+def rlc_resonance_demo() -> Figure:
     """Series RLC circuit: resonance curves and the Q factor."""
     L, C, V0 = 0.05, 2e-6, 1.0
     w0 = circuits.resonant_frequency(L, C)
@@ -461,4 +471,23 @@ def rlc_resonance_demo():
     ax2.plot(1e3 * t, amp * (1 - np.exp(-R * t / (2 * L))), "k--", lw=1, label=r"envelope $I_0(1-e^{-Rt/2L})$")
     ax2.set(xlabel="t / ms", ylabel="I / mA", title="Switching on at resonance")
     ax2.legend(fontsize=8)
+    return fig
+
+
+@demo("energy_drift")
+def energy_drift_demo() -> Figure:
+    r"""Oscillator energy drift, $E=(v^2+x^2)/2$, over twenty periods at a fixed step."""
+    from . import integrators
+
+    times = np.linspace(0, 40 * np.pi, 1601)
+    def rhs(t, state):
+        return [state[1], -state[0]]
+    fig, ax = plt.subplots()
+    for name, solver in (("Euler", integrators.euler_trajectory), ("RK4", integrators.rk4_trajectory)):
+        _, state = solver(rhs, [1., 0.], times)
+        ax.plot(times, np.sum(state**2, axis=1)-1, label=name)
+    _, state = integrators.verlet_trajectory(lambda x: -x, [1.], [0.], times)
+    ax.plot(times, np.sum(state**2, axis=1)-1, label="Velocity Verlet")
+    ax.set(xlabel="Time (s)", ylabel="Relative energy error", yscale="symlog", title="Energy drift at a fixed time step")
+    ax.legend()
     return fig

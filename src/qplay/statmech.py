@@ -8,6 +8,10 @@ from __future__ import annotations
 
 import numpy as np
 
+__all__ = [
+    "T_CRITICAL", "ising_energy", "onsager_magnetization", "ising",
+]
+
 T_CRITICAL = 2 / np.log(1 + np.sqrt(2))  # Onsager, for J = 1: about 2.269
 
 

@@ -14,6 +14,15 @@ from scipy import constants
 from scipy.linalg import eigh_tridiagonal, expm
 from scipy.special import genlaguerre, lpmv
 
+__all__ = [
+    "infinite_well_energy", "infinite_well_state", "solve_tise", "gaussian_wavepacket",
+    "split_step", "probability_density", "expectation", "barrier_transmission", "harmonic_state",
+    "coherent_state", "coherent_alpha", "hydrogen_energy_eV", "hydrogen_wavelength_nm", "SIGMA_X",
+    "SIGMA_Y", "SIGMA_Z", "PAULI", "evolve", "bloch_vector", "hydrogen_radial",
+    "spherical_harmonic", "hydrogen_density_xz", "gaussian_wavepacket_2d", "split_step_2d",
+    "absorbing_layer", "double_slit_potential", "double_slit_experiment",
+]
+
 # ---- particle in a box ---------------------------------------------------------
 
 def infinite_well_energy(n, L=1.0, m=1.0, hbar=1.0):

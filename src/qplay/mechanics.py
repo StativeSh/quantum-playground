@@ -5,32 +5,65 @@ Pendulum:  $\ddot\theta = -\frac{g}{L}\sin\theta$
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.integrate import solve_ivp
 from scipy.special import ellipk
 
 from .integrators import solve
 
+__all__ = [
+    "oscillator_trajectory", "harmonic_oscillator", "pendulum_trajectory", "pendulum",
+    "pendulum_period", "double_pendulum", "double_pendulum_xy", "double_pendulum_energy",
+    "projectile_trajectory", "projectile", "nbody_trajectory", "nbody", "nbody_energy",
+    "FIGURE_EIGHT", "collision",
+]
 
-def harmonic_oscillator(x0=1.0, v0=0.0, omega=1.0, gamma=0.0, drive=0.0,
-                        drive_omega=1.0, t_max=20.0, n=1000):
+
+def oscillator_trajectory(
+    x0: float = 1.0, v0: float = 0.0, omega: float = 1.0, gamma: float = 0.0, drive: float = 0.0,
+    drive_omega: float = 1.0, t_max: float = 20.0, n: int = 1000,
+) -> tuple[np.ndarray, np.ndarray]:
     r"""Damped, driven oscillator $\ddot x + 2\gamma\dot x + \omega^2 x = F\cos\Omega t$.
 
-    Returns ``(t, x, v)``.
+    Return time and a state matrix with columns for displacement and velocity.
     """
     def rhs(t, y):
         return [y[1], -omega**2 * y[0] - 2 * gamma * y[1] + drive * np.cos(drive_omega * t)]
 
     t, y = solve(rhs, [x0, v0], (0, t_max), n)
+    return t, y
+
+
+def harmonic_oscillator(x0=1.0, v0=0.0, omega=1.0, gamma=0.0, drive=0.0,
+                        drive_omega=1.0, t_max=20.0, n=1000):
+    """Compatibility interface. Use :func:`oscillator_trajectory` for time and a state matrix."""
+    warnings.warn("harmonic_oscillator is deprecated; use oscillator_trajectory", DeprecationWarning, stacklevel=2)
+    t, y = oscillator_trajectory(x0, v0, omega, gamma, drive, drive_omega, t_max, n)
     return t, y[:, 0], y[:, 1]
 
 
-def pendulum(theta0=1.0, omega0=0.0, g=9.81, length=1.0, t_max=10.0, n=500):
-    """Nonlinear simple pendulum. Returns ``(t, theta, omega)``."""
+def pendulum_trajectory(
+    theta0: float = 1.0, omega0: float = 0.0, g: float = 9.81, length: float = 1.0,
+    t_max: float = 10.0, n: int = 500,
+) -> tuple[np.ndarray, np.ndarray]:
+    r"""Nonlinear simple pendulum.
+
+    Return time and a state matrix with columns for angle and angular velocity.
+    """
     def rhs(_, y):
         return [y[1], -(g / length) * np.sin(y[0])]
 
     t, y = solve(rhs, [theta0, omega0], (0, t_max), n)
+    return t, y
+
+
+def pendulum(theta0=1.0, omega0=0.0, g=9.81, length=1.0, t_max=10.0, n=500):
+    """Compatibility interface. Use :func:`pendulum_trajectory` for time and a state matrix."""
+    warnings.warn("pendulum is deprecated; use pendulum_trajectory", DeprecationWarning, stacklevel=2)
+    t, y = pendulum_trajectory(theta0, omega0, g, length, t_max, n)
     return t, y[:, 0], y[:, 1]
 
 
@@ -39,7 +72,10 @@ def pendulum_period(theta0, g=9.81, length=1.0):
     return 4 * np.sqrt(length / g) * ellipk(np.sin(theta0 / 2) ** 2)
 
 
-def double_pendulum(state0, m1=1.0, m2=1.0, l1=1.0, l2=1.0, g=9.81, t_max=20.0, n=2000):
+def double_pendulum(
+    state0: ArrayLike, m1: float = 1.0, m2: float = 1.0, l1: float = 1.0, l2: float = 1.0, g: float
+    = 9.81, t_max: float = 20.0, n: int = 2000,
+) -> tuple[np.ndarray, np.ndarray]:
     """Double pendulum. ``state = [theta1, theta2, omega1, omega2]``. Returns ``(t, y)``."""
     def rhs(_, s):
         th1, th2, w1, w2 = s
@@ -69,10 +105,15 @@ def double_pendulum_energy(y, m1=1.0, m2=1.0, l1=1.0, l2=1.0, g=9.81):
     return kinetic + potential
 
 
-def projectile(speed, angle_deg, drag=0.0, g=9.81, h0=0.0, n=300):
+def projectile_trajectory(
+    speed: float, angle_deg: float, drag: float = 0.0, g: float = 9.81, h0: float = 0.0,
+    n: int = 300,
+) -> tuple[np.ndarray, np.ndarray]:
     r"""Projectile with optional quadratic drag $\mathbf a = -g\hat y - c|\mathbf v|\mathbf v$.
 
-    ``drag`` is $c$ in 1/m. Returns ``(t, x, y)`` from launch until ground impact.
+    ``drag`` is $c$ in 1/m.
+
+    Return time and a state matrix with columns for x, y, vx, vy.
     """
     ang = np.radians(angle_deg)
 
@@ -92,14 +133,25 @@ def projectile(speed, angle_deg, drag=0.0, g=9.81, h0=0.0, n=300):
         raise RuntimeError("projectile never landed")
     t = np.linspace(0, sol.t_events[0][0], n)
     s = sol.sol(t)
-    return t, s[0], s[1]
+    return t, s.T
 
 
-def nbody(masses, pos0, vel0, t_max, n=1000, G=1.0, softening=0.0):
-    """Newtonian N-body gravity in any dimension.
+def projectile(speed, angle_deg, drag=0.0, g=9.81, h0=0.0, n=300):
+    """Compatibility interface. Use :func:`projectile_trajectory` for time and a state matrix."""
+    warnings.warn("projectile is deprecated; use projectile_trajectory", DeprecationWarning, stacklevel=2)
+    t, y = projectile_trajectory(speed, angle_deg, drag, g, h0, n)
+    return t, y[:, 0], y[:, 1]
 
-    ``pos0`` and ``vel0`` have shape ``(N, d)``. Returns ``(t, pos, vel)`` with
-    ``pos.shape == (n, N, d)``.
+
+def nbody_trajectory(
+    masses: ArrayLike, pos0: ArrayLike, vel0: ArrayLike, t_max: float, n: int = 1000,
+    G: float = 1.0, softening: float = 0.0,
+) -> tuple[np.ndarray, np.ndarray]:
+    r"""Newtonian N-body gravity in any dimension.
+
+    ``pos0`` and ``vel0`` have shape ``(N, d)``.
+
+    Return time and a state matrix with columns for flattened positions followed by flattened velocities in body order.
     """
     m = np.asarray(masses, float)
     pos0 = np.asarray(pos0, float)
@@ -118,7 +170,16 @@ def nbody(masses, pos0, vel0, t_max, n=1000, G=1.0, softening=0.0):
         return np.concatenate([y[N * d:], acc(y[:N * d].reshape(N, d)).ravel()])
 
     t, y = solve(rhs, np.concatenate([pos0.ravel(), vel0.ravel()]), (0, t_max), n)
-    return t, y[:, :N * d].reshape(n, N, d), y[:, N * d:].reshape(n, N, d)
+    return t, y
+
+
+def nbody(masses, pos0, vel0, t_max, n=1000, G=1.0, softening=0.0):
+    """Compatibility interface. Use :func:`nbody_trajectory` for time and a state matrix."""
+    warnings.warn("nbody is deprecated; use nbody_trajectory", DeprecationWarning, stacklevel=2)
+    t, y = nbody_trajectory(masses, pos0, vel0, t_max, n, G, softening)
+    n_bodies, dim = np.asarray(pos0).shape
+    positions, velocities = np.hsplit(y, 2)
+    return t, positions.reshape(-1, n_bodies, dim), velocities.reshape(-1, n_bodies, dim)
 
 
 def nbody_energy(masses, pos, vel, G=1.0, softening=0.0):
@@ -140,3 +201,20 @@ FIGURE_EIGHT = {
     "vel0": [[0.466203685, 0.43236573], [0.466203685, 0.43236573], [-0.93240737, -0.86473146]],
     "period": 6.32591398,
 }
+
+
+def collision(m1: float, m2: float, u1: ArrayLike, u2: ArrayLike,
+              normal: ArrayLike = (1,), restitution: float = 1.) -> tuple[np.ndarray, np.ndarray]:
+    r"""Post-impact velocities for smooth bodies, $J=(1+e)(u_1-u_2)\cdot n/(1/m_1+1/m_2)$.
+
+    Use a unit direction from body one towards body two. Only closing velocities
+    receive an impulse. Tangential motion is unchanged even for zero restitution.
+    """
+    a, b, n = (np.atleast_1d(np.asarray(x, float)) for x in (u1, u2, normal))
+    if a.shape != b.shape or a.shape != n.shape or n.ndim != 1 or not np.linalg.norm(n):
+        raise ValueError("velocities and a nonzero normal must have matching dimensions")
+    if min(m1, m2) <= 0 or not 0 <= restitution <= 1:
+        raise ValueError("require positive masses and restitution between zero and one")
+    n = n / np.linalg.norm(n)
+    impulse = (1 + restitution) * max(0., (a - b) @ n) / (1/m1 + 1/m2)
+    return a - impulse*n/m1, b + impulse*n/m2

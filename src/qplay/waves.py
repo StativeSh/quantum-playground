@@ -10,6 +10,11 @@ from scipy import sparse
 from scipy.integrate import quad
 from scipy.sparse.linalg import splu
 
+__all__ = [
+    "wave_1d", "heat_1d", "fourier_coefficients", "fourier_sum", "spectrum", "grating_angle",
+    "slit_envelope", "image_distance", "refraction",
+]
+
 
 def _sample(f, x):
     return np.asarray(f(x) if callable(f) else f, float)
@@ -88,3 +93,35 @@ def spectrum(signal, dt):
     paired_end = -1 if len(signal) % 2 == 0 else None
     amp[1:paired_end] *= 2
     return np.fft.rfftfreq(len(signal), dt), amp
+
+
+def grating_angle(order: int, wavelength: float, spacing: float) -> float | None:
+    r"""Principal maximum at normal incidence, $d\sin\theta=m\lambda$; radians or None for absent orders."""
+    if min(wavelength, spacing) <= 0:
+        raise ValueError("wavelength and spacing must be positive")
+    sine = order * wavelength / spacing
+    return float(np.arcsin(sine)) if abs(sine) <= 1 else None
+
+
+def slit_envelope(theta: float, width: float, wavelength: float) -> float:
+    r"""Normalised intensity $I/I_0=\mathrm{sinc}^2(\pi w\sin\theta/\lambda)$ at angle in radians."""
+    if min(width, wavelength) <= 0:
+        raise ValueError("width and wavelength must be positive")
+    return np.sinc(width * np.sin(theta) / wavelength)**2
+
+
+def image_distance(focal_length: float, object_distance: float) -> float:
+    r"""Signed image distance in metres, $1/v=1/f-1/u$, for a real object; negative means virtual."""
+    if object_distance <= 0 or focal_length == 0:
+        raise ValueError("require a positive object distance and nonzero focal length")
+    if object_distance == focal_length:
+        return np.inf
+    return 1 / (1 / focal_length - 1 / object_distance)
+
+
+def refraction(theta: float, n1: float, n2: float) -> float | None:
+    r"""Angle from the normal, $n_1\sin\theta_1=n_2\sin\theta_2$, or None for total internal reflection."""
+    if min(n1, n2) <= 0 or abs(theta) > np.pi / 2:
+        raise ValueError("require positive indices and incidence within a half-turn about the normal")
+    sine = n1 * np.sin(theta) / n2
+    return float(np.arcsin(sine)) if abs(sine) <= 1 else None

@@ -13,6 +13,11 @@ from matplotlib.colors import PowerNorm
 
 from . import kinetic, mechanics, plotting, quantum, statmech
 
+__all__ = [
+    "ANIMATIONS", "animation", "render", "double_pendulum_anim", "wavepacket_anim",
+    "figure_eight_anim", "double_slit_anim", "ising_anim", "gas_anim",
+]
+
 ANIMATIONS: dict = {}
 
 

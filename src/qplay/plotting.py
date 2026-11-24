@@ -6,6 +6,10 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
+__all__ = [
+    "setup_style", "save", "save_gif", "shrink_gif",
+]
+
 
 def setup_style():
     plt.rcParams.update({

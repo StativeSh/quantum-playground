@@ -8,6 +8,10 @@ from __future__ import annotations
 
 import numpy as np
 
+__all__ = [
+    "rotation", "shear", "gram_schmidt", "power_iteration", "unit_circle_image", "singular_axes",
+]
+
 
 def rotation(theta):
     c, s = np.cos(theta), np.sin(theta)

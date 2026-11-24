@@ -111,20 +111,24 @@
       ]
     },
     "12": {
-      "assumes": "resolving velocity into components",
+      "assumes": "Newton's laws of motion and kinetic energy",
       "builds_on": [
         {
           "lesson": "02",
-          "for": "resolving velocity into components"
+          "for": "resolving velocities into components"
         }
       ]
     },
     "13": {
-      "assumes": "circular motion and centripetal acceleration",
+      "assumes": "Newton's laws of motion and gravitational potential energy near the Earth",
       "builds_on": [
         {
           "lesson": "03",
-          "for": "circular motion and centripetal acceleration"
+          "for": "circular motion, centripetal force and orbits"
+        },
+        {
+          "lesson": "05",
+          "for": "field strength and potential, which gravity mirrors"
         }
       ]
     },
@@ -138,29 +142,37 @@
       ]
     },
     "15": {
-      "assumes": "interference and path difference",
+      "assumes": "wavelength, frequency and the speed of light",
       "builds_on": [
         {
+          "lesson": "04",
+          "for": "superposition of waves"
+        },
+        {
           "lesson": "07",
-          "for": "interference and path difference"
+          "for": "two-slit interference and path difference"
         }
       ]
     },
     "16": {
-      "assumes": "thermal energy and temperature",
+      "assumes": "energy, power and E = Pt",
       "builds_on": [
         {
           "lesson": "09",
-          "for": "thermal energy and temperature"
+          "for": "internal energy and the kinetic model of matter"
         }
       ]
     },
     "17": {
-      "assumes": "proton and nucleon numbers",
+      "assumes": "atomic structure: protons, neutrons and the atomic mass unit",
       "builds_on": [
         {
+          "lesson": "08",
+          "for": "mass-energy equivalence, E = mc^2"
+        },
+        {
           "lesson": "10",
-          "for": "proton and nucleon numbers"
+          "for": "proton and nucleon numbers, and radioactive decay"
         }
       ]
     }

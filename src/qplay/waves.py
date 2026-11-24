@@ -6,6 +6,7 @@ Wave equation: $u_{tt} = c^2 u_{xx}$.  Heat equation: $u_t = \alpha u_{xx}$.
 from __future__ import annotations
 
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy import sparse
 from scipy.integrate import quad
 from scipy.sparse.linalg import splu
@@ -103,7 +104,7 @@ def grating_angle(order: int, wavelength: float, spacing: float) -> float | None
     return float(np.arcsin(sine)) if abs(sine) <= 1 else None
 
 
-def slit_envelope(theta: float, width: float, wavelength: float) -> float:
+def slit_envelope(theta: ArrayLike, width: float, wavelength: float) -> float | np.ndarray:
     r"""Normalised intensity $I/I_0=\mathrm{sinc}^2(\pi w\sin\theta/\lambda)$ at angle in radians."""
     if min(width, wavelength) <= 0:
         raise ValueError("width and wavelength must be positive")

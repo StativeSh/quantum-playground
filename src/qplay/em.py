@@ -106,9 +106,9 @@ def rod_emf(field: float, length: float, speed: float) -> float:
     return field * length * speed
 
 
-def coil_emf(turns: int, field: float, area: float, omega: float, time: float) -> float:
+def coil_emf(turns: int, field: float, area: float, omega: float, time: ArrayLike) -> float | np.ndarray:
     r"""Instantaneous volts, $\varepsilon=NBA\omega\sin(\omega t)$, starting at maximum flux."""
-    return turns * field * area * omega * np.sin(omega * time)
+    return turns * field * area * omega * np.sin(omega * np.asarray(time))
 
 
 def wire_field(current: float, radius: float) -> float:

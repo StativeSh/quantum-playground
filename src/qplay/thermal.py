@@ -8,7 +8,7 @@ __all__ = [
 
 
 def heating_curve(heat: ArrayLike, mass: float, start: float, melting: float,
-                  solid_capacity: float, latent_heat: float, liquid_capacity: float) -> NDArray[np.float64]:
+                  solid_capacity: float, latent_heat: float, liquid_capacity: float) -> np.float64 | NDArray[np.float64]:
     r"""Temperature during heating through fusion, $Q=mc\Delta T$ and $Q_f=mL_f$.
 
     Temperatures use kelvin, heat is in joules and capacities in J/(kg K).
@@ -22,7 +22,7 @@ def heating_curve(heat: ArrayLike, mass: float, start: float, melting: float,
     return start + np.minimum(q, onset) / (mass * solid_capacity) + np.maximum(q-end, 0) / (mass*liquid_capacity)
 
 
-def cooling(time: ArrayLike, initial: float, ambient: float, rate: float) -> NDArray[np.float64]:
+def cooling(time: ArrayLike, initial: float, ambient: float, rate: float) -> np.float64 | NDArray[np.float64]:
     r"""Newton cooling with constant surroundings, $T=T_a+(T_i-T_a)e^{-kt}$, with $k$ in inverse seconds."""
     if rate < 0:
         raise ValueError("rate must be nonnegative")

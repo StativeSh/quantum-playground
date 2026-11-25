@@ -129,11 +129,15 @@
       ]
     },
     "14": {
-      "assumes": "magnetic forces and field direction",
+      "assumes": "the field patterns of a bar magnet and of a current-carrying wire",
       "builds_on": [
         {
+          "lesson": "01",
+          "for": "angular frequency and sinusoidal graphs, which describe the emf of a rotating coil"
+        },
+        {
           "lesson": "06",
-          "for": "magnetic forces and field direction"
+          "for": "the magnetic force on moving charges and on a current-carrying wire"
         }
       ]
     },

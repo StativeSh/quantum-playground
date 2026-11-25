@@ -144,3 +144,5 @@ img { max-width: 100%; }
 
 /* A live readout or canvas resize only needs layout within its own experiment. */
 .experiment { contain: layout; }
+.experiment-figures table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.experiment-figures th, .experiment-figures td { padding: 4px; border-bottom: 1px solid var(--grid); text-align: right; overflow-wrap: anywhere; }

@@ -209,22 +209,23 @@ export function measureTable({columns}) {
 }
 
 // Ordinary least squares, with residual variance estimated using n - 2 degrees of freedom.
-export function fitLine(xs, ys) {
+export function fitLine(xs, ys, {throughOrigin = false} = {}) {
   const n = xs.length;
   if (n < 2 || n !== ys.length || !xs.every(Number.isFinite) || !ys.every(Number.isFinite)) {
     throw new RangeError("Expected at least two finite (x, y) pairs");
   }
   const mean = values => values.reduce((a, b) => a + b, 0) / n;
-  const xMean = mean(xs), yMean = mean(ys);
+  const xMean = throughOrigin ? 0 : mean(xs), yMean = throughOrigin ? 0 : mean(ys);
   const sxx = xs.reduce((sum, x) => sum + (x - xMean) ** 2, 0);
   if (sxx === 0) throw new RangeError("A line needs distinct x values");
   const gradient = xs.reduce((sum, x, i) => sum + (x - xMean) * (ys[i] - yMean), 0) / sxx;
   const intercept = yMean - gradient * xMean;
   const rss = ys.reduce((sum, y, i) => sum + ((y - yMean) - gradient * (xs[i] - xMean)) ** 2, 0);
-  const variance = rss / (n - 2);
+  const degrees = n - (throughOrigin ? 1 : 2);
+  const variance = rss / degrees;
   return {gradient, intercept,
-    gradientSE: n > 2 ? Math.sqrt(variance / sxx) : null,
-    interceptSE: n > 2 ? Math.sqrt(variance * (1 / n + xMean ** 2 / sxx)) : null};
+    gradientSE: degrees > 0 ? Math.sqrt(variance / sxx) : null,
+    interceptSE: throughOrigin ? 0 : n > 2 ? Math.sqrt(variance * (1 / n + xMean ** 2 / sxx)) : null};
 }
 
 export function guided({question, steps}) {

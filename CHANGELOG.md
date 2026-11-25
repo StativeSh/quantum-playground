@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1
+
+Lessons 1, 2, 3, 6 and 11, the demos and the figure-eight animation now use the 1.0 trajectory functions, so learners no longer see deprecation warnings. Lessons 1–11 upgrade an older installation, as lessons 12–17 already did. The test suite fails if repository code calls a deprecated name.
+
+`binding_energy_per_nucleon` accepts integer arrays, so a whole binding-energy curve takes one call. The energy drift demo is now `energy-drift`, matching the other demo names; `qplay run energy_drift` still works. The `refraction` error message now states the allowed angle range. Python 3.10 is tested with current dependencies as well as the oldest supported ones.
+
 ## 1.0.0 release series
 
 Six new lessons cover momentum, gravity, induction, optics, thermal transfer and binding energy. The explorer adds rotating-coil and diffraction-grating experiments. The energy drift demo compares Euler, RK4 and velocity Verlet on one oscillator.

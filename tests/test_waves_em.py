@@ -66,7 +66,8 @@ def test_point_charge_field_inverse_square():
 def test_cyclotron_radius():
     q, m, B, v = 1.0, 2.0, 0.5, 3.0
     T = 2 * np.pi * m / (q * B)
-    _, r, _ = em.charged_particle(q, m, [0, 0, 0], [0, 0, B], [0, 0, 0], [v, 0, 0], T, n=4001)
+    _, state = em.particle_trajectory(q, m, [0, 0, 0], [0, 0, B], [0, 0, 0], [v, 0, 0], T, n=4001)
+    r = state[:, :3]
     assert np.ptp(r[:, 1]) / 2 == pytest.approx(m * v / (q * B), rel=1e-6)
     assert np.allclose(r[-1], 0, atol=1e-6)
 

@@ -21,6 +21,32 @@ def test_notebook_opens_in_colab_and_is_committed_clean(path):
     assert all(not c.outputs and c.execution_count is None for c in code), "commit notebooks without outputs"
 
 
+def _deprecated_names():
+    """Functions kept only for 0.3 compatibility; their docstrings start "Compatibility interface"."""
+    import importlib
+
+    import qplay
+    names = set()
+    for module_name in (m for m in qplay.__all__ if m != "__version__"):
+        module = importlib.import_module(f"qplay.{module_name}")
+        for name in getattr(module, "__all__", []):
+            doc = getattr(getattr(module, name), "__doc__", None) or ""
+            if callable(getattr(module, name)) and doc.startswith("Compatibility interface"):
+                names.add(name)
+    return names
+
+
+def test_notebooks_use_the_current_api():
+    deprecated = _deprecated_names()
+    assert {"rc_circuit", "projectile", "nbody", "velocity_verlet"} <= deprecated
+    call = re.compile(r"\.(" + "|".join(sorted(deprecated)) + r")\(")
+    for path in NOTEBOOKS:
+        for cell in nbformat.read(path, as_version=4).cells:
+            if cell.cell_type == "code":
+                found = call.search(cell.source)
+                assert not found, f"{path.name} calls deprecated {found.group(1)}(); use the *_trajectory function"
+
+
 def test_lessons_have_exercises_and_solutions():
     lessons = sorted(ROOT.glob("lessons/*.ipynb"))
     assert lessons

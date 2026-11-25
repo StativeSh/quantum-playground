@@ -232,10 +232,12 @@ def test_monte_carlo_decay_is_binomial_around_exponential():
 
 def test_rc_numerics_match_exponentials():
     R, C, V0 = 2e3, 50e-6, 9.0
-    t, q, I = circuits.rc_circuit(R, C, V=V0, t_max=0.5)
+    t, state = circuits.rc_trajectory(R, C, V=V0, t_max=0.5)
+    q, I = state.T
     assert np.allclose(q / C, circuits.rc_charge(t, V0, R, C), atol=1e-8)
     assert np.allclose(I, V0 / R * np.exp(-t / (R * C)), atol=1e-10)
-    t, q, _ = circuits.rc_circuit(R, C, q0=C * V0, t_max=0.5)
+    t, state = circuits.rc_trajectory(R, C, q0=C * V0, t_max=0.5)
+    q = state[:, 0]
     assert np.allclose(q / C, circuits.rc_discharge(t, V0, R, C), atol=1e-8)
     assert circuits.rc_discharge(R * C, 1.0, R, C) == pytest.approx(np.exp(-1))     # 37% after one tau
 
@@ -243,7 +245,8 @@ def test_rc_numerics_match_exponentials():
 def test_lc_circuit_conserves_energy_and_oscillates_at_omega0():
     L, C = 0.2, 5e-6
     w0 = circuits.resonant_frequency(L, C)
-    t, q, I = circuits.rlc_series(0.0, L, C, q0=1e-5, t_max=4 * 2 * np.pi / w0, n=2000)
+    t, state = circuits.rlc_trajectory(0.0, L, C, q0=1e-5, t_max=4 * 2 * np.pi / w0, n=2000)
+    q, I = state.T
     energy = q**2 / (2 * C) + 0.5 * L * I**2
     assert np.ptp(energy) < 1e-6 * energy[0]
     assert np.allclose(q, 1e-5 * np.cos(w0 * t), atol=1e-12)
@@ -252,7 +255,8 @@ def test_lc_circuit_conserves_energy_and_oscillates_at_omega0():
 def test_critical_damping_and_quality_factor():
     L, C = 0.1, 1e-4
     Rc = 2 * np.sqrt(L / C)
-    t, q, _ = circuits.rlc_series(Rc, L, C, q0=1.0, t_max=0.2, n=4000)
+    t, state = circuits.rlc_trajectory(Rc, L, C, q0=1.0, t_max=0.2, n=4000)
+    q = state[:, 0]
     a = Rc / (2 * L)
     assert np.allclose(q, (1 + a * t) * np.exp(-a * t), atol=1e-8)
     assert q.min() > -1e-12                              # no overshoot
@@ -263,7 +267,8 @@ def test_driven_rlc_steady_state_and_bandwidth():
     R, L, C, V0 = 10.0, 0.05, 2e-6, 1.0
     w0 = circuits.resonant_frequency(L, C)
     for w in (0.8 * w0, w0, 1.25 * w0):
-        t, _, I = circuits.rlc_series(R, L, C, V=lambda t, w=w: V0 * np.cos(w * t), t_max=0.25, n=20000)
+        t, state = circuits.rlc_trajectory(R, L, C, V=lambda t, w=w: V0 * np.cos(w * t), t_max=0.25, n=20000)
+        I = state[:, 1]
         late = t > 0.2
         assert np.abs(I[late]).max() == pytest.approx(circuits.current_amplitude(w, V0, R, L, C), rel=2e-3)
     Q = circuits.quality_factor(R, L, C)

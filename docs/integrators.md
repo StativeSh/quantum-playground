@@ -6,7 +6,7 @@ Choose **rk4_trajectory** when comparing trajectories on a prescribed grid. For 
 
 Choose **verlet_trajectory** for a conservative model whose acceleration depends only on position. Use a uniform step small enough to resolve the fastest oscillation. Plot energy over many periods to distinguish bounded oscillations from accumulated drift.
 
-Use **euler_trajectory** to study first-order error. Even the undamped harmonic oscillator gains energy under forward Euler. Run `qplay run energy_drift` to compare all three fixed-step schemes at the same step size.
+Use **euler_trajectory** to study first-order error. Even the undamped harmonic oscillator gains energy under forward Euler. Run `qplay run energy-drift` to compare all three fixed-step schemes at the same step size.
 
 ## Numerical methods notebook route
 

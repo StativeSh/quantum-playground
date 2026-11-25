@@ -85,3 +85,37 @@ def test_verlet_compatibility():
     args = (lambda x: -x, [1.], [0.], [0, .1])
     with pytest.warns(DeprecationWarning):
         np.testing.assert_equal(np.column_stack(integrators.velocity_verlet(*args)), integrators.verlet_trajectory(*args)[1])
+
+
+def test_binding_energy_curve_and_valley_of_stability():
+    # Computing a whole curve at once: the most bound isobar is the stable one.
+    for A, stable_Z in [(27, 13), (56, 26), (127, 53), (208, 82)]:
+        Z = np.arange(1, A)
+        assert Z[np.argmax(nuclear.binding_energy_per_nucleon(A, Z))] == stable_Z
+    A = np.arange(20, 240, 2)
+    Z = np.round(A / (1.98 + 0.0155 * A**(2/3))).astype(int)             # near the stability line
+    assert 54 <= A[np.argmax(nuclear.binding_energy_per_nucleon(A, Z))] <= 64   # iron-nickel peak
+    assert isinstance(nuclear.binding_energy_per_nucleon(56, 26), float)
+
+
+@pytest.mark.parametrize("A,Z", [(56.0, 26), (56, 26.0), (56, 0), (56, 56), ([56, 4], [26, 4])])
+def test_binding_energy_rejects_impossible_nuclei(A, Z):
+    with pytest.raises(ValueError):
+        nuclear.binding_energy_per_nucleon(A, Z)
+
+
+@pytest.mark.parametrize("call", [
+    lambda: thermal.heating_curve(1, 0, 260, 270, 1, 10, 2),          # no mass
+    lambda: thermal.heating_curve(1, 1, 280, 270, 1, 10, 2),          # starts above melting
+    lambda: thermal.heating_curve(-1, 1, 260, 270, 1, 10, 2),         # heat removed
+    lambda: thermal.cooling(1, 300, 280, -1),                         # negative rate
+    lambda: waves.grating_angle(1, 0, 1e-6),
+    lambda: waves.slit_envelope(0, -1e-6, 5e-7),
+    lambda: waves.image_distance(0.1, 0),                             # object at the lens
+    lambda: waves.image_distance(0, 0.2),                             # zero focal length
+    lambda: waves.refraction(0.1, 0, 1.5),
+    lambda: waves.refraction(2.0, 1, 1.5),                            # beyond grazing incidence
+], ids=["mass", "start", "heat", "rate", "grating", "slit", "object", "focal", "index", "angle"])
+def test_course_models_reject_unphysical_input(call):
+    with pytest.raises(ValueError):
+        call()

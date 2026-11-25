@@ -123,6 +123,6 @@ def image_distance(focal_length: float, object_distance: float) -> float:
 def refraction(theta: float, n1: float, n2: float) -> float | None:
     r"""Angle from the normal, $n_1\sin\theta_1=n_2\sin\theta_2$, or None for total internal reflection."""
     if min(n1, n2) <= 0 or abs(theta) > np.pi / 2:
-        raise ValueError("require positive indices and incidence within a half-turn about the normal")
+        raise ValueError("require positive indices and an angle of incidence between -pi/2 and pi/2")
     sine = n1 * np.sin(theta) / n2
     return float(np.arcsin(sine)) if abs(sine) <= 1 else None

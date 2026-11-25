@@ -414,3 +414,174 @@ def test_shared_experiment_widgets(page):
     page.get_by_text("Predict the area").click()
     assert step.is_visible()
     assert canvas_ink(page, "widget-plot") > 0
+
+
+def test_offscreen_input_updates_without_scrolling(page):
+    before = page.evaluate("window.scrollY")
+    set_slider(page, "lor-rho", 15)
+    assert "fixed point" in text(page, "lor-regime")
+    assert page.evaluate("window.scrollY") == before
+    page.wait_for_timeout(200)
+    assert number(page, "lor-t") == 0
+
+
+# ---- projectile launcher ---------------------------------------------------------------
+
+@pytest.mark.parametrize("speed,angle,height", [(15, 30, 0), (30, 45, 0), (20, 65, 4)])
+def test_projectile_vacuum(page, speed, angle, height):
+    set_slider(page, "projectile-speed", speed)
+    set_slider(page, "projectile-angle", angle)
+    set_slider(page, "projectile-height", height)
+    times, state = mechanics.projectile_trajectory(speed, angle, h0=height)
+    assert number(page, "projectile-range") == pytest.approx(state[-1, 0], abs=0.006)
+    assert number(page, "projectile-flight") == pytest.approx(times[-1], abs=0.006)
+
+
+@pytest.mark.parametrize("speed,angle,height", [(10, 15, 5), (30, 45, 0), (40, 80, 10)])
+def test_projectile_with_drag(page, speed, angle, height):
+    page.check("#projectile-drag")
+    set_slider(page, "projectile-speed", speed)
+    set_slider(page, "projectile-angle", angle)
+    set_slider(page, "projectile-height", height)
+    times, state = mechanics.projectile_trajectory(speed, angle, drag=0.02, h0=height, n=1001)
+    assert number(page, "projectile-range") == pytest.approx(state[-1, 0], abs=0.006)
+    assert number(page, "projectile-flight") == pytest.approx(times[-1], abs=0.006)
+    assert number(page, "projectile-peak") == pytest.approx(state[:, 1].max(), abs=0.006)
+
+
+@pytest.mark.parametrize("frequency,work", [(500, 2.28), (900, 2.28), (1500, 5.6)])
+def test_photoelectric_threshold_and_energy(page, frequency, work):
+    from scipy.constants import elementary_charge, h
+    page.select_option("#photoelectric-metal", str(work))
+    set_slider(page, "photoelectric-frequency", frequency)
+    energy_ev = max(0, h * frequency * 1e12 / elementary_charge - work)
+    assert number(page, "photoelectric-threshold") == pytest.approx(work * elementary_charge / h / 1e12, abs=0.006)
+    assert number(page, "photoelectric-energy") == pytest.approx(energy_ev, abs=0.0006)
+    assert number(page, "photoelectric-cutoff") == pytest.approx(energy_ev, abs=0.0006)
+
+
+@pytest.mark.parametrize("frequency,intensity,voltage", [(400, 5, 0), (800, 2, 0), (800, 4, 0.5), (800, 4, 2)])
+def test_photoelectric_collector_current(page, frequency, intensity, voltage):
+    from scipy.constants import elementary_charge, h
+    set_slider(page, "photoelectric-frequency", frequency)
+    set_slider(page, "photoelectric-intensity", intensity)
+    set_slider(page, "photoelectric-voltage", voltage)
+    photon = h * frequency * 1e12
+    available = photon - 2.1 * elementary_charge  # caesium
+    fraction = max(0, 1 - elementary_charge * voltage / available) if available > 0 else 0
+    expected = intensity * 1e-4 / photon * elementary_charge * fraction
+    assert number(page, "photoelectric-current") == pytest.approx(expected * 1e6, abs=0.0006)
+
+
+def prepare_decay(page, initial, probability):
+    button = page.locator("#decay-play")
+    if button.get_attribute("aria-pressed") == "true":
+        button.click()
+    set_slider(page, "decay-initial", initial)
+    set_slider(page, "decay-probability", probability)
+
+
+@pytest.mark.parametrize("initial,probability,steps", [(200, 0.1, 5), (600, 0.25, 3), (1000, 0.5, 2)])
+def test_decay_sample_and_expected_count(page, initial, probability, steps):
+    from qplay import nuclear
+    prepare_decay(page, initial, probability)
+    for _ in range(steps):
+        page.click("#decay-step")
+    expected = nuclear.remaining(initial, -math.log1p(-probability), steps)
+    sigma = math.sqrt(expected * (1 - expected / initial))  # binomial survivors
+    assert number(page, "decay-expected") == pytest.approx(expected, abs=0.006)
+    assert number(page, "decay-count") == pytest.approx(expected, abs=4*sigma)
+    assert number(page, "decay-time") == steps
+
+
+@pytest.mark.parametrize("initial,probability", [(500, 0.15), (800, 0.3), (1000, 0.5)])
+def test_decay_measured_half_life(page, initial, probability):
+    from qplay import nuclear
+    prepare_decay(page, initial, probability)
+    decay_const = -math.log1p(-probability)
+    half = nuclear.half_life(decay_const)
+    for _ in range(math.ceil(half) + 3):
+        page.click("#decay-step")
+    assert number(page, "decay-half") == pytest.approx(half, abs=0.0006)
+    # Propagate the binomial count uncertainty at N0/2 through dN/dt = -lambda*N.
+    assert number(page, "decay-observed") == pytest.approx(half, abs=4 / (decay_const * math.sqrt(initial)) + 0.1)
+
+
+@pytest.mark.parametrize("r_kohm,c_uf,supply,t", [(2, 50, 4, 0), (5, 100, 6, 0.5), (10, 200, 12, 3)])
+def test_rc_charge(page, r_kohm, c_uf, supply, t):
+    from qplay import circuits
+    set_slider(page, "rc-resistance", r_kohm)
+    set_slider(page, "rc-capacitance", c_uf)
+    set_slider(page, "rc-supply", supply)
+    set_slider(page, "rc-time", t)
+    r, c = r_kohm * 1000, c_uf * 1e-6
+    voltage = circuits.rc_charge(t, supply, r, c)
+    assert number(page, "rc-voltage") == pytest.approx(voltage, abs=0.0006)
+    assert number(page, "rc-current") == pytest.approx((supply-voltage)/r_kohm, abs=0.0006)
+    assert number(page, "rc-tau") == pytest.approx(r*c, abs=0.0006)
+
+
+@pytest.mark.parametrize("r_kohm,c_uf,supply,t", [(1, 20, 3, 0), (4, 50, 8, 0.2), (20, 200, 12, 5)])
+def test_rc_discharge(page, r_kohm, c_uf, supply, t):
+    from qplay import circuits
+    page.select_option("#rc-mode", "discharge")
+    set_slider(page, "rc-resistance", r_kohm)
+    set_slider(page, "rc-capacitance", c_uf)
+    set_slider(page, "rc-supply", supply)
+    set_slider(page, "rc-time", t)
+    voltage = circuits.rc_discharge(t, supply, r_kohm*1000, c_uf*1e-6)
+    assert number(page, "rc-voltage") == pytest.approx(voltage, abs=0.0006)
+    assert number(page, "rc-current") == pytest.approx(-voltage/r_kohm, abs=0.0006)
+    assert number(page, "rc-energy") == pytest.approx(0.5*c_uf*1e-3*supply**2, abs=0.0006)
+
+
+def configure_carts(page, m1, m2, u1, u2, restitution):
+    for key, value in [("mass1", m1), ("mass2", m2), ("u1", u1), ("u2", u2), ("restitution", restitution)]:
+        set_slider(page, f"collisions-{key}", value)
+    return mechanics.collision(m1, m2, u1, u2, normal=(1,), restitution=restitution)
+
+
+@pytest.mark.parametrize("m1,m2,u1,u2,e", [(1, 1, 2, 0, 1), (2, 3, 1, -2, 0), (1, 3, -2, 2, 0.5)])
+def test_cart_velocities(page, m1, m2, u1, u2, e):
+    v1, v2 = configure_carts(page, m1, m2, u1, u2, e)
+    assert number(page, "collisions-v1") == pytest.approx(v1.item(), abs=0.0006)
+    assert number(page, "collisions-v2") == pytest.approx(v2.item(), abs=0.0006)
+
+
+@pytest.mark.parametrize("m1,m2,u1,u2,e", [(1, 2, 3, -1, 1), (2, 0.5, 1, -2, 0.4), (3, 2, 2, 0, 0)])
+def test_cart_momentum_and_energy(page, m1, m2, u1, u2, e):
+    v1, v2 = configure_carts(page, m1, m2, u1, u2, e)
+    momentum = m1*u1 + m2*u2
+    for key in ("p-before", "p-after"):
+        assert number(page, f"collisions-{key}") == pytest.approx(momentum, abs=0.0006)
+    assert number(page, "collisions-k-before") == pytest.approx((m1*u1**2 + m2*u2**2)/2, abs=0.0006)
+    final = (m1*v1.item()**2 + m2*v2.item()**2)/2
+    assert number(page, "collisions-k-after") == pytest.approx(final, abs=0.0006)
+
+
+@pytest.mark.parametrize("probe,start,mass,power", [(1, 240, 1, 100), (50, 263, 0.5, 500), (99, 270, 2, 1000)])
+def test_heating_temperature_across_phases(page, probe, start, mass, power):
+    from qplay import thermal
+    set_slider(page, "heating-probe", probe)
+    set_slider(page, "heating-start", start)
+    set_slider(page, "heating-mass", mass)
+    set_slider(page, "heating-power", power)
+    total_heat = mass * (2100*(273.15-start) + 334000 + 4200*20)
+    supplied = total_heat * probe / 100
+    assert number(page, "heating-time") == pytest.approx(supplied/power, abs=0.0006)
+    assert number(page, "heating-heat") == pytest.approx(supplied/1000, abs=0.0006)
+    assert number(page, "heating-temperature") == pytest.approx(
+        thermal.heating_curve(supplied, mass, start, 273.15, 2100, 334000, 4200), abs=0.006)
+
+
+@pytest.mark.parametrize("material,mass,power,melting,latent", [
+    ("water", 0.5, 250, 273.15, 334000), ("water", 1, 500, 273.15, 334000),
+    ("gallium", 0.8, 400, 302.91, 80100)])
+def test_heating_melting_plateau(page, material, mass, power, melting, latent):
+    page.select_option("#heating-material", material)
+    set_slider(page, "heating-mass", mass)
+    set_slider(page, "heating-power", power)
+    assert number(page, "heating-duration") == pytest.approx(mass*latent/power, abs=0.006)
+    for probe in (35, 65):
+        set_slider(page, "heating-probe", probe)
+        assert number(page, "heating-temperature") == pytest.approx(melting, abs=0.006)

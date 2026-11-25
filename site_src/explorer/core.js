@@ -109,12 +109,14 @@ export function registerSim(name, buttonId, step, draw) {
     if (on && sim.visible) scheduleAnimation();
   }
   button.addEventListener("click", () => setPlaying(!sim.playing));
-  // Keep the active simulation in view when a control is adjusted off-screen.
-  section.addEventListener("input", event => {
-    const rect = section.getBoundingClientRect();
-    if (rect.bottom <= 0 || rect.top >= innerHeight) {
-      event.target.scrollIntoView({block: "nearest"});
-    }
+  // Capture non-bubbling inputs too. Draw after the control has updated its state.
+  let inputFrame = null;
+  section.addEventListener("input", () => {
+    if (inputFrame !== null || (sim.visible && sim.playing)) return;
+    inputFrame = requestAnimationFrame(() => {
+      inputFrame = null;
+      if (!sim.visible || !sim.playing) draw();
+    });
   }, true);
   setPlaying(!matchMedia("(prefers-reduced-motion: reduce)").matches);
   return setPlaying;
@@ -164,7 +166,13 @@ export function plot(canvas, {xLabel, yLabel, series}) {
   }
   const {X, Y} = axes(ctx, w, h, range(0), range(1), {xlabel: xLabel, ylabel: yLabel});
   series.forEach(({points, color, dash}, i) => {
-    line(ctx, points.map(([x, y]) => [X(x), Y(y)]), color ?? tok(i % 2 ? "--accent-2" : "--accent"), 2, dash);
+    const stroke = color ?? tok(i % 2 ? "--accent-2" : "--accent");
+    if (points.length === 1) {
+      const [[x, y]] = points;
+      dot(ctx, X(x), Y(y), 4, stroke);
+    } else {
+      line(ctx, points.map(([x, y]) => [X(x), Y(y)]), stroke, 2, dash);
+    }
   });
 }
 
@@ -228,4 +236,27 @@ export function guided({question, steps}) {
   }
   element.append(summary, list);
   return element;
+}
+
+// Mount the common controls beside an experiment's canvas.
+export function experiment(id, question, steps) {
+  const section = $(id);
+  section.querySelector(".prediction").append(guided({question, steps}));
+  function range(key, label, min, max, step, value, unit = "") {
+    const control = slider({id: id + "-" + key, label, min, max, step, value, unit});
+    section.querySelector(".controls").append(control.element);
+    return () => control.input.valueAsNumber;
+  }
+  function result(key, label, unit = "", digits = 2) {
+    const field = readout({id: id + "-" + key, label,
+      format: value => typeof value === "number" ? [value.toFixed(digits), unit].filter(Boolean).join(" ") : value});
+    section.querySelector(".results").append(field.element);
+    return field.set;
+  }
+  function start(update, redraw = update) {
+    for (const control of section.querySelectorAll("input, select")) control.addEventListener("input", update);
+    update();
+    onRedraw(redraw);
+  }
+  return {range, result, start};
 }

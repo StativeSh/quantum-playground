@@ -73,6 +73,16 @@
       <li><a href="#rp-spring">Mass–spring period</a></li>
       <li><a href="#rp-freefall">Free fall with light gates</a></li>
     </ul></div>
+    <div><h2>Beyond the specification</h2><ul>
+      <li><a href="#integrator-drift">Integrator energy drift</a></li>
+      <li><a href="#coherent-state">Coherent state in a harmonic well</a></li>
+      <li><a href="#double-pendulum">Two double pendulums</a></li>
+      <li><a href="#logistic">Logistic map and bifurcation</a></li>
+      <li><a href="#phase-portrait">Phase portraits</a></li>
+      <li><a href="#hydrogen">Hydrogen orbitals</a></li>
+      <li><a href="#bloch">Precession on the Bloch sphere</a></li>
+      <li><a href="#fourier">Build a Fourier series</a></li>
+    </ul></div>
   </nav>
 
   <!-- ===================== Pendulum ===================== -->
@@ -692,6 +702,123 @@
     </div>
   </section>
 
+  <section class="experiment" id="fourier" aria-labelledby="fourier-h">
+    <div class="side">
+      <h2 id="fourier-h">Build a Fourier series</h2>
+      <div class="prediction"></div>
+      <p>Add odd harmonics to a square wave of height ±1. Overshoot is measured as a percentage of the jump.</p>
+      <div class="controls"></div>
+      <div class="results"></div>
+      <a href="../lessons/04_stationary_waves.html">Explore lesson 4 in Python</a>
+    </div>
+    <div class="plots experiment-figures">
+      <canvas class="c-plot" id="fourier-plot" role="img" aria-label="Square wave and its truncated Fourier series"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="bloch" aria-labelledby="bloch-h">
+    <div class="side">
+      <h2 id="bloch-h">Precession on the Bloch sphere</h2>
+      <div class="prediction"></div>
+      <p>A spin initially points in the xz plane. A constant field along z gives the Hamiltonian ℏωσz/2.</p>
+      <div class="controls"></div>
+      <button type="button" id="bloch-play">Play</button>
+      <div class="results"></div>
+      <a href="../lessons/07_wave_particle_duality.html">Explore lesson 7 in Python</a>
+    </div>
+    <div class="plots experiment-figures">
+      <canvas class="c-plot" id="bloch-plot" role="img" aria-label="Projected Bloch sphere with the spin vector and precession circle"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="hydrogen" aria-labelledby="hydrogen-h">
+    <div class="side">
+      <h2 id="hydrogen-h">Hydrogen orbitals</h2>
+      <div class="prediction"></div>
+      <p>Choose quantum numbers and sample the density in a plane through the nucleus. Lengths are in Bohr radii.</p>
+      <div class="controls"></div>
+      <div class="results"></div>
+      <a href="../lessons/07_wave_particle_duality.html">Explore lesson 7 in Python</a>
+    </div>
+    <div class="plots experiment-figures">
+      <canvas class="c-plot" id="hydrogen-plot" role="img" aria-label="Hydrogen probability density in the xz plane with a marked probe"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="phase-portrait" aria-labelledby="phase-portrait-h">
+    <div class="side">
+      <h2 id="phase-portrait-h">Phase portraits</h2>
+      <div class="prediction"></div>
+      <p>Explore dx/dt = y and dy/dt = −kx − by in dimensionless units. Arrows indicate the local direction of motion.</p>
+      <div class="controls"></div>
+      <div class="results"></div>
+      <a href="../lessons/01_simple_harmonic_motion.html">Explore lesson 1 in Python</a>
+    </div>
+    <div class="plots experiment-figures">
+      <canvas class="c-plot" id="phase-portrait-plot" role="img" aria-label="Direction field and trajectories of a linear dynamical system"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="logistic" aria-labelledby="logistic-h">
+    <div class="side">
+      <h2 id="logistic-h">Logistic map and bifurcation</h2>
+      <div class="prediction"></div>
+      <p>Iterate x → rx(1 − x) for a population fraction. The bifurcation diagram discards the first 500 iterations.</p>
+      <div class="controls"></div>
+      <div class="results"></div>
+      <a href="../lessons/10_radioactive_decay.html">Explore lesson 10 in Python</a>
+    </div>
+    <div class="plots experiment-figures">
+      <canvas class="c-plot" id="logistic-plot" role="img" aria-label="Population fraction over successive iterations"></canvas>
+      <canvas class="c-plot" id="logistic-plot2" role="img" aria-label="Attracting populations against growth parameter"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="double-pendulum" aria-labelledby="double-pendulum-h">
+    <div class="side">
+      <h2 id="double-pendulum-h">Two double pendulums</h2>
+      <div class="prediction"></div>
+      <p>Both systems have 1 m rods, 1 kg bobs and start from rest. Only the starting angle of the second lower rod differs.</p>
+      <div class="controls"></div>
+      <button type="button" id="double-pendulum-play">Play</button>
+      <div class="results"></div>
+      <a href="../lessons/01_simple_harmonic_motion.html">Explore lesson 1 in Python</a>
+    </div>
+    <div class="plots experiment-figures">
+      <canvas class="c-plot" id="double-pendulum-plot" role="img" aria-label="Pair of double pendulums with separate pivots and trails"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="coherent-state" aria-labelledby="coherent-state-h">
+    <div class="side">
+      <h2 id="coherent-state-h">Coherent state in a harmonic well</h2>
+      <div class="prediction"></div>
+      <p>Use natural units ℏ = m = 1. Vary the initial complex amplitude and inspect the packet at different times.</p>
+      <div class="controls"></div>
+      <button type="button" id="coherent-state-play">Play</button>
+      <div class="results"></div>
+      <a href="../lessons/07_wave_particle_duality.html">Explore lesson 7 in Python</a>
+    </div>
+    <div class="plots experiment-figures">
+      <canvas class="c-plot" id="coherent-state-plot" role="img" aria-label="Position probability density and its harmonic potential"></canvas>
+      <canvas class="c-plot" id="coherent-state-plot2" role="img" aria-label="Harmonic potential and the packet’s mean energy"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="integrator-drift" aria-labelledby="integrator-drift-h">
+    <div class="side">
+      <h2 id="integrator-drift-h">Integrator energy drift</h2>
+      <div class="prediction"></div>
+      <p>Integrate a unit-mass harmonic oscillator from x = 1, v = 0 using the same time step for all three methods. The graph shows Euler in rust, RK4 dashed and Verlet in the text colour.</p>
+      <div class="controls"></div>
+      <div class="results"></div>
+      <a href="../lessons/01_simple_harmonic_motion.html">Explore lesson 1 in Python</a>
+    </div>
+    <div class="plots experiment-figures">
+      <canvas class="c-plot" id="integrator-drift-plot" role="img" aria-label="Relative energy errors for Euler, RK4 and velocity Verlet"></canvas>
+    </div>
+  </section>
+
   <footer>
     <p>Everything is computed in your browser. The same physics lives in Python as <code>mechanics.pendulum_period</code>, <code>quantum.barrier_transmission</code>, <code>quantum.double_slit_experiment</code>, <code>mechanics.nbody</code>, <code>chaos.lorenz</code> and <code>statmech.ising</code>, where it is checked against these analytic results by the test suite.</p>
     <p>The tunnelling plot is the exact stationary state, matched across both barrier edges. The double-slit pattern uses the Fraunhofer (far-field) formula.</p>
@@ -728,5 +855,13 @@
 <script type="module" src="./exp-rp-capacitor.js"></script>
 <script type="module" src="./exp-rp-boyle.js"></script>
 <script type="module" src="./exp-rp-searchcoil.js"></script>
+<script type="module" src="./exp-fourier.js"></script>
+<script type="module" src="./exp-bloch.js"></script>
+<script type="module" src="./exp-hydrogen.js"></script>
+<script type="module" src="./exp-phase-portrait.js"></script>
+<script type="module" src="./exp-logistic.js"></script>
+<script type="module" src="./exp-double-pendulum.js"></script>
+<script type="module" src="./exp-coherent-state.js"></script>
+<script type="module" src="./exp-integrator-drift.js"></script>
 </body>
 </html>

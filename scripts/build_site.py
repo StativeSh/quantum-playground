@@ -168,9 +168,7 @@ def build(out, quick=False):
     nb_paths, notebooks = notebook_cards("notebooks")
     _, lessons = notebook_cards("lessons")
 
-    explorer = out / "explorer"
-    explorer.mkdir(parents=True)
-    shutil.copy(ROOT / "site_src" / "explorer.html", explorer / "index.html")
+    shutil.copytree(ROOT / "site_src" / "explorer", out / "explorer")
     import markdown2
     for name in ("migration", "integrators"):
         guide = (ROOT / "docs" / f"{name}.md").read_text(encoding="utf-8")

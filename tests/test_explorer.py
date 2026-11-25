@@ -1,4 +1,4 @@
-"""Behavioural tests for the interactive explorer (site_src/explorer.html) in a real browser.
+"""Behavioural tests for the interactive explorer (site_src/explorer/) in a real browser.
 
 They move sliders, read the numbers the page shows, and check them against the Python package
 or an analytic result; they also let the animations run and check what they converge to.
@@ -9,7 +9,10 @@ variable QPLAY_REQUIRE_BROWSER is set (CI sets it, so a broken browser fails the
 import math
 import os
 import re
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from threading import Thread
 
 import numpy as np
 import pytest
@@ -18,12 +21,29 @@ from qplay import mechanics, quantum, statmech
 
 pytestmark = pytest.mark.slow
 REQUIRE = bool(os.environ.get("QPLAY_REQUIRE_BROWSER"))
-PAGE = (Path(__file__).resolve().parents[1] / "site_src" / "explorer.html").as_uri()
+PAGE = None  # assigned the loopback server URL for the duration of this module
 
 if REQUIRE:
     from playwright.sync_api import sync_playwright
 else:
     sync_playwright = pytest.importorskip("playwright.sync_api").sync_playwright
+
+
+@pytest.fixture(scope="module", autouse=True)
+def explorer_server():
+    global PAGE
+    directory = Path(__file__).resolve().parents[1] / "site_src" / "explorer"
+    handler = partial(SimpleHTTPRequestHandler, directory=directory)
+    with ThreadingHTTPServer(("127.0.0.1", 0), handler) as server:
+        PAGE = f"http://127.0.0.1:{server.server_port}/"
+        thread = Thread(target=server.serve_forever)
+        thread.start()
+        try:
+            yield
+        finally:
+            server.shutdown()
+            thread.join()
+            PAGE = None
 
 
 @pytest.fixture(scope="module")
@@ -45,7 +65,8 @@ def open_page(browser, width=1200, height=900, **context_options):
     errors = []
     page.on("pageerror", lambda err: errors.append(str(err)))
     page.on("console", lambda msg: errors.append(msg.text) if msg.type == "error" else None)
-    page.route(re.compile(r"^https?://"), lambda route: route.abort())   # hermetic: no fonts or CDNs
+    page.route(re.compile(r"^https?://"), lambda route: (
+        route.continue_() if route.request.url.startswith(PAGE) else route.abort()))
     page.goto(PAGE)
     page.all_errors = errors
     return page
@@ -293,3 +314,103 @@ def test_grating_orders(page, density):
     angles = [waves.grating_angle(m, 500e-9, 1e-3/density) for m in range(-10, 11)]
     assert number(page, "grating-count") == sum(a is not None for a in angles)
     assert number(page, "grating-angle") == pytest.approx(math.degrees(angles[11]), abs=.006)
+
+
+def test_every_experiment_at_phone_width(browser):
+    page = open_page(browser, width=375, height=800, reduced_motion="reduce", color_scheme="dark")
+    try:
+        sections = page.locator(".experiment").all()
+        links = page.locator(".experiment-index a")
+        anchors = links.evaluate_all("links => links.map(a => a.hash.slice(1))")
+        assert sections and set(anchors) == {section.get_attribute("id") for section in sections}
+        for section in sections:
+            anchor = section.get_attribute("id")
+            page.locator(f'.experiment-index a[href="#{anchor}"]').first.click()
+            assert page.url.endswith(f"#{anchor}")
+            assert section.get_by_role("heading").is_visible()
+            assert page.evaluate("document.documentElement.scrollWidth") <= 375
+            canvases = section.locator("canvas").all()
+            assert canvases
+            for canvas in canvases:
+                assert canvas_ink(page, canvas.get_attribute("id")) > 0
+            for button in section.locator("button[aria-pressed]").all():
+                assert button.get_attribute("aria-pressed") == "false"
+                assert button.inner_text() == "Play"
+        assert page.all_errors == []
+    finally:
+        page.context.close()
+
+
+def test_frame_time_with_all_simulations_visible(page):
+    # Show all experiments so IntersectionObserver enables every playing simulation.
+    height = page.evaluate("document.documentElement.scrollHeight")
+    page.set_viewport_size({"width": 1200, "height": height})
+    buttons = page.locator(".experiment button[aria-pressed]").all()
+    assert buttons and all(b.get_attribute("aria-pressed") == "true" for b in buttons)
+    intervals = page.evaluate("""() => new Promise(resolve => {
+        const samples = [];
+        let previous;
+        function frame(now) {
+            if (previous !== undefined) samples.push(now - previous);
+            previous = now;
+            if (samples.length === 40) resolve(samples);
+            else requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+    })""")
+    assert np.percentile(intervals, 90) < 100  # allow occasional slow frames on CI
+    assert number(page, "lor-t") > 0
+
+
+def test_offscreen_simulation_suspends_and_resumes(page):
+    clock = page.locator("#lor-t")
+    wait_until(page, "document.getElementById('lor-t').textContent === '0.0'")
+    clock.scroll_into_view_if_needed()
+    wait_until(page, "+document.getElementById('lor-t').textContent > 0.2")
+    page.locator("h1").scroll_into_view_if_needed()
+    page.wait_for_timeout(150)  # allow the intersection callback to run
+    paused = clock.inner_text()
+    page.wait_for_timeout(350)
+    assert clock.inner_text() == paused
+    clock.scroll_into_view_if_needed()
+    page.wait_for_function("t => +document.getElementById('lor-t').textContent > t", arg=float(paused))
+
+
+def test_fit_line_and_seeded_sampling(page):
+    result = page.evaluate("""async () => {
+        const {fitLine, seededRandom} = await import("./core.js");
+        const a = seededRandom(42), b = seededRandom(42), c = seededRandom(43);
+        const sample = generator => Array.from({length: 16}, generator);
+        return [fitLine([-1, 0, 1], [1, 0, 5]), sample(a), sample(b), sample(c)];
+    }""")
+    fit, first, repeat, different = result
+    # y = 2x + 2 with residuals [1, -2, 1]; one residual degree of freedom.
+    assert fit == pytest.approx(dict(gradient=2, intercept=2, gradientSE=math.sqrt(3), interceptSE=math.sqrt(2)))
+    assert first == repeat and first != different
+    assert all(0 <= value < 1 for value in first)
+
+
+def test_shared_experiment_widgets(page):
+    page.evaluate("""async () => {
+        const {slider, readout, measureTable, guided, plot} = await import("./core.js");
+        const control = slider({id: "distance", label: "Distance", min: 0, max: 5,
+                                step: 0.5, value: 1, unit: "m", format: v => v.toFixed(1)});
+        const value = readout({id: "area", label: "Area", format: v => v + " m²"});
+        control.input.addEventListener("input", () => value.set(control.input.valueAsNumber ** 2));
+        const table = measureTable({columns: ["x", "y"]});
+        table.addRow([1, 2]);
+        const box = guided({question: "Predict the area", steps: ["Square the distance"]});
+        const canvas = document.createElement("canvas");
+        canvas.id = "widget-plot";
+        document.body.append(control.element, value.element, table.element, box, canvas);
+        plot(canvas, {xLabel: "x", yLabel: "y", series: [{points: [[0, 0], [1, 2]]}]});
+    }""")
+    set_slider(page, "distance", 2.5)
+    assert page.locator("output[for=distance]").inner_text() == "2.5 m"
+    assert text(page, "area") == "6.25 m²"
+    assert page.get_by_role("cell").all_text_contents() == ["1", "2"]
+    step = page.get_by_text("Square the distance")
+    assert not step.is_visible()
+    page.get_by_text("Predict the area").click()
+    assert step.is_visible()
+    assert canvas_ink(page, "widget-plot") > 0

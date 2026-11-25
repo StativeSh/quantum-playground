@@ -16,7 +16,7 @@ function orbParams() {
   $("orb-a").textContent = Number.isFinite(el.a) ? fmt(el.a) : "∞ (escapes)";
   $("orb-T").textContent = Number.isFinite(el.T) ? fmt(el.T, 2) : "–";
   $("orb-Tm").textContent = "waiting…";
-  drawOrb(); drawOrbCurve();
+  drawOrbCurve();
 }
 function stepOrb(dt) {                                       // velocity Verlet, small fixed substeps
   const n = Math.max(1, Math.ceil(dt * 3 / 0.0005)), h = dt * 3 / n;   // 3 time units per second
@@ -70,5 +70,6 @@ function drawOrbCurve() {
 $("orb-v").addEventListener("input", orbParams);
 
 orbParams();
+drawOrb();
 registerSim("orb", "orb-play", stepOrb, drawOrb);
 onRedraw(() => { drawOrb(); drawOrbCurve(); });

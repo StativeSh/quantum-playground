@@ -22,7 +22,7 @@ function lorParams() {
   badge.textContent = p.rho < 1 ? "ρ < 1 · decays to rest" : chaotic ? "ρ > ρ_H · chaotic" : "ρ < ρ_H · settles on a fixed point";
   badge.style.color = chaotic ? tok("--accent-2") : tok("--accent");
   $("lor-t").textContent = "0.0"; $("lor-sep").textContent = "1e-8";
-  drawLor(); drawLorCurve();
+  drawLorCurve();
 }
 function stepLor(dt) {
   const h = 0.004, n = Math.max(1, Math.round(dt / 0.016 * 4));
@@ -56,5 +56,6 @@ function drawLorCurve() {
 ["lor-rho", "lor-sigma", "lor-beta"].forEach((id) => $(id).addEventListener("input", lorParams));
 
 lorParams();
+drawLor();
 registerSim("lor", "lor-play", stepLor, drawLor);
 onRedraw(() => { drawLor(); drawLorCurve(); });

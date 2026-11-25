@@ -20,7 +20,7 @@ function pendParams() {
   $("pend-T").textContent = `${fmt(T)} s`;
   $("pend-T0").textContent = `${fmt(T0)} s`;
   $("pend-ratio").textContent = `${fmt(T / T0)} ×`;
-  drawPendCurve(); drawPend();
+  drawPendCurve();
 }
 function stepPend(dt) {                    // RK4 with 1 ms substeps
   const k = g / pend.L, n = Math.max(1, Math.ceil(dt / 0.001)), h = dt / n;
@@ -66,5 +66,6 @@ function drawPendCurve() {
 ["pend-amp", "pend-len"].forEach((id) => $(id).addEventListener("input", pendParams));
 
 pendParams();
+drawPend();
 registerSim("pend", "pend-play", stepPend, drawPend);
 onRedraw(() => { drawPendCurve(); drawPend(); });

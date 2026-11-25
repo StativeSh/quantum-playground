@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Quantum Playground Explorer</title>
-<meta name="description" content="Explore eight interactive physics experiments, from pendulum periods and quantum tunnelling to rotating coils and diffraction orders.">
+<meta name="description" content="Explore fourteen interactive physics experiments, from pendulum periods and quantum tunnelling to rotating coils and diffraction orders.">
 <link rel="stylesheet" href="./style.css">
 <link rel="icon" href="data:,">
 </head>
@@ -14,32 +14,44 @@
   <header>
     <nav class="glassbar" aria-label="Site"><a class="brand" href="../">← quantum-playground</a><span class="eyebrow">Interactive explorer</span></nav>
     <h1>Quantum Playground Explorer</h1>
-    <p class="lede">Eight experiments from the <a href="https://github.com/StativeSh/quantum-playground">quantum-playground</a> Python package, recomputed live as you drag. Each one puts an exact result next to the approximation it replaces.</p>
+    <p class="lede">Fourteen experiments from the <a href="https://github.com/StativeSh/quantum-playground">quantum-playground</a> Python package, recomputed live as you drag.</p>
   </header>
 
   <nav class="experiment-index" aria-label="Experiments by learning route">
     <div><h2>Mechanics</h2><ul>
+      <li><a href="#collisions">Air-track collisions</a></li>
+      <li><a href="#projectile">Projectile launcher</a></li>
       <li><a href="#pendulum">Pendulum period</a></li>
       <li><a href="#kepler">Kepler orbits</a></li>
       <li><a href="#lorenz">Lorenz attractor</a></li>
     </ul></div>
     <div><h2>Waves to quantum</h2><ul>
+      <li><a href="#photoelectric">Photoelectric effect</a></li>
       <li><a href="#double-slit">Young's double slit</a></li>
       <li><a href="#grating">Diffraction orders</a></li>
       <li><a href="#tunnelling">Quantum tunnelling</a></li>
     </ul></div>
     <div><h2>Fields</h2><ul>
+      <li><a href="#rc">RC charge and discharge</a></li>
       <li><a href="#kepler">Kepler orbits</a></li>
     </ul></div>
     <div><h2>Modern physics</h2><ul>
+      <li><a href="#decay">Radioactive decay dice</a></li>
+      <li><a href="#photoelectric">Photoelectric effect</a></li>
       <li><a href="#tunnelling">Quantum tunnelling</a></li>
       <li><a href="#double-slit">Young's double slit</a></li>
     </ul></div>
     <div><h2>Thermal physics</h2><ul>
+      <li><a href="#heating">Heating curve</a></li>
       <li><a href="#ising">Ising model</a></li>
     </ul></div>
     <div><h2>Electromagnetism</h2><ul>
+      <li><a href="#rc">RC charge and discharge</a></li>
       <li><a href="#coil">A rotating coil</a></li>
+    </ul></div>
+    <div><h2>Exponential change</h2><ul>
+      <li><a href="#rc">RC charge and discharge</a></li>
+      <li><a href="#decay">Radioactive decay dice</a></li>
     </ul></div>
   </nav>
 
@@ -311,6 +323,95 @@
     </div>
     <div class="plots"><canvas class="c-plot" id="grating-plot" role="img" aria-label="Fan of allowed diffracted rays at normal incidence"></canvas></div>
   </section>
+  <section class="experiment" id="projectile" aria-labelledby="projectile-h">
+    <div class="side">
+      <h2 id="projectile-h">Projectile launcher</h2>
+      <div class="prediction"></div>
+      <div class="controls"></div>
+      <label><input id="projectile-drag" type="checkbox"> Quadratic air resistance (0.020 m⁻¹)</label>
+      <div class="results"></div>
+      <a href="../lessons/02_projectile_motion.html">Explore lesson 2 in Python</a>
+    </div>
+    <div class="plots">
+      <canvas class="c-plot" id="projectile-plot" role="img" aria-label="Flight path above the ground"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="photoelectric" aria-labelledby="photoelectric-h">
+    <div class="side">
+      <h2 id="photoelectric-h">Photoelectric effect</h2>
+      <div class="prediction"></div>
+      <p>Ideal collector with 1 cm² illuminated area, one electron per absorbed photon and a uniform distribution of forward kinetic energies from zero to the maximum.</p>
+      <div class="controls"></div>
+      <label>Metal <select id="photoelectric-metal"><option value="2.1">Caesium (2.10 eV)</option><option value="2.28">Sodium (2.28 eV)</option><option value="4.3">Zinc (4.30 eV)</option><option value="5.6">Platinum (5.60 eV)</option></select></label>
+      <div class="results"></div>
+      <a href="../lessons/07_wave_particle_duality.html">Explore lesson 7 in Python</a>
+    </div>
+    <div class="plots">
+      <canvas class="c-plot" id="photoelectric-plot" role="img" aria-label="Collected current against retarding voltage"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="decay" aria-labelledby="decay-h">
+    <div class="side">
+      <h2 id="decay-h">Radioactive decay dice</h2>
+      <div class="prediction"></div>
+      <p>Each step represents one second. A filled dot marks a surviving nucleus. Reset to replay the same sample.</p>
+      <div class="controls"></div>
+      <div><button id="decay-step" type="button">Step</button> <button id="decay-play" type="button">Play</button> <button id="decay-reset" type="button">Reset</button></div>
+      <div class="results"></div>
+      <a href="../lessons/10_radioactive_decay.html">Explore lesson 10 in Python</a>
+    </div>
+    <div class="plots">
+      <canvas class="c-plot" id="decay-plot" role="img" aria-label="Grid of surviving and decayed nuclei"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="rc" aria-labelledby="rc-h">
+    <div class="side">
+      <h2 id="rc-h">RC charge and discharge</h2>
+      <div class="prediction"></div>
+      <div class="controls"></div>
+      <label>Switch <select id="rc-mode"><option value="charge">Charge</option><option value="discharge">Discharge</option></select></label>
+      <div class="results"></div>
+      <a href="../lessons/11_capacitors.html">Explore lesson 11 in Python</a>
+    </div>
+    <div class="plots">
+      <canvas class="c-plot" id="rc-plot" role="img" aria-label="Capacitor voltage against time"></canvas>
+      <canvas class="c-plot" id="rc-plot2" role="img" aria-label="Signed current against time"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="collisions" aria-labelledby="collisions-h">
+    <div class="side">
+      <h2 id="collisions-h">Air-track collisions</h2>
+      <div class="prediction"></div>
+      <p>Positive velocity points right. Cart 1 starts on the left. The motion repeats so you can compare the two velocities.</p>
+      <div class="controls"></div>
+      <button id="collisions-play" type="button">Play</button>
+      <div class="results"></div>
+      <a href="../lessons/12_momentum_and_collisions.html">Explore lesson 12 in Python</a>
+    </div>
+    <div class="plots">
+      <canvas class="c-plot" id="collisions-plot" role="img" aria-label="Two carts moving on an air track"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="heating" aria-labelledby="heating-h">
+    <div class="side">
+      <h2 id="heating-h">Heating curve</h2>
+      <div class="prediction"></div>
+      <p>The heater supplies constant power to an insulated sample. The graph ends 20 K above the melting point.</p>
+      <div class="controls"></div>
+      <label>Substance <select id="heating-material"><option value="water">Ice</option><option value="gallium">Solid gallium</option></select></label>
+      <div class="results"></div>
+      <a href="../lessons/16_thermal_energy_transfer.html">Explore lesson 16 in Python</a>
+    </div>
+    <div class="plots">
+      <canvas class="c-plot" id="heating-plot" role="img" aria-label="Temperature against heating time"></canvas>
+    </div>
+  </section>
+
   <footer>
     <p>Everything is computed in your browser. The same physics lives in Python as <code>mechanics.pendulum_period</code>, <code>quantum.barrier_transmission</code>, <code>quantum.double_slit_experiment</code>, <code>mechanics.nbody</code>, <code>chaos.lorenz</code> and <code>statmech.ising</code>, where it is checked against these analytic results by the test suite.</p>
     <p>The tunnelling plot is the exact stationary state, matched across both barrier edges. The double-slit pattern uses the Fraunhofer (far-field) formula.</p>
@@ -326,5 +427,11 @@
 <script type="module" src="./exp-coil.js"></script>
 <script type="module" src="./exp-grating.js"></script>
 
+<script type="module" src="./exp-projectile.js"></script>
+<script type="module" src="./exp-photoelectric.js"></script>
+<script type="module" src="./exp-decay.js"></script>
+<script type="module" src="./exp-rc.js"></script>
+<script type="module" src="./exp-collisions.js"></script>
+<script type="module" src="./exp-heating.js"></script>
 </body>
 </html>

@@ -29,7 +29,7 @@ function isingParams() {
   $("ising-T-out").textContent = ising.T.toFixed(2);
   $("ising-ratio").textContent = fmt(ising.T / TC);
   $("ising-exact").textContent = fmt(onsager(ising.T));
-  drawIsing(); drawIsingCurve();
+  drawIsingCurve();
 }
 function stepIsing() { sweep(); sweep(); }
 function drawIsing() {
@@ -67,5 +67,6 @@ $("ising-cold").addEventListener("click", () => { isingFill(false); drawIsing();
 isingFill(false);                                           // ordered start: no stuck stripe domains
 
 isingParams();
+drawIsing();
 registerSim("ising", "ising-play", stepIsing, drawIsing);
 onRedraw(() => { drawIsing(); drawIsingCurve(); });

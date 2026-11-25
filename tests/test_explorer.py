@@ -750,3 +750,168 @@ def test_planet_launch_outcome(page, speed, angle, fate):
     vc = gravity.escape_speed(5.9e24, 6.4e6)/math.sqrt(2)
     assert number(page, "launch-velocity") == pytest.approx(speed*vc/1000, abs=0.00006)
     assert text(page, "launch-fate") == fate
+
+
+def configure_gas(page, n, kelvin, width):
+    if page.locator("#gas-play").get_attribute("aria-pressed") == "true":
+        page.click("#gas-play")
+    for key, value in [("n", n), ("temperature", kelvin), ("width", width)]:
+        set_slider(page, "gas-"+key, value)
+
+
+@pytest.mark.parametrize("n,kelvin,width", [(100, 200, 30), (200, 300, 60), (300, 500, 90)])
+def test_gas_wall_impulses(page, n, kelvin, width):
+    from scipy.constants import Boltzmann
+    configure_gas(page, n, kelvin, width)
+    page.click("#gas-sample")
+    pressure_kpa = n*Boltzmann*kelvin/(width*60**2*1e-27)/1000
+    assert number(page, "gas-ideal") == pytest.approx(pressure_kpa, abs=0.0006)
+    # Finite Maxwell sample and finite wall-hit count over 100 ps.
+    assert number(page, "gas-pressure") == pytest.approx(pressure_kpa, rel=0.18)
+    assert number(page, "gas-time") == pytest.approx(100)
+
+
+@pytest.mark.parametrize("n,kelvin", [(100, 100), (200, 300), (300, 600)])
+def test_gas_maxwell_rms(page, n, kelvin):
+    from scipy.constants import atomic_mass, Boltzmann
+    from qplay import kinetic
+    configure_gas(page, n, kelvin, 60)
+    expected = kinetic.rms_speed(Boltzmann*kelvin, 4.002602*atomic_mass)
+    most_probable = math.sqrt(2*Boltzmann*kelvin/(4.002602*atomic_mass))
+    peak = kinetic.maxwell_boltzmann_speed(most_probable, Boltzmann*kelvin, 4.002602*atomic_mass)
+    assert number(page, "gas-density") == pytest.approx(peak, abs=6e-8)
+    # Three standard deviations of the rms of 3N Gaussian components.
+    tolerance = 3 / math.sqrt(6*n)
+    for _ in range(2):
+        assert number(page, "gas-rms") == pytest.approx(expected, rel=tolerance)
+        page.click("#gas-sample")
+
+
+def open_mode(page, mode):
+    page.locator(f"#{mode} > summary").click()
+    page.locator(f"#{mode}-plot").wait_for()
+
+
+@pytest.mark.parametrize("omega,gamma,drive,t", [(1, 0.1, 0, 1), (2, 0.2, 2, 3), (3, 0.5, 4, 6)])
+def test_driven_spring_state(page, omega, gamma, drive, t):
+    open_mode(page, "spring")
+    for key, value in [("omega", omega), ("gamma", gamma), ("drive", drive), ("time", t)]:
+        set_slider(page, "spring-"+key, value)
+    _, state = mechanics.oscillator_trajectory(omega=omega, gamma=gamma, drive=1, drive_omega=drive, t_max=t)
+    x, v = state[-1]
+    assert number(page, "spring-x") == pytest.approx(x, abs=0.00006)
+    assert number(page, "spring-v") == pytest.approx(v, abs=0.00006)
+
+
+@pytest.mark.parametrize("force,gamma,t", [(0, 0.2, 2), (1, 0.1, 0.5), (2, 0.5, 5)])
+def test_driven_spring_energy(page, force, gamma, t):
+    open_mode(page, "spring")
+    for key, value in [("force", force), ("gamma", gamma), ("time", t)]:
+        set_slider(page, "spring-"+key, value)
+    _, state = mechanics.oscillator_trajectory(omega=2, gamma=gamma, drive=force, drive_omega=2, t_max=t)
+    x, v = state[-1]
+    assert number(page, "spring-q") == pytest.approx(1/gamma, abs=0.0006)
+    assert number(page, "spring-ke") == pytest.approx(v*v/2, abs=0.00006)
+    assert number(page, "spring-pe") == pytest.approx(2*x*x, abs=0.00006)
+
+
+@pytest.mark.parametrize("m,b,length,r,t", [(0.2, 0.5, 0.5, 1, 1), (0.5, 1, 1, 2, 3), (1, 0.2, 0.4, 3, 0)])
+def test_braked_rod_velocity(page, m, b, length, r, t):
+    open_mode(page, "rod")
+    for key, v in [("mass", m), ("field", b), ("length", length), ("resistance", r), ("time", t)]:
+        set_slider(page, "rod-"+key, v)
+    tau = m*r/(b*length)**2
+    assert number(page, "rod-tau") == pytest.approx(tau, abs=0.00006)
+    assert number(page, "rod-speed") == pytest.approx(4*math.exp(-t/tau), abs=0.00006)
+
+
+@pytest.mark.parametrize("initial,t", [(2, 0.5), (4, 2), (8, 10)])
+def test_braked_rod_joule_heat(page, initial, t):
+    open_mode(page, "rod")
+    set_slider(page, "rod-initial", initial)
+    set_slider(page, "rod-time", t)
+    tau = 0.2/(0.5*0.5)**2
+    expected = 0.1*initial**2*(1-math.exp(-2*t/tau))
+    for key in ("rod-heat", "rod-lost"):
+        assert number(page, key) == pytest.approx(expected, abs=0.00006)
+
+
+@pytest.mark.parametrize("density", [300, 600, 1100])
+def test_white_grating_orders(page, density):
+    from qplay import waves
+    open_mode(page, "white")
+    set_slider(page, "white-density", density)
+    for color, nm in [("blue", 450), ("red", 650)]:
+        angle = waves.grating_angle(1, nm*1e-9, 1e-3/density)
+        assert number(page, "white-"+color) == pytest.approx(math.degrees(angle), abs=0.0006)
+
+
+@pytest.mark.parametrize("slits,density", [(2, 400), (10, 600), (30, 800)])
+def test_grating_peak_width(page, slits, density):
+    open_mode(page, "white")
+    set_slider(page, "white-slits", slits)
+    set_slider(page, "white-density", density)
+    width = 2*math.degrees(math.asin(550e-9/(slits*1e-3/density)))
+    assert number(page, "white-width") == pytest.approx(width, abs=0.0006)
+
+
+@pytest.mark.parametrize("speed", [0.7, 0.9, 1.1])
+def test_kepler_measurement_axes(page, speed):
+    open_mode(page, "kepler-law")
+    set_slider(page, "orb-v", speed)
+    a = 1/(2-speed**2)
+    wait_until(page, "!/Awaiting/.test(document.getElementById('kepler-law-t2').textContent)")
+    assert number(page, "kepler-law-a3") == pytest.approx(a**3, abs=0.000006)
+    assert number(page, "kepler-law-t2") == pytest.approx(4*math.pi**2*a**3, rel=0.001)
+
+
+@pytest.mark.parametrize("pair", [(0.6, 0.8), (0.8, 1)])
+def test_kepler_repeated_measurements(page, pair):
+    open_mode(page, "kepler-law")
+    for speed in pair:
+        set_slider(page, "orb-v", speed)
+        wait_until(page, "!/Awaiting/.test(document.getElementById('kepler-law-t2').textContent)")
+        assert number(page, "kepler-law-ratio") == pytest.approx(4*math.pi**2, rel=0.001)
+    assert page.locator("#kepler-law tbody tr").count() >= 2
+
+
+@pytest.mark.parametrize("lam,d,length", [(450, 0.2, 1), (532, 0.4, 2), (650, 0.6, 3)])
+def test_photon_fringe_minimum(page, lam, d, length):
+    open_mode(page, "photons")
+    set_slider(page, "slit-lam", lam)
+    set_slider(page, "slit-d", d)
+    set_slider(page, "slit-L", length)
+    theta = math.asin(lam*1e-9/(2*d*1e-3))
+    assert number(page, "photons-width") == pytest.approx(1000*length*math.tan(theta), abs=0.00006)
+
+
+@pytest.mark.parametrize("d,width", [(0.2, 0.04), (0.4, 0.08), (0.6, 0.03)])
+def test_photon_central_counts(page, d, width):
+    from scipy.integrate import quad
+    open_mode(page, "photons")
+    set_slider(page, "slit-d", d)
+    set_slider(page, "slit-w", width)
+    set_slider(page, "photons-batch", 2000)
+    page.get_by_role("button", name="Add photons").click()
+    lam = 532e-9
+    span = min(0.08, 2.2*lam/(width*1e-3))
+    cutoff = math.tan(math.asin(lam/(2*d*1e-3)))
+    def intensity(y):
+        sin = y/math.hypot(1, y)
+        return np.sinc(width*1e-3*sin/lam)**2 * math.cos(math.pi*d*1e-3*sin/lam)**2
+    prob = quad(intensity, 0, cutoff)[0]/quad(intensity, 0, span, limit=200)[0]
+    assert number(page, "photons-count") == 2000
+    assert number(page, "photons-central") == pytest.approx(prob, abs=4*math.sqrt(prob*(1-prob)/2000))
+
+
+def test_optional_modes_on_phone(browser):
+    page = open_page(browser, width=375, height=800, reduced_motion="reduce")
+    try:
+        for panel in page.locator(".extension").all():
+            mode = panel.get_attribute("id")
+            open_mode(page, mode)
+            assert canvas_ink(page, mode+"-plot") > 0
+            assert page.evaluate("document.documentElement.scrollWidth") == 375
+        assert page.all_errors == []
+    finally:
+        page.context.close()

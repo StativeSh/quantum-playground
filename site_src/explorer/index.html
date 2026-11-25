@@ -49,6 +49,7 @@
       <li><a href="#double-slit">Young's double slit</a></li>
     </ul></div>
     <div><h2>Thermal physics</h2><ul>
+      <li><a href="#gas">Gas in a box</a></li>
       <li><a href="#heating">Heating curve</a></li>
       <li><a href="#ising">Ising model</a></li>
     </ul></div>
@@ -102,6 +103,15 @@
         <p class="legend">How much longer the real period is, at every amplitude</p>
       </div>
     </div>
+    <details class="extension" id="spring">
+      <summary>Driven mass–spring mode</summary>
+      <div class="side">
+        <div class="prediction"></div>
+        <div class="controls"></div>
+        <div class="results"></div>
+        <a href="../lessons/01_simple_harmonic_motion.html">Explore lesson 1 in Python</a>
+      </div>
+    </details>
   </section>
 
   <!-- ===================== Tunnelling ===================== -->
@@ -192,6 +202,15 @@
         <span class="key"><span class="swatch dash" style="border-color:var(--accent-2)"></span>single-slit envelope</span>
       </div>
     </div>
+    <details class="extension" id="photons">
+      <summary>Photon-by-photon mode</summary>
+      <div class="side">
+        <div class="prediction"></div>
+        <div class="controls"></div>
+        <div class="results"></div>
+        <a href="../lessons/07_wave_particle_duality.html">Explore lesson 7 in Python</a>
+      </div>
+    </details>
   </section>
 
   <!-- ===================== Kepler orbits ===================== -->
@@ -228,6 +247,15 @@
         <p class="legend">Every completed orbit adds a dot: they all sit on <math><mi>T</mi><mo>∝</mo><msup><mi>a</mi><mrow><mn>3</mn><mo>/</mo><mn>2</mn></mrow></msup></math></p>
       </div>
     </div>
+    <details class="extension" id="kepler-law">
+      <summary>Measure Kepler’s third law</summary>
+      <div class="side">
+        <div class="prediction"></div>
+        <div class="controls"></div>
+        <div class="results"></div>
+        <a href="../lessons/13_gravitational_fields.html">Explore lesson 13 in Python</a>
+      </div>
+    </details>
   </section>
 
   <!-- ===================== Lorenz ===================== -->
@@ -320,6 +348,15 @@
       <a href="../lessons/14_electromagnetic_induction.html">Explain the sign using Faraday’s law</a>
     </div>
     <div class="plots"><canvas class="c-plot" id="coil-plot" role="img" aria-label="Induced voltage against rotation angle with the selected point marked"></canvas></div>
+    <details class="extension" id="rod">
+      <summary>Braked rod on rails</summary>
+      <div class="side">
+        <div class="prediction"></div>
+        <div class="controls"></div>
+        <div class="results"></div>
+        <a href="../lessons/14_electromagnetic_induction.html">Explore lesson 14 in Python</a>
+      </div>
+    </details>
   </section>
   <section class="experiment" id="grating" aria-labelledby="grating-h">
     <div class="side">
@@ -331,6 +368,15 @@
       <a href="../lessons/15_diffraction_gratings_and_optics.html">Derive the angles in Python</a>
     </div>
     <div class="plots"><canvas class="c-plot" id="grating-plot" role="img" aria-label="Fan of allowed diffracted rays at normal incidence"></canvas></div>
+    <details class="extension" id="white">
+      <summary>White-light diffraction</summary>
+      <div class="side">
+        <div class="prediction"></div>
+        <div class="controls"></div>
+        <div class="results"></div>
+        <a href="../lessons/15_diffraction_gratings_and_optics.html">Explore lesson 15 in Python</a>
+      </div>
+    </details>
   </section>
   <section class="experiment" id="projectile" aria-labelledby="projectile-h">
     <div class="side">
@@ -508,6 +554,22 @@
     </div>
   </section>
 
+  <section class="experiment" id="gas" aria-labelledby="gas-h">
+    <div class="side">
+      <h2 id="gas-h">Gas in a box</h2>
+      <div class="prediction"></div>
+      <p>The piston sets the width of a 60 nm × 60 nm chamber. Changing a control prepares a fresh helium sample at the chosen temperature.</p>
+      <div class="controls"></div>
+      <button type="button" id="gas-play">Play</button> <button type="button" id="gas-sample">Measure 100 ps</button>
+      <div class="results"></div>
+      <a href="../lessons/09_ideal_gases_and_kinetic_theory.html">Explore lesson 9 in Python</a>
+    </div>
+    <div class="plots experiment-figures">
+      <canvas class="c-plot" id="gas-plot" role="img" aria-label="Projection of hard spheres and the piston"></canvas>
+      <canvas class="c-plot" id="gas-plot2" role="img" aria-label="Sampled speed histogram and Maxwell–Boltzmann density"></canvas>
+    </div>
+  </section>
+
   <footer>
     <p>Everything is computed in your browser. The same physics lives in Python as <code>mechanics.pendulum_period</code>, <code>quantum.barrier_transmission</code>, <code>quantum.double_slit_experiment</code>, <code>mechanics.nbody</code>, <code>chaos.lorenz</code> and <code>statmech.ising</code>, where it is checked against these analytic results by the test suite.</p>
     <p>The tunnelling plot is the exact stationary state, matched across both barrier edges. The double-slit pattern uses the Fraunhofer (far-field) formula.</p>
@@ -535,5 +597,6 @@
 <script type="module" src="./exp-lightclock.js"></script>
 <script type="module" src="./exp-binding.js"></script>
 <script type="module" src="./exp-launch.js"></script>
+<script type="module" src="./exp-gas.js"></script>
 </body>
 </html>

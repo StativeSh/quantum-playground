@@ -1,4 +1,4 @@
-import { $, tok, fmt, prep, axes, line, onRedraw } from "./core.js";
+import { extension, seededRandom, $, tok, fmt, prep, axes, line, onRedraw } from "./core.js";
 
 // ---------- double slit ----------
 function wavelengthRGB(nm) {                // approximate visible-spectrum colour
@@ -137,3 +137,45 @@ $("slit-save").addEventListener("click", () => {
 
 slitParams();
 onRedraw(slitParams);
+
+extension("photons", "Where will the next photon land, and what pattern emerges after many arrivals?", [
+  "Add one photon at a time, then add a larger batch. Compare the fraction inside the central fringe.",
+  "Change the slit separation above and repeat. Predict how the width of the central bright fringe will change.",
+], "Individual photon arrivals sampled from the diffraction intensity", (lab,canvas) => {
+  const batch=lab.range("batch","Photons to add",1,2001,1,1);
+  const count=lab.result("count","Detected photons","",0);
+  const central=lab.result("central","Fraction in central fringe","",4);
+  const halfWidth=lab.result("width","Distance to first interference minimum","mm",4);
+  const button=document.createElement("button");
+  button.textContent="Add photons";
+  $("photons").querySelector(".controls").append(button);
+  let hits=[], centralHits=0, random=seededRandom(7001);
+  function minimum(s) {
+    const sin=s.lam/(2*s.d);
+    return 1000*s.L*sin/Math.sqrt(1-sin*sin);
+  }
+  function draw() {
+    const s=slitState(), span=slitScreenLimit(s);
+    count(hits.length); central(hits.length ? centralHits/hits.length : "Awaiting photons");
+    halfWidth(minimum(s));
+    const {ctx,w,h}=prep(canvas);
+    ctx.fillStyle=tok("--screen"); ctx.fillRect(0,0,w,h);
+    ctx.fillStyle="rgb("+wavelengthRGB(s.lam*1e9).join(",")+")";
+    for (const [x,y] of hits) ctx.fillRect((x/span+1)*w/2,y*h,2,2);
+  }
+  button.addEventListener("click",() => {
+    const s=slitState(), span=slitScreenLimit(s), limit=minimum(s);
+    for (let i=0;i<batch();i++) {
+      let x;
+      do { x=span*(2*random()-1); } while(random()>intensity(x,s).I);
+      hits.push([x,random()]);
+      if (Math.abs(x)<limit) centralHits++;
+    }
+    draw();
+  });
+  for (const id of ["slit-lam","slit-d","slit-w","slit-L"]) $(id).addEventListener("input",() => {
+    hits=[]; centralHits=0; random=seededRandom(7001);
+    if ($("photons").open) draw();
+  });
+  return draw;
+});

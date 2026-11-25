@@ -12,7 +12,7 @@ function lorParams() {
   const p = { rho: +$("lor-rho").value, sigma: +$("lor-sigma").value, beta: +$("lor-beta").value };
   let start = [1, 1, 1];                                     // run onto the attractor first
   for (let i = 0; i < 5000; i++) start = rk4(start, p, 0.004);
-  Object.assign(lor, { p, a: start, b: [start[0] + 1e-8, start[1], start[2]], t: 0, ta: [], tb: [], seps: [] });
+  Object.assign(lor, { p, a: start, b: [start[0] + 1e-8, start[1], start[2]], t: 0, ta: [], tb: [], seps: [], separation: 1e-8 });
   $("lor-rho-out").textContent = p.rho.toFixed(1);
   $("lor-sigma-out").textContent = p.sigma.toFixed(1);
   $("lor-beta-out").textContent = p.beta.toFixed(2);
@@ -33,10 +33,12 @@ function stepLor(dt) {
   if (lor.ta.length > 1500) { lor.ta.splice(0, lor.ta.length - 1500); lor.tb.splice(0, lor.tb.length - 1500); }
   const sep = Math.hypot(lor.a[0] - lor.b[0], lor.a[1] - lor.b[1], lor.a[2] - lor.b[2]);
   if (lor.t < 40) lor.seps.push([lor.t, Math.log10(Math.max(sep, 1e-16))]);
-  $("lor-t").textContent = lor.t.toFixed(1); $("lor-sep").textContent = sep.toExponential(1);
-  drawLorCurve();
+  lor.separation = sep;
 }
 function drawLor() {
+  $("lor-t").textContent = lor.t.toFixed(1);
+  $("lor-sep").textContent = (lor.separation ?? 1e-8).toExponential(1);
+  drawLorCurve();
   const { ctx, w, h } = prep($("lor-anim"));
   const zmax = Math.max(50, lor.p.rho * 1.8), xm = Math.max(25, Math.sqrt(lor.p.beta * Math.max(lor.p.rho - 1, 1)) * 2.4);
   const X = (x) => w / 2 + x / xm * (w / 2 - 8), Y = (z) => h - 8 - z / zmax * (h - 16);
@@ -58,4 +60,4 @@ function drawLorCurve() {
 lorParams();
 drawLor();
 registerSim("lor", "lor-play", stepLor, drawLor);
-onRedraw(() => { drawLor(); drawLorCurve(); });
+onRedraw(drawLor);

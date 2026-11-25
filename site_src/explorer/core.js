@@ -75,16 +75,21 @@ new MutationObserver(scheduleRedraw).observe(document.documentElement, {
 document.fonts.ready.then(scheduleRedraw);
 
 const simulations = new Map();
-let frame;
+let frame, nextDraw = 0;
 function animate(now) {
   frame = null;
-  for (const sim of simulations.values()) {
-    if (!sim.playing || !sim.visible) continue;
+  const active = [...simulations.values()].filter(sim => sim.playing && sim.visible);
+  if (!active.length) return;
+  for (const sim of active) {
     if (sim.last !== null) sim.step(Math.min(0.05, (now - sim.last) / 1000));
     sim.last = now;
-    sim.draw();
-    scheduleAnimation();
   }
+  // Advance every clock, but spread distant canvas paints across frames when
+  // several experiments are on screen. A normal one- or two-panel view draws each frame.
+  const count = Math.min(2, active.length);
+  for (let i = 0; i < count; i++) active[(nextDraw + i) % active.length].draw();
+  nextDraw = (nextDraw + count) % active.length;
+  scheduleAnimation();
 }
 function scheduleAnimation() {
   if (frame == null) frame = requestAnimationFrame(animate);

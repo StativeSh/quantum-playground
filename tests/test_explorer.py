@@ -223,6 +223,7 @@ def test_double_slit_readouts(page, lam_nm, d_mm, w_mm, L):
 # ---- Kepler orbits ----------------------------------------------------------------------
 
 @pytest.mark.parametrize("v", [0.8, 1.0, 1.2])
+@pytest.mark.usefixtures("visible_orbit")
 def test_orbit_elements_and_measured_period(page, v):
     set_slider(page, "orb-v", v)
     a = 1 / (2 - v**2)                        # from the energy v^2/2 - 1 = -1/(2a), GM = r0 = 1
@@ -234,6 +235,7 @@ def test_orbit_elements_and_measured_period(page, v):
     assert number(page, "orb-Tm") == pytest.approx(T, rel=0.005)     # simulated in the browser
 
 
+@pytest.mark.usefixtures("visible_orbit")
 def test_orbit_escape_at_and_above_root_two(page):
     set_slider(page, "orb-v", 1.45)
     assert "escapes" in text(page, "orb-a")
@@ -254,6 +256,7 @@ def test_lorenz_chaos_threshold_readout(page):
         assert ("chaotic" in text(page, "lor-regime")) == (rho > rho_h)
 
 
+@pytest.mark.usefixtures("visible_lorenz")
 def test_lorenz_separation_grows_when_chaotic_and_shrinks_when_stable(page):
     set_slider(page, "lor-rho", 28)
     wait_until(page, "+document.getElementById('lor-t').textContent >= 8", timeout=40_000)
@@ -414,6 +417,16 @@ def test_shared_experiment_widgets(page):
     page.get_by_text("Predict the area").click()
     assert step.is_visible()
     assert canvas_ink(page, "widget-plot") > 0
+
+
+@pytest.fixture
+def visible_orbit(page):
+    page.locator("#kepler").scroll_into_view_if_needed()
+
+
+@pytest.fixture
+def visible_lorenz(page):
+    page.locator("#lorenz").scroll_into_view_if_needed()
 
 
 def test_offscreen_input_updates_without_scrolling(page):

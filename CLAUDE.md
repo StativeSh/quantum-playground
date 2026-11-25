@@ -16,7 +16,7 @@ Physics and maths playground: a small Python package (`qplay`) plus notebooks.
 - `src/qplay/` one module per topic: `mechanics`, `waves`, `em`, `quantum`, `atomic`, `kinetic`, `nuclear`, `circuits`, `relativity`, `chaos`, `statmech`, `symbolic`, `hamiltonian`, `dynamics`, `complexplane`, `linalg`, `numerics`, plus `integrators`, `plotting`, `demos`, `animations`
 - `tests/` one test file per area; tests check numerics against analytic results
 - `notebooks/` and `lessons/` committed without outputs; both are executed by `make notebooks-check`, CI and the site build
-- `scripts/` site and README-media builders; `site_src/` landing-page template (`string.Template`, so a literal `$` is written `$$`) and the standalone explorer page (plain JS on canvas; its experiments share one `requestAnimationFrame` loop via `registerSim`)
+- `scripts/` site and README-media builders; `site_src/` landing-page template (`string.Template`, so a literal `$` is written `$$`) and the explorer in `site_src/explorer/` (native ES modules on canvas; its experiments share one `requestAnimationFrame` loop via `registerSim`)
 
 ## Conventions
 
@@ -43,3 +43,10 @@ Physics and maths playground: a small Python package (`qplay`) plus notebooks.
 Declare supported public symbols in each module’s explicit `__all__`. Annotate new public functions and ship the PEP 561 marker. Use SI and radians unless the name or docstring explicitly specifies another unit. Unit suffixes on converted quantities (for example eV and nm) identify the returned unit. Preserve existing normalised and natural-unit defaults.
 
 New deterministic particle and circuit trajectory APIs return `(t, y)` with shape `(n_times, n_dim)` and documented column order. Spatial fields, ensembles and derived observables retain their physically meaningful axes. Preserve old signatures and return shapes throughout 1.x, issue DeprecationWarning for replaced interfaces and document the migration. Repository code (package, demos, notebooks, lessons, tests) uses only the current names: pytest turns a deprecated-call warning into an error outside `pytest.warns`, and `tests/test_notebooks.py` rejects deprecated calls in notebook code. Keep a renamed demo working through `_ALIASES` in `demos.py`; demo names use hyphens.
+
+## Adding an explorer experiment
+
+- [ ] Add a labelled `section.experiment` with a stable ID to `site_src/explorer/index.html`. Link to it from the relevant learning routes. Link the section and its lesson to each other.
+- [ ] Load one native `exp-<name>.js` module. Use `core.js` for controls, plots and measurements. Label units, ask for a prediction before revealing the steps, and draw an initial frame.
+- [ ] Register resize and theme redraws with `onRedraw`. Use `registerSim` for animation so reduced motion and off-screen pausing work.
+- [ ] Add parametrised Playwright checks against analytic results or `qplay` at several slider settings. Run `make test-browser`, `make test-all` and `make site`.

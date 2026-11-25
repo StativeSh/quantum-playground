@@ -6,7 +6,7 @@
 
 A physics and maths playground in Python: simulations, symbolic mechanics and Jupyter notebooks, with tests that check every solver against known analytic results.
 
-**[Website](https://stativesh.github.io/quantum-playground/)**: every figure and animation, the executed notebooks and lessons, the [API reference](https://stativesh.github.io/quantum-playground/api/), and an [interactive explorer](https://stativesh.github.io/quantum-playground/explorer/) with fourteen live experiments, including pendulum motion, the double slit, radioactive decay and capacitor charging.
+**[Website](https://stativesh.github.io/quantum-playground/)**: every figure and animation, the executed notebooks and lessons, the [API reference](https://stativesh.github.io/quantum-playground/api/), and an [interactive explorer](https://stativesh.github.io/quantum-playground/explorer/) with live experiments, including pendulum motion, the double slit, radioactive decay and capacitor charging.
 
 <table>
   <tr>

@@ -7,7 +7,10 @@ export function prep(cv) {
   const dpr = window.devicePixelRatio || 1;
   const r = cv.getBoundingClientRect();
   const w = Math.max(1, r.width), h = Math.max(1, r.height);
-  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  // Resizing invalidates the backing store and layout, even at the same size.
+  const width = Math.round(w * dpr), height = Math.round(h * dpr);
+  if (cv.width !== width) cv.width = width;
+  if (cv.height !== height) cv.height = height;
   const ctx = cv.getContext("2d");
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, w, h);

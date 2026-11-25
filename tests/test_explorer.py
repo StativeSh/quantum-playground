@@ -598,3 +598,155 @@ def test_heating_melting_plateau(page, material, mass, power, melting, latent):
     for probe in (35, 65):
         set_slider(page, "heating-probe", probe)
         assert number(page, "heating-temperature") == pytest.approx(melting, abs=0.006)
+
+
+@pytest.mark.parametrize("tension,length,density", [(4, 1, 10), (16, 0.8, 5), (64, 2, 20)])
+def test_string_fundamental(page, tension, length, density):
+    set_slider(page, "strings-tension", tension)
+    set_slider(page, "strings-length", length)
+    set_slider(page, "strings-density", density)
+    expected = math.sqrt(tension/(density*1e-3))/(2*length)
+    assert number(page, "strings-fundamental") == pytest.approx(expected, abs=0.0006)
+
+
+@pytest.mark.parametrize("frequency,n", [(20, 1), (60, 3), (100, 5), (73, None)])
+def test_string_modes_and_nodes(page, frequency, n):
+    set_slider(page, "strings-tension", 16)
+    set_slider(page, "strings-density", 10)
+    set_slider(page, "strings-length", 1)
+    set_slider(page, "strings-drive", frequency)
+    if n is None:
+        assert text(page, "strings-mode") == "Between modes"
+    else:
+        assert number(page, "strings-mode") == n
+        assert number(page, "strings-nodes") == n+1
+
+
+@pytest.mark.parametrize("q,x,y,px,py", [(2, -0.5, 0, 0, 0), (-3, 0.2, 0.5, -0.5, 0.1),
+                                        (4, -0.2, -0.7, 0.5, 0.6)])
+def test_electric_field_vector(page, q, x, y, px, py):
+    from scipy.constants import epsilon_0
+    from qplay import em
+    for key, val in [("count", 1), ("q0", q), ("x0", x), ("y0", y), ("px", px), ("py", py)]:
+        set_slider(page, "efield-"+key, val)
+    field = em.point_charge_field([q*1e-9], [(x, y)], px, py, k=1/(4*math.pi*epsilon_0))
+    for key, value in zip(("ex", "ey"), field):
+        assert number(page, "efield-"+key) == pytest.approx(value, abs=0.0006)
+
+
+@pytest.mark.parametrize("n,x,y", [(2, 0, 0), (3, 0.3, -0.2), (4, 0.2, 0.4)])
+def test_electric_potential_superposition(page, n, x, y):
+    from scipy.constants import epsilon_0
+    from qplay import em
+    set_slider(page, "efield-count", n)
+    set_slider(page, "efield-px", x)
+    set_slider(page, "efield-py", y)
+    positions = [(-0.5, 0), (0.5, 0), (0, 0.5), (0, -0.5)]
+    v = em.point_charge_potential([1e-9, -1e-9, 1e-9, -1e-9][:n], positions[:n], x, y,
+                                  k=1/(4*math.pi*epsilon_0))
+    assert number(page, "efield-v") == pytest.approx(v, abs=0.0006)
+
+
+@pytest.mark.parametrize("device", ["mouse", "touch"])
+def test_drag_charge(page, device):
+    canvas = page.locator("#efield-plot")
+    canvas.scroll_into_view_if_needed()
+    box = canvas.bounding_box()
+    y = box["y"] + box["height"]/2
+    x, end = (box["x"] + box["width"]*f for f in (0.25, 0.35))
+    if device == "mouse":
+        page.mouse.move(x, y)
+        page.mouse.down()
+        page.mouse.move(end, y)
+        page.mouse.up()
+    else:
+        session = page.context.new_cdp_session(page)
+        for action, points in [("touchStart", [{"x": x, "y": y}]), ("touchMove", [{"x": end, "y": y}]),
+                               ("touchEnd", [])]:
+            session.send("Input.dispatchTouchEvent", {"type": action, "touchPoints": points})
+        session.detach()
+    assert float(page.locator("#efield-x0").input_value()) == pytest.approx(-0.3)
+
+
+@pytest.mark.parametrize("electric,magnetic,speed", [(10, 0.5, 20), (6, 0.2, 30), (5, 0.5, 8)])
+def test_crossed_field_selector(page, electric, magnetic, speed):
+    set_slider(page, "spectrometer-electric", electric)
+    set_slider(page, "spectrometer-magnetic", magnetic)
+    set_slider(page, "spectrometer-speed", speed)
+    assert number(page, "spectrometer-selected") == pytest.approx(electric/magnetic)
+    assert ("Blocked" in text(page, "spectrometer-landing")) == (not math.isclose(speed, electric/magnetic))
+
+
+@pytest.mark.parametrize("mass,charge,b", [(12, 1, 0.5), (20, 2, 0.2), (24, 1, 1)])
+def test_spectrometer_trajectory(page, mass, charge, b):
+    from scipy.constants import atomic_mass, elementary_charge
+    from qplay import em
+    v = 10000/b
+    for key, value in [("mass", mass), ("charge", charge), ("magnetic", b), ("speed", v/1000)]:
+        set_slider(page, "spectrometer-"+key, value)
+    m, q = mass*atomic_mass, charge*elementary_charge
+    _, path = em.particle_trajectory(q, m, [0, 0, 0], [0, 0, b], [0, 0, 0], [v, 0, 0], math.pi*m/(q*b))
+    assert number(page, "spectrometer-radius") == pytest.approx(1000*m*v/(q*b), abs=0.0006)
+    assert number(page, "spectrometer-landing") == pytest.approx(1000*path[-1, 1], abs=0.0006)
+
+
+@pytest.mark.parametrize("beta", [0, 0.6, 0.866, 0.99])
+def test_light_clock_ticks(page, beta):
+    from qplay import relativity
+    set_slider(page, "lightclock-beta", beta)
+    assert number(page, "lightclock-gamma") == pytest.approx(relativity.gamma(beta, c=1), abs=0.00006)
+    assert number(page, "lightclock-time") == pytest.approx(relativity.time_dilation(1, beta, c=1), abs=0.00006)
+
+
+@pytest.mark.parametrize("beta", [0.7, 0.95, 0.999])
+def test_muon_survival(page, beta):
+    from scipy.constants import c
+    from qplay import relativity
+    set_slider(page, "lightclock-beta", beta)
+    lifetime = relativity.time_dilation(2.197e-6, beta*c)
+    assert number(page, "lightclock-fraction") == pytest.approx(math.exp(-10000/(beta*c*lifetime)), abs=6e-7)
+
+
+@pytest.mark.parametrize("a,z", [(16, 8), (55, 25), (56, 27), (208, 82)])
+def test_binding_curve(page, a, z):
+    from qplay import nuclear
+    set_slider(page, "binding-a", a)
+    set_slider(page, "binding-z", z)
+    chain = nuclear.binding_energy_per_nucleon(a, np.arange(1, a))
+    assert number(page, "binding-energy") == pytest.approx(chain[z-1], abs=0.00006)
+
+
+@pytest.mark.parametrize("a,z,reaction", [(16, 8, "fusion"), (56, 26, "fission"), (209, 83, "fission")])
+def test_binding_reaction_balance(page, a, z, reaction):
+    from qplay import nuclear
+    set_slider(page, "binding-a", a)
+    set_slider(page, "binding-z", z)
+    page.select_option("#binding-reaction", reaction)
+    def total(mass, protons):
+        return mass*nuclear.binding_energy_per_nucleon(mass, protons)
+    if reaction == "fusion":
+        expected = total(2*a, 2*z)-2*total(a, z)
+    else:
+        expected = total(a//2, z//2)+total(a-a//2, z-z//2)-total(a, z)
+    assert number(page, "binding-release") == pytest.approx(expected, abs=0.0006)
+
+
+@pytest.mark.parametrize("mass,radius", [(1, 2), (5.9, 6.4), (10, 10)])
+def test_planet_surface_speeds(page, mass, radius):
+    from qplay import gravity
+    set_slider(page, "launch-mass", mass)
+    set_slider(page, "launch-radius", radius)
+    escape = gravity.escape_speed(mass*1e24, radius*1e6)/1000
+    assert number(page, "launch-escape") == pytest.approx(escape, abs=0.00006)
+    assert number(page, "launch-circular") == pytest.approx(escape/math.sqrt(2), abs=0.00006)
+
+
+@pytest.mark.parametrize("speed,angle,fate", [(0.9, 0, "Falls back"), (1, 0, "Orbits"),
+                                             (1.2, 45, "Falls back"), (1.42, 90, "Escapes")])
+def test_planet_launch_outcome(page, speed, angle, fate):
+    from qplay import gravity
+    set_slider(page, "launch-speed", speed)
+    set_slider(page, "launch-angle", angle)
+    vc = gravity.escape_speed(5.9e24, 6.4e6)/math.sqrt(2)
+    assert number(page, "launch-velocity") == pytest.approx(speed*vc/1000, abs=0.00006)
+    assert text(page, "launch-fate") == fate

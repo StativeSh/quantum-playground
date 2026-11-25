@@ -93,6 +93,7 @@ const visibility = new IntersectionObserver(entries => {
   for (const entry of entries) {
     const sim = simulations.get(entry.target);
     sim.visible = entry.isIntersecting;
+    entry.target.classList.toggle("animating", sim.visible && sim.playing);
     sim.last = null;
     if (sim.visible && sim.playing) scheduleAnimation();
   }
@@ -106,6 +107,7 @@ export function registerSim(name, buttonId, step, draw) {
   visibility.observe(section);
   function setPlaying(on) {
     sim.playing = on;
+    section.classList.toggle("animating", sim.visible && on);
     sim.last = null;
     button.textContent = on ? "Pause" : "Play";
     button.setAttribute("aria-pressed", String(on));

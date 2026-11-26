@@ -164,7 +164,10 @@ export function readout({id, label, format = String}) {
   const value = document.createElement("dd");
   value.id = id;
   element.append(term, value);
-  return {element, set: v => { value.textContent = format(v); }};
+  return {element, set: v => {
+    const display = format(v);
+    if (value.textContent !== display) value.textContent = display;
+  }};
 }
 
 // Each series supplies {points: [[x, y], ...], color?, dash?} in data coordinates.

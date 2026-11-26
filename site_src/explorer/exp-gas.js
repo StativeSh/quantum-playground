@@ -7,6 +7,7 @@ const lab = experiment("gas", "At the same temperature, how does moving the pist
 const number = lab.range("n", "Helium atoms", 100, 300, 10, 200);
 const temperature = lab.range("temperature", "Temperature", 100, 600, 10, 300, "K");
 const width = lab.range("width", "Piston position", 30, 90, 1, 60, "nm");
+const seed = lab.range("seed", "Initial velocity seed", 0, 65535, 1, 903);
 const pressure = lab.result("pressure", "Pressure from wall impacts", "kPa", 3);
 const ideal = lab.result("ideal", "NkT/V", "kPa", 3);
 const rms = lab.result("rms", "Sample rms speed", "m/s");
@@ -17,7 +18,7 @@ const mass = 4.002602*1.66053906892e-27, kB = 1.380649e-23;
 const radius = 0.3, depth = 60;
 let atoms, size, impulse, time, nextPlot;
 function reset() {
-  const n=number(), cells=Math.ceil(Math.cbrt(n)), random=seededRandom(903);
+  const n=number(), cells=Math.ceil(Math.cbrt(n)), random=seededRandom(seed());
   size=[width(),depth,depth];
   const thermal=Math.sqrt(kB*temperature()/mass)/1000;
   const gaussian=() => thermal*Math.sqrt(-2*Math.log(1-random()))*Math.cos(2*Math.PI*random());
@@ -54,10 +55,11 @@ function substep(dt) {
       if (r2 >= 4*radius**2 || r2 === 0) continue;
       const normalSpeed=((a.v[0]-b.v[0])*dx+(a.v[1]-b.v[1])*dy+(a.v[2]-b.v[2])*dz)/r2;
       if (normalSpeed<=0) continue;
-      for (const [k,d] of [dx,dy,dz].entries()) {
-        a.v[k]-=normalSpeed*d;
-        b.v[k]+=normalSpeed*d;
-      }
+      // Apply the equal and opposite impulses without allocating a vector
+      // for each collision in the innermost loop.
+      a.v[0]-=normalSpeed*dx; b.v[0]+=normalSpeed*dx;
+      a.v[1]-=normalSpeed*dy; b.v[1]+=normalSpeed*dy;
+      a.v[2]-=normalSpeed*dz; b.v[2]+=normalSpeed*dz;
     }
   }
   time+=dt;

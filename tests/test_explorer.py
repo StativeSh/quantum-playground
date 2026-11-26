@@ -1153,3 +1153,10 @@ def test_verlet_drift(page, dt, steps, omega):
     x, v = states[-1]
     assert number(page, "integrator-drift-verlet") == pytest.approx(x*x+(v/omega)**2-1, rel=6e-6, abs=3e-13)
     assert number(page, "integrator-drift-time") == pytest.approx(dt*steps)
+
+
+def test_photoelectric_current_model_is_labelled(page):
+    note = page.locator("#photoelectric p").filter(has_text="Model:").inner_text()
+    for assumption in ("unit quantum efficiency", "1 cm²", "linear fall-off"):
+        assert assumption in note
+    assert "maximum kinetic energy, threshold frequency and stopping potential are exact" in note

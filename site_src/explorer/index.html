@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Quantum Playground Explorer</title>
-<meta name="description" content="Explore fourteen interactive physics experiments, from pendulum periods and quantum tunnelling to rotating coils and diffraction orders.">
+<meta name="description" content="Explore interactive physics experiments, from pendulum periods and quantum tunnelling to rotating coils and diffraction orders.">
 <link rel="stylesheet" href="./style.css">
 <link rel="icon" href="data:,">
 </head>
@@ -14,11 +14,12 @@
   <header>
     <nav class="glassbar" aria-label="Site"><a class="brand" href="../">← quantum-playground</a><span class="eyebrow">Interactive explorer</span></nav>
     <h1>Quantum Playground Explorer</h1>
-    <p class="lede">Fourteen experiments from the <a href="https://github.com/StativeSh/quantum-playground">quantum-playground</a> Python package, recomputed live as you drag.</p>
+    <p class="lede">Interactive experiments from the <a href="https://github.com/StativeSh/quantum-playground">quantum-playground</a> Python package, recomputed live as you drag.</p>
   </header>
 
   <nav class="experiment-index" aria-label="Experiments by learning route">
     <div><h2>Mechanics</h2><ul>
+      <li><a href="#launch">Launch from a planet</a></li>
       <li><a href="#collisions">Air-track collisions</a></li>
       <li><a href="#projectile">Projectile launcher</a></li>
       <li><a href="#pendulum">Pendulum period</a></li>
@@ -26,16 +27,22 @@
       <li><a href="#lorenz">Lorenz attractor</a></li>
     </ul></div>
     <div><h2>Waves to quantum</h2><ul>
+      <li><a href="#strings">Standing waves on a string</a></li>
       <li><a href="#photoelectric">Photoelectric effect</a></li>
       <li><a href="#double-slit">Young's double slit</a></li>
       <li><a href="#grating">Diffraction orders</a></li>
       <li><a href="#tunnelling">Quantum tunnelling</a></li>
     </ul></div>
     <div><h2>Fields</h2><ul>
+      <li><a href="#spectrometer">Velocity selector and mass spectrometer</a></li>
+      <li><a href="#efield">Electric field mapper</a></li>
       <li><a href="#rc">RC charge and discharge</a></li>
       <li><a href="#kepler">Kepler orbits</a></li>
     </ul></div>
     <div><h2>Modern physics</h2><ul>
+      <li><a href="#binding">Nuclear binding energy</a></li>
+      <li><a href="#lightclock">Light clock and muons</a></li>
+      <li><a href="#efield">Electric field mapper</a></li>
       <li><a href="#decay">Radioactive decay dice</a></li>
       <li><a href="#photoelectric">Photoelectric effect</a></li>
       <li><a href="#tunnelling">Quantum tunnelling</a></li>
@@ -46,6 +53,8 @@
       <li><a href="#ising">Ising model</a></li>
     </ul></div>
     <div><h2>Electromagnetism</h2><ul>
+      <li><a href="#spectrometer">Velocity selector and mass spectrometer</a></li>
+      <li><a href="#efield">Electric field mapper</a></li>
       <li><a href="#rc">RC charge and discharge</a></li>
       <li><a href="#coil">A rotating coil</a></li>
     </ul></div>
@@ -412,6 +421,93 @@
     </div>
   </section>
 
+  <section class="experiment" id="strings" aria-labelledby="strings-h">
+    <div class="side">
+      <h2 id="strings-h">Standing waves on a string</h2>
+      <div class="prediction"></div>
+      <p>Tune the drive to within 0.5 Hz of a mode to see the standing wave. Both fixed ends count as nodes.</p>
+      <div class="controls"></div>
+      <div class="results"></div>
+      <a href="../lessons/04_stationary_waves.html">Explore lesson 4 in Python</a>
+    </div>
+    <div class="plots experiment-figures">
+      <canvas class="c-plot" id="strings-plot" role="img" aria-label="Displacement along a string with fixed ends"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="efield" aria-labelledby="efield-h">
+    <div class="side">
+      <h2 id="efield-h">Electric field mapper</h2>
+      <div class="prediction"></div>
+      <p>Drag a charge or the probe, or use the position sliders. Arrows show field direction; contours are lines of equal potential.</p>
+      <div class="controls"></div>
+      <div class="results"></div>
+      <a href="../lessons/05_electric_fields.html">Explore lesson 5 in Python</a>
+    </div>
+    <div class="plots experiment-figures">
+      <canvas class="c-plot" id="efield-plot" role="img" aria-label="Field vectors and equipotential lines around movable charges"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="spectrometer" aria-labelledby="spectrometer-h">
+    <div class="side">
+      <h2 id="spectrometer-h">Velocity selector and mass spectrometer</h2>
+      <div class="prediction"></div>
+      <p>An ideal narrow slit admits undeflected ions. The analyser uses the same magnetic field and no electric field.</p>
+      <div class="controls"></div>
+      <div class="results"></div>
+      <a href="../lessons/06_charged_particles_in_fields.html">Explore lesson 6 in Python</a>
+    </div>
+    <div class="plots experiment-figures">
+      <canvas class="c-plot" id="spectrometer-plot" role="img" aria-label="Ion trajectory through crossed fields and into the detector"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="lightclock" aria-labelledby="lightclock-h">
+    <div class="side">
+      <h2 id="lightclock-h">Light clock and muons</h2>
+      <div class="prediction"></div>
+      <p>Compare a 1 µs proper tick with the lab time. Muons travel 10 km and have a mean proper lifetime of 2.197 µs.</p>
+      <div class="controls"></div>
+      <button type="button" id="lightclock-play">Play</button>
+      <div class="results"></div>
+      <a href="../lessons/08_special_relativity.html">Explore lesson 8 in Python</a>
+    </div>
+    <div class="plots experiment-figures">
+      <canvas class="c-plot" id="lightclock-plot" role="img" aria-label="Light pulse bouncing between moving mirrors"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="binding" aria-labelledby="binding-h">
+    <div class="side">
+      <h2 id="binding-h">Nuclear binding energy</h2>
+      <div class="prediction"></div>
+      <p>The liquid-drop estimate is most reliable for medium and heavy nuclei. Compare fusion and a near-symmetric split that conserve mass number and charge.</p>
+      <div class="controls"></div>
+      <label>Reaction <select id="binding-reaction"><option value="fusion">Fuse two copies</option><option value="fission">Split into two fragments</option></select></label>
+      <div class="results"></div>
+      <a href="../lessons/17_nuclear_binding_energy.html">Explore lesson 17 in Python</a>
+    </div>
+    <div class="plots experiment-figures">
+      <canvas class="c-plot" id="binding-plot" role="img" aria-label="Liquid-drop contributions to binding energy"></canvas>
+      <canvas class="c-plot" id="binding-plot2" role="img" aria-label="Binding energy per nucleon along the selected mass chain"></canvas>
+    </div>
+  </section>
+
+  <section class="experiment" id="launch" aria-labelledby="launch-h">
+    <div class="side">
+      <h2 id="launch-h">Launch from a planet</h2>
+      <div class="prediction"></div>
+      <p>Launch from the surface. Angles are measured above the local horizontal. The model neglects air resistance and rotation.</p>
+      <div class="controls"></div>
+      <div class="results"></div>
+      <a href="../lessons/13_gravitational_fields.html">Explore lesson 13 in Python</a>
+    </div>
+    <div class="plots experiment-figures">
+      <canvas class="c-plot" id="launch-plot" role="img" aria-label="Flight path around the planet"></canvas>
+    </div>
+  </section>
+
   <footer>
     <p>Everything is computed in your browser. The same physics lives in Python as <code>mechanics.pendulum_period</code>, <code>quantum.barrier_transmission</code>, <code>quantum.double_slit_experiment</code>, <code>mechanics.nbody</code>, <code>chaos.lorenz</code> and <code>statmech.ising</code>, where it is checked against these analytic results by the test suite.</p>
     <p>The tunnelling plot is the exact stationary state, matched across both barrier edges. The double-slit pattern uses the Fraunhofer (far-field) formula.</p>
@@ -433,5 +529,11 @@
 <script type="module" src="./exp-rc.js"></script>
 <script type="module" src="./exp-collisions.js"></script>
 <script type="module" src="./exp-heating.js"></script>
+<script type="module" src="./exp-strings.js"></script>
+<script type="module" src="./exp-efield.js"></script>
+<script type="module" src="./exp-spectrometer.js"></script>
+<script type="module" src="./exp-lightclock.js"></script>
+<script type="module" src="./exp-binding.js"></script>
+<script type="module" src="./exp-launch.js"></script>
 </body>
 </html>

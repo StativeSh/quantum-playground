@@ -134,3 +134,5 @@ img { max-width: 100%; }
 
 .controls, .results { display: grid; gap: 8px; }
 .prediction summary { cursor: pointer; color: var(--accent); }
+.experiment-figures { align-content: start; }
+#efield-plot { touch-action: none; aspect-ratio: 1; }

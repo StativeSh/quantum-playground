@@ -350,6 +350,16 @@ def test_frame_time_with_all_simulations_visible(page):
     page.set_viewport_size({"width": 1200, "height": height})
     buttons = page.locator(".experiment button[aria-pressed]").all()
     assert buttons and all(b.get_attribute("aria-pressed") == "true" for b in buttons)
+    # Start sampling once the resized viewport is active and the animations
+    # have painted. Viewport setup exercises a separate, one-off browser layout.
+    page.wait_for_function("""() => {
+        const running = document.querySelectorAll('.experiment button[aria-pressed="true"]');
+        return [...running].every(button => {
+            const {top, bottom} = button.closest(".experiment").getBoundingClientRect();
+            return top < innerHeight && bottom > 0;
+        }) && parseFloat(document.getElementById("lor-t").textContent) > 0
+           && parseFloat(document.getElementById("gas-time").textContent) > 0;
+    }""")
     intervals = page.evaluate("""() => new Promise(resolve => {
         const samples = [];
         let previous;

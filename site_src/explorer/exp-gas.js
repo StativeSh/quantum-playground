@@ -55,10 +55,11 @@ function substep(dt) {
       if (r2 >= 4*radius**2 || r2 === 0) continue;
       const normalSpeed=((a.v[0]-b.v[0])*dx+(a.v[1]-b.v[1])*dy+(a.v[2]-b.v[2])*dz)/r2;
       if (normalSpeed<=0) continue;
-      for (const [k,d] of [dx,dy,dz].entries()) {
-        a.v[k]-=normalSpeed*d;
-        b.v[k]+=normalSpeed*d;
-      }
+      // Apply the equal and opposite impulses without allocating a vector
+      // for each collision in the innermost loop.
+      a.v[0]-=normalSpeed*dx; b.v[0]+=normalSpeed*dx;
+      a.v[1]-=normalSpeed*dy; b.v[1]+=normalSpeed*dy;
+      a.v[2]-=normalSpeed*dz; b.v[2]+=normalSpeed*dz;
     }
   }
   time+=dt;

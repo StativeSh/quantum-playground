@@ -12,6 +12,7 @@ from .integrators import solve
 __all__ = [
     "lorenz", "logistic_map", "bifurcation", "lyapunov_logistic", "escape_time", "mandelbrot",
     "julia",
+    "lorenz_hopf_threshold",
 ]
 
 
@@ -86,3 +87,13 @@ def julia(c, xlim=(-1.6, 1.6), ylim=(-1.2, 1.2), width=600, height=400, max_iter
     """Julia set for $z\\to z^2 + c$: the grid supplies the starting points $z_0$."""
     z0 = _grid(xlim, ylim, width, height)
     return escape_time(np.full(z0.shape, c, dtype=complex), max_iter, z0=z0)
+
+
+def lorenz_hopf_threshold(sigma: float, beta: float) -> float:
+    r"""Loss of stability of the nonzero Lorenz equilibria, $\rho_H=\sigma(\sigma+\beta+3)/(\sigma-\beta-1)$.
+
+    Dimensionless. A finite positive Hopf threshold requires $\sigma>\beta+1$.
+    """
+    if beta <= 0 or sigma <= beta + 1:
+        raise ValueError("a finite Hopf threshold requires beta > 0 and sigma > beta + 1")
+    return sigma * (sigma + beta + 3) / (sigma - beta - 1)

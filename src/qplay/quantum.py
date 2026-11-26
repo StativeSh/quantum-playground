@@ -21,6 +21,8 @@ __all__ = [
     "SIGMA_Y", "SIGMA_Z", "PAULI", "evolve", "bloch_vector", "hydrogen_radial",
     "spherical_harmonic", "hydrogen_density_xz", "gaussian_wavepacket_2d", "split_step_2d",
     "absorbing_layer", "double_slit_potential", "double_slit_experiment",
+    "photoelectron_energy_eV", "threshold_frequency",
+    "de_broglie_wavelength",
 ]
 
 # ---- particle in a box ---------------------------------------------------------
@@ -301,3 +303,30 @@ def double_slit_experiment(n=256, k0=3.0, separation=5.0, slit_width=1.0, screen
     screen = (np.abs(psi[:, :, ix]) ** 2).sum(axis=0)
     return {"x": x, "y": y, "times": times, "psi": psi, "V": V.real,
             "screen": screen / screen.max(), "screen_x": x[ix]}
+
+
+def photoelectron_energy_eV(frequency: float, work_function_eV: float) -> float:
+    r"""Maximum photoelectron energy $K_{\max}=\max(0,hf/e-\phi)$ in eV for frequency in Hz.
+
+    Zero below threshold denotes no photoemission.
+    """
+    if frequency < 0 or work_function_eV < 0:
+        raise ValueError("frequency and work function must be nonnegative")
+    return max(0.0, constants.h * frequency / constants.e - work_function_eV)
+
+
+def threshold_frequency(work_function_eV: float) -> float:
+    r"""Photoemission threshold $f_0=e\phi/h$ in Hz for a work function in eV."""
+    if work_function_eV < 0:
+        raise ValueError("work function must be nonnegative")
+    return constants.e * work_function_eV / constants.h
+
+
+def de_broglie_wavelength(momentum: float, *, planck_constant: float = constants.h) -> float:
+    r"""Matter wavelength $\lambda=h/p$ in m for momentum magnitude in kg m/s.
+
+    Pass the Planck constant explicitly when working in scaled units.
+    """
+    if momentum <= 0 or planck_constant <= 0:
+        raise ValueError("momentum magnitude and Planck constant must be positive")
+    return planck_constant / momentum

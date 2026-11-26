@@ -2,6 +2,10 @@
 
 The time vector is the first result of a trajectory call. Each row of the second result is one sample. Positions precede velocities and angles use radians unless a parameter names another unit.
 
+## Removal in 2.0
+
+The following 0.3 interfaces remain available throughout 1.x and will be removed in 2.0.0.
+
 | Earlier call | Preferred call | State columns |
 |---|---|---|
 | `integrators.euler` | `integrators.euler_trajectory` | solution components |
@@ -23,4 +27,4 @@ t, state = pendulum_trajectory(theta0=0.2)
 angle = state[:, 0]
 ```
 
-The earlier names still accept their 0.3 arguments and return their original shapes. They emit DeprecationWarning and may be removed in 2.0. Grid solvers keep their spatial axes, Monte Carlo runs keep their ensemble dimensions, and snapshot or observable helpers document their own return types. SI is the default for new dimensional physics. Existing natural-unit quantum functions, normalised N-body gravity and electrostatics retain their documented defaults. Pass G or the Coulomb constant explicitly when using those models with SI data.
+The earlier names still accept their 0.3 arguments and return their original shapes. They emit DeprecationWarning. Grid solvers keep their spatial axes, Monte Carlo runs keep their ensemble dimensions, and snapshot or observable helpers document their own return types. SI is the default for new dimensional physics. Existing natural-unit quantum functions, normalised N-body gravity and electrostatics retain their documented defaults. Pass G or the Coulomb constant explicitly when using those models with SI data.

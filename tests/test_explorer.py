@@ -17,7 +17,7 @@ from threading import Thread
 import numpy as np
 import pytest
 
-from qplay import mechanics, quantum, statmech
+from qplay import chaos, em, gravity, mechanics, nuclear, numerics, quantum, statmech, waves
 
 pytestmark = pytest.mark.slow
 REQUIRE = bool(os.environ.get("QPLAY_REQUIRE_BROWSER"))
@@ -148,7 +148,7 @@ def test_pendulum_period_matches_python(page, degrees, length):
     set_slider(page, "pend-amp", degrees)
     set_slider(page, "pend-len", length)
     T = mechanics.pendulum_period(math.radians(degrees), 9.81, length)
-    T0 = 2 * math.pi * math.sqrt(length / 9.81)
+    T0 = mechanics.pendulum_period(0, 9.81, length)
     assert number(page, "pend-T") == pytest.approx(T, abs=6e-4)
     assert number(page, "pend-T0") == pytest.approx(T0, abs=6e-4)
     assert number(page, "pend-ratio") == pytest.approx(T / T0, abs=6e-4)
@@ -175,7 +175,7 @@ def test_tunnelling_transmission_matches_exact_formula(page, E, V0, a):
     else:
         assert shown == pytest.approx(T, abs=6e-4)
         assert number(page, "tun-R") == pytest.approx(1 - T, abs=6e-4)
-    assert number(page, "tun-lam") == pytest.approx(2 * math.pi / math.sqrt(2 * E), abs=6e-3)
+    assert number(page, "tun-lam") == pytest.approx(quantum.de_broglie_wavelength(math.sqrt(2 * E), planck_constant=2*math.pi), abs=6e-3)
     assert ("tunnelling" in text(page, "tun-regime")) == (E < V0)
 
 
@@ -213,7 +213,7 @@ def test_double_slit_readouts(page, lam_nm, d_mm, w_mm, L):
     set_slider(page, "slit-w", w_mm)
     set_slider(page, "slit-L", L)
     lam, d, w = lam_nm * 1e-9, d_mm * 1e-3, w_mm * 1e-3
-    assert number(page, "slit-dy") == pytest.approx(lam * L / d * 1e3, abs=6e-3)
+    assert number(page, "slit-dy") == pytest.approx(waves.fringe_spacing(lam, L, d) * 1e3, abs=6e-3)
     assert number(page, "slit-env") == pytest.approx(lam * L / w * 1e3, abs=0.06)
     # bright fringes strictly inside the central envelope: |m| lambda/d < lambda/w
     expected = sum(1 for m in range(-1000, 1001) if abs(m) / d < (1 - 1e-12) / w)
@@ -227,7 +227,7 @@ def test_double_slit_readouts(page, lam_nm, d_mm, w_mm, L):
 def test_orbit_elements_and_measured_period(page, v):
     set_slider(page, "orb-v", v)
     a = 1 / (2 - v**2)                        # from the energy v^2/2 - 1 = -1/(2a), GM = r0 = 1
-    T = 2 * math.pi * a**1.5
+    T = gravity.orbital_period(a, 1)
     assert number(page, "orb-e") == pytest.approx(abs(v**2 - 1), abs=6e-4)
     assert number(page, "orb-a") == pytest.approx(a, abs=6e-4)
     assert number(page, "orb-T") == pytest.approx(T, abs=6e-3)
@@ -251,7 +251,7 @@ def test_lorenz_chaos_threshold_readout(page):
         set_slider(page, "lor-rho", rho)
         set_slider(page, "lor-sigma", sigma)
         set_slider(page, "lor-beta", beta)
-        rho_h = sigma * (sigma + beta + 3) / (sigma - beta - 1)
+        rho_h = chaos.lorenz_hopf_threshold(sigma, beta)
         assert number(page, "lor-rhoH") == pytest.approx(rho_h, abs=6e-3)
         assert ("chaotic" in text(page, "lor-regime")) == (rho > rho_h)
 
@@ -307,7 +307,7 @@ def test_rotating_coil(page, angle):
     set_slider(page, "coil-angle", angle)
     expected = em.coil_emf(100, 0.2, 0.01, 10, math.radians(angle)/10)
     assert number(page, "coil-emf") == pytest.approx(expected, abs=.001)
-    assert number(page, "coil-flux") == pytest.approx(.2*math.cos(math.radians(angle)), abs=.001)
+    assert number(page, "coil-flux") == pytest.approx(em.flux_linkage(100, 0.2, 0.01, math.radians(angle)), abs=.001)
 
 
 @pytest.mark.parametrize("density", [400, 800, 1500])
@@ -388,7 +388,7 @@ def test_fit_line_and_seeded_sampling(page):
     }""")
     fit, first, repeat, different = result
     # y = 2x + 2 with residuals [1, -2, 1]; one residual degree of freedom.
-    assert fit == pytest.approx(dict(gradient=2, intercept=2, gradientSE=math.sqrt(3), interceptSE=math.sqrt(2)))
+    assert fit == pytest.approx(numerics.fit_line([-1, 0, 1], [1, 0, 5]))
     assert first == repeat and first != different
     assert all(0 <= value < 1 for value in first)
 
@@ -464,11 +464,10 @@ def test_projectile_with_drag(page, speed, angle, height):
 
 @pytest.mark.parametrize("frequency,work", [(500, 2.28), (900, 2.28), (1500, 5.6)])
 def test_photoelectric_threshold_and_energy(page, frequency, work):
-    from scipy.constants import elementary_charge, h
     page.select_option("#photoelectric-metal", str(work))
     set_slider(page, "photoelectric-frequency", frequency)
-    energy_ev = max(0, h * frequency * 1e12 / elementary_charge - work)
-    assert number(page, "photoelectric-threshold") == pytest.approx(work * elementary_charge / h / 1e12, abs=0.006)
+    energy_ev = quantum.photoelectron_energy_eV(frequency * 1e12, work)
+    assert number(page, "photoelectric-threshold") == pytest.approx(quantum.threshold_frequency(work) / 1e12, abs=0.006)
     assert number(page, "photoelectric-energy") == pytest.approx(energy_ev, abs=0.0006)
     assert number(page, "photoelectric-cutoff") == pytest.approx(energy_ev, abs=0.0006)
 
@@ -480,7 +479,7 @@ def test_photoelectric_collector_current(page, frequency, intensity, voltage):
     set_slider(page, "photoelectric-intensity", intensity)
     set_slider(page, "photoelectric-voltage", voltage)
     photon = h * frequency * 1e12
-    available = photon - 2.1 * elementary_charge  # caesium
+    available = quantum.photoelectron_energy_eV(frequency * 1e12, 2.1) * elementary_charge  # caesium
     fraction = max(0, 1 - elementary_charge * voltage / available) if available > 0 else 0
     expected = intensity * 1e-4 / photon * elementary_charge * fraction
     assert number(page, "photoelectric-current") == pytest.approx(expected * 1e6, abs=0.0006)
@@ -545,7 +544,7 @@ def test_rc_discharge(page, r_kohm, c_uf, supply, t):
     voltage = circuits.rc_discharge(t, supply, r_kohm*1000, c_uf*1e-6)
     assert number(page, "rc-voltage") == pytest.approx(voltage, abs=0.0006)
     assert number(page, "rc-current") == pytest.approx(-voltage/r_kohm, abs=0.0006)
-    assert number(page, "rc-energy") == pytest.approx(0.5*c_uf*1e-3*supply**2, abs=0.0006)
+    assert number(page, "rc-energy") == pytest.approx(circuits.capacitor_energy(c_uf*1e-6, supply)*1000, abs=0.0006)
 
 
 def configure_carts(page, m1, m2, u1, u2, restitution):
@@ -605,7 +604,7 @@ def test_string_fundamental(page, tension, length, density):
     set_slider(page, "strings-tension", tension)
     set_slider(page, "strings-length", length)
     set_slider(page, "strings-density", density)
-    expected = math.sqrt(tension/(density*1e-3))/(2*length)
+    expected = waves.string_harmonic(1, length, tension, density*1e-3)
     assert number(page, "strings-fundamental") == pytest.approx(expected, abs=0.0006)
 
 
@@ -673,8 +672,8 @@ def test_crossed_field_selector(page, electric, magnetic, speed):
     set_slider(page, "spectrometer-electric", electric)
     set_slider(page, "spectrometer-magnetic", magnetic)
     set_slider(page, "spectrometer-speed", speed)
-    assert number(page, "spectrometer-selected") == pytest.approx(electric/magnetic)
-    assert ("Blocked" in text(page, "spectrometer-landing")) == (not math.isclose(speed, electric/magnetic))
+    assert number(page, "spectrometer-selected") == pytest.approx(em.selector_speed(electric*1000, magnetic)/1000)
+    assert ("Blocked" in text(page, "spectrometer-landing")) == (not math.isclose(speed, em.selector_speed(electric*1000, magnetic)/1000))
 
 
 @pytest.mark.parametrize("mass,charge,b", [(12, 1, 0.5), (20, 2, 0.2), (24, 1, 1)])
@@ -686,7 +685,7 @@ def test_spectrometer_trajectory(page, mass, charge, b):
         set_slider(page, "spectrometer-"+key, value)
     m, q = mass*atomic_mass, charge*elementary_charge
     _, path = em.particle_trajectory(q, m, [0, 0, 0], [0, 0, b], [0, 0, 0], [v, 0, 0], math.pi*m/(q*b))
-    assert number(page, "spectrometer-radius") == pytest.approx(1000*m*v/(q*b), abs=0.0006)
+    assert number(page, "spectrometer-radius") == pytest.approx(1000*em.gyroradius(m, q, v, b), abs=0.0006)
     assert number(page, "spectrometer-landing") == pytest.approx(1000*path[-1, 1], abs=0.0006)
 
 
@@ -704,7 +703,7 @@ def test_muon_survival(page, beta):
     from qplay import relativity
     set_slider(page, "lightclock-beta", beta)
     lifetime = relativity.time_dilation(2.197e-6, beta*c)
-    assert number(page, "lightclock-fraction") == pytest.approx(math.exp(-10000/(beta*c*lifetime)), abs=6e-7)
+    assert number(page, "lightclock-fraction") == pytest.approx(nuclear.remaining(1, 1/lifetime, 10000/(beta*c)), abs=6e-7)
 
 
 @pytest.mark.parametrize("a,z", [(16, 8), (55, 25), (56, 27), (208, 82)])
@@ -725,9 +724,9 @@ def test_binding_reaction_balance(page, a, z, reaction):
     def total(mass, protons):
         return mass*nuclear.binding_energy_per_nucleon(mass, protons)
     if reaction == "fusion":
-        expected = total(2*a, 2*z)-2*total(a, z)
+        expected = nuclear.reaction_energy([total(a, z)]*2, [total(2*a, 2*z)])
     else:
-        expected = total(a//2, z//2)+total(a-a//2, z-z//2)-total(a, z)
+        expected = nuclear.reaction_energy([total(a, z)], [total(a//2, z//2), total(a-a//2, z-z//2)])
     assert number(page, "binding-release") == pytest.approx(expected, abs=0.0006)
 
 
@@ -738,7 +737,7 @@ def test_planet_surface_speeds(page, mass, radius):
     set_slider(page, "launch-radius", radius)
     escape = gravity.escape_speed(mass*1e24, radius*1e6)/1000
     assert number(page, "launch-escape") == pytest.approx(escape, abs=0.00006)
-    assert number(page, "launch-circular") == pytest.approx(escape/math.sqrt(2), abs=0.00006)
+    assert number(page, "launch-circular") == pytest.approx(gravity.circular_speed(mass*1e24, radius*1e6)/1000, abs=0.00006)
 
 
 @pytest.mark.parametrize("speed,angle,fate", [(0.9, 0, "Falls back"), (1, 0, "Orbits"),
@@ -747,7 +746,7 @@ def test_planet_launch_outcome(page, speed, angle, fate):
     from qplay import gravity
     set_slider(page, "launch-speed", speed)
     set_slider(page, "launch-angle", angle)
-    vc = gravity.escape_speed(5.9e24, 6.4e6)/math.sqrt(2)
+    vc = gravity.circular_speed(5.9e24, 6.4e6)
     assert number(page, "launch-velocity") == pytest.approx(speed*vc/1000, abs=0.00006)
     assert text(page, "launch-fate") == fate
 
@@ -820,7 +819,7 @@ def test_braked_rod_velocity(page, m, b, length, r, t):
     open_mode(page, "rod")
     for key, v in [("mass", m), ("field", b), ("length", length), ("resistance", r), ("time", t)]:
         set_slider(page, "rod-"+key, v)
-    tau = m*r/(b*length)**2
+    tau = em.rod_braking_time(m, r, b, length)
     assert number(page, "rod-tau") == pytest.approx(tau, abs=0.00006)
     assert number(page, "rod-speed") == pytest.approx(4*math.exp(-t/tau), abs=0.00006)
 
@@ -830,7 +829,7 @@ def test_braked_rod_joule_heat(page, initial, t):
     open_mode(page, "rod")
     set_slider(page, "rod-initial", initial)
     set_slider(page, "rod-time", t)
-    tau = 0.2/(0.5*0.5)**2
+    tau = em.rod_braking_time(0.2, 1, 0.5, 0.5)
     expected = 0.1*initial**2*(1-math.exp(-2*t/tau))
     for key in ("rod-heat", "rod-lost"):
         assert number(page, key) == pytest.approx(expected, abs=0.00006)
@@ -851,7 +850,7 @@ def test_grating_peak_width(page, slits, density):
     open_mode(page, "white")
     set_slider(page, "white-slits", slits)
     set_slider(page, "white-density", density)
-    width = 2*math.degrees(math.asin(550e-9/(slits*1e-3/density)))
+    width = 2*math.degrees(waves.grating_angle(1, 550e-9, slits*1e-3/density))
     assert number(page, "white-width") == pytest.approx(width, abs=0.0006)
 
 
@@ -862,7 +861,7 @@ def test_kepler_measurement_axes(page, speed):
     a = 1/(2-speed**2)
     wait_until(page, "!/Awaiting/.test(document.getElementById('kepler-law-t2').textContent)")
     assert number(page, "kepler-law-a3") == pytest.approx(a**3, abs=0.000006)
-    assert number(page, "kepler-law-t2") == pytest.approx(4*math.pi**2*a**3, rel=0.001)
+    assert number(page, "kepler-law-t2") == pytest.approx(gravity.orbital_period(a, 1)**2, rel=0.001)
 
 
 @pytest.mark.parametrize("pair", [(0.6, 0.8), (0.8, 1)])
@@ -871,7 +870,7 @@ def test_kepler_repeated_measurements(page, pair):
     for speed in pair:
         set_slider(page, "orb-v", speed)
         wait_until(page, "!/Awaiting/.test(document.getElementById('kepler-law-t2').textContent)")
-        assert number(page, "kepler-law-ratio") == pytest.approx(4*math.pi**2, rel=0.001)
+        assert number(page, "kepler-law-ratio") == pytest.approx(gravity.orbital_period(1, 1)**2, rel=0.001)
     assert page.locator("#kepler-law tbody tr").count() >= 2
 
 
@@ -898,7 +897,7 @@ def test_photon_central_counts(page, d, width):
     cutoff = math.tan(math.asin(lam/(2*d*1e-3)))
     def intensity(y):
         sin = y/math.hypot(1, y)
-        return np.sinc(width*1e-3*sin/lam)**2 * math.cos(math.pi*d*1e-3*sin/lam)**2
+        return waves.slit_envelope(math.asin(sin), width*1e-3, lam) * math.cos(math.pi*d*1e-3*sin/lam)**2
     prob = quad(intensity, 0, cutoff)[0]/quad(intensity, 0, span, limit=200)[0]
     assert number(page, "photons-count") == 2000
     assert number(page, "photons-central") == pytest.approx(prob, abs=4*math.sqrt(prob*(1-prob)/2000))

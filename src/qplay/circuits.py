@@ -22,6 +22,7 @@ from .integrators import solve
 __all__ = [
     "rc_discharge", "rc_charge", "rc_trajectory", "rc_circuit", "rlc_trajectory", "rlc_series",
     "resonant_frequency", "quality_factor", "impedance", "current_amplitude",
+    "capacitor_energy",
 ]
 
 
@@ -104,3 +105,10 @@ def impedance(omega, R, L, C):
 def current_amplitude(omega, V0, R, L, C):
     r"""Steady-state current amplitude $I_0 = V_0/|Z|$ for a drive $V_0\cos\omega t$."""
     return V0 / np.abs(impedance(omega, R, L, C))
+
+
+def capacitor_energy(capacitance: float, voltage: float) -> float:
+    r"""Stored energy $U=CV^2/2$ in J for capacitance in F and potential difference in V."""
+    if capacitance < 0:
+        raise ValueError("capacitance must be nonnegative")
+    return 0.5 * capacitance * voltage**2

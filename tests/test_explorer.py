@@ -915,3 +915,61 @@ def test_optional_modes_on_phone(browser):
         assert page.all_errors == []
     finally:
         page.context.close()
+
+
+# Settings are in the units labelled on each instrument. The first six cover
+# the middle of its range; the next six add leverage at both ends.
+PRACTICALS = {
+    "freefall": ([0.65, 0.75, 0.85, 0.95, 1.05, 1.15, 0.1, 1.95, 0.25, 1.75, 0.35, 2], {"g": 9.81}),
+    "spring": ([0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.05, 1, 0.1, 0.9, 0.15, 0.95], {"k": 16}),
+    "melde": ([14, 16, 18, 20, 22, 24, 2, 40, 4, 36, 6, 38], {"mu": 0.002}),
+    "resistivity": ([0.65, 0.75, 0.85, 0.95, 1.05, 1.15, 0.1, 1.95, 0.25, 1.75, 0.35, 2], {"rho": 1.1e-6}),
+    "emf": ([0.5, 0.6, 0.7, 0.8, 0.9, 1, 0.05, 1.5, 0.1, 1.4, 0.2, 1.45], {"emf": 3.2, "r": 0.8}),
+    "capacitor": ([1.2, 1.4, 1.6, 1.8, 2, 2.2, 0, 4, 0.2, 3.6, 0.4, 3.8], {"c": 220}),
+    "boyle": ([54, 56, 58, 60, 62, 64, 20, 100, 22, 90, 24, 80], {"pv": 5}),
+    "searchcoil": ([55, 60, 65, 70, 75, 80, 0, 180, 10, 165, 20, 150], {"flux": 0.012}),
+}
+
+
+def practical_fit(page, name, key):
+    content = text(page, f"rp-{name}-{key}")
+    match = re.match(r"([-+\d.eE]+) ± ([-+\d.eE]+)", content)
+    assert match, content
+    estimate, error = map(float, match.groups())
+    percent = float(re.search(r"\(([-+\d.eE]+)%\)", content).group(1))
+    assert percent > 0
+    return estimate, error
+
+
+@pytest.mark.parametrize("name", PRACTICALS)
+def test_practical_constant_within_reported_errors(page, name):
+    settings, truth = PRACTICALS[name]
+    panel = page.locator("#rp-"+name)
+    for value in settings[:6]:
+        set_slider(page, f"rp-{name}-setting", value)
+        panel.get_by_role("button", name="Record", exact=True).click()
+    assert panel.locator("tbody tr").count() == 6
+    for key, expected in truth.items():
+        estimate, error = practical_fit(page, name, key)
+        assert error > 0
+        assert estimate == pytest.approx(expected, abs=3*error)
+
+
+@pytest.mark.parametrize("name", PRACTICALS)
+def test_practical_uncertainty_with_wider_data(page, name):
+    settings, truth = PRACTICALS[name]
+    panel = page.locator("#rp-"+name)
+    first = {}
+    for i, value in enumerate(settings, 1):
+        set_slider(page, f"rp-{name}-setting", value)
+        panel.get_by_role("button", name="Record", exact=True).click()
+        if i == 6:
+            first = {key: practical_fit(page, name, key)[1] for key in truth}
+    assert panel.locator("tbody tr").count() == 12
+    for key, expected in truth.items():
+        estimate, error = practical_fit(page, name, key)
+        assert 0 < error < first[key]
+        assert estimate == pytest.approx(expected, abs=3*error)
+    panel.get_by_role("button", name="Clear").click()
+    assert panel.locator("tbody tr").count() == 0
+    assert "Record" in text(page, f"rp-{name}-{next(iter(truth))}")

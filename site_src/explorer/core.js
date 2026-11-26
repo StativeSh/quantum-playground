@@ -75,16 +75,21 @@ new MutationObserver(scheduleRedraw).observe(document.documentElement, {
 document.fonts.ready.then(scheduleRedraw);
 
 const simulations = new Map();
-let frame;
+let frame, nextDraw = 0;
 function animate(now) {
   frame = null;
-  for (const sim of simulations.values()) {
-    if (!sim.playing || !sim.visible) continue;
+  const active = [...simulations.values()].filter(sim => sim.playing && sim.visible);
+  if (!active.length) return;
+  for (const sim of active) {
     if (sim.last !== null) sim.step(Math.min(0.05, (now - sim.last) / 1000));
     sim.last = now;
-    sim.draw();
-    scheduleAnimation();
   }
+  // Advance every clock, but spread distant canvas paints across frames when
+  // several experiments are on screen. A normal one- or two-panel view draws each frame.
+  const count = Math.min(2, active.length);
+  for (let i = 0; i < count; i++) active[(nextDraw + i) % active.length].draw();
+  nextDraw = (nextDraw + count) % active.length;
+  scheduleAnimation();
 }
 function scheduleAnimation() {
   if (frame == null) frame = requestAnimationFrame(animate);
@@ -93,6 +98,7 @@ const visibility = new IntersectionObserver(entries => {
   for (const entry of entries) {
     const sim = simulations.get(entry.target);
     sim.visible = entry.isIntersecting;
+    entry.target.classList.toggle("animating", sim.visible && sim.playing);
     sim.last = null;
     if (sim.visible && sim.playing) scheduleAnimation();
   }
@@ -106,6 +112,7 @@ export function registerSim(name, buttonId, step, draw) {
   visibility.observe(section);
   function setPlaying(on) {
     sim.playing = on;
+    section.classList.toggle("animating", sim.visible && on);
     sim.last = null;
     button.textContent = on ? "Pause" : "Play";
     button.setAttribute("aria-pressed", String(on));
@@ -209,22 +216,23 @@ export function measureTable({columns}) {
 }
 
 // Ordinary least squares, with residual variance estimated using n - 2 degrees of freedom.
-export function fitLine(xs, ys) {
+export function fitLine(xs, ys, {throughOrigin = false} = {}) {
   const n = xs.length;
   if (n < 2 || n !== ys.length || !xs.every(Number.isFinite) || !ys.every(Number.isFinite)) {
     throw new RangeError("Expected at least two finite (x, y) pairs");
   }
   const mean = values => values.reduce((a, b) => a + b, 0) / n;
-  const xMean = mean(xs), yMean = mean(ys);
+  const xMean = throughOrigin ? 0 : mean(xs), yMean = throughOrigin ? 0 : mean(ys);
   const sxx = xs.reduce((sum, x) => sum + (x - xMean) ** 2, 0);
   if (sxx === 0) throw new RangeError("A line needs distinct x values");
   const gradient = xs.reduce((sum, x, i) => sum + (x - xMean) * (ys[i] - yMean), 0) / sxx;
   const intercept = yMean - gradient * xMean;
   const rss = ys.reduce((sum, y, i) => sum + ((y - yMean) - gradient * (xs[i] - xMean)) ** 2, 0);
-  const variance = rss / (n - 2);
+  const degrees = n - (throughOrigin ? 1 : 2);
+  const variance = rss / degrees;
   return {gradient, intercept,
-    gradientSE: n > 2 ? Math.sqrt(variance / sxx) : null,
-    interceptSE: n > 2 ? Math.sqrt(variance * (1 / n + xMean ** 2 / sxx)) : null};
+    gradientSE: degrees > 0 ? Math.sqrt(variance / sxx) : null,
+    interceptSE: throughOrigin ? 0 : n > 2 ? Math.sqrt(variance * (1 / n + xMean ** 2 / sxx)) : null};
 }
 
 export function guided({question, steps}) {

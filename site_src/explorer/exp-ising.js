@@ -3,6 +3,8 @@ import { $, tok, fmt, prep, axes, line, dot, onRedraw, registerSim } from "./cor
 // ---------- Ising model (checkerboard Metropolis, J = 1) ----------
 const N = 96, TC = 2 / Math.log(1 + Math.SQRT2);
 const spins = new Int8Array(N * N);
+const left = Array.from({length: N}, (_, x) => (x + N - 1) % N);
+const right = Array.from({length: N}, (_, x) => (x + 1) % N);
 const ising = { T: 2, mags: [], img: null };
 const onsager = (T) => (T >= TC ? 0 : Math.pow(1 - Math.pow(Math.sinh(2 / T), -4), 1 / 8));
 function isingFill(hot) { for (let i = 0; i < N * N; i++) spins[i] = hot ? (Math.random() < 0.5 ? 1 : -1) : 1; ising.mags = []; }
@@ -13,7 +15,7 @@ function sweep() {
       const up = ((y + N - 1) % N) * N, dn = ((y + 1) % N) * N, row = y * N;
       for (let x = (y + colour) % 2; x < N; x += 2) {
         const s = spins[row + x];
-        const nb = spins[row + (x + 1) % N] + spins[row + (x + N - 1) % N] + spins[up + x] + spins[dn + x];
+        const nb = spins[row + right[x]] + spins[row + left[x]] + spins[up + x] + spins[dn + x];
         const dE = 2 * s * nb;                                 // 0, 4 or 8 when it would cost energy
         if (dE <= 0 || Math.random() < boltz[dE / 4 - 1]) spins[row + x] = -s;
       }

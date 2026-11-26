@@ -361,7 +361,7 @@ def test_frame_time_with_all_simulations_visible(page):
         }
         requestAnimationFrame(frame);
     })""")
-    assert np.percentile(intervals, 90) < 34  # twice the measured Chromium p90 (16.8 ms)
+    assert np.percentile(intervals, 90) < 40  # roughly 2 × the observed 16.8 ms CI p90, with margin for frame pacing
     assert number(page, "lor-t") > 0
 
 

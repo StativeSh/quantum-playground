@@ -36,8 +36,6 @@ function stepLor(dt) {
   lor.separation = sep;
 }
 function drawLor() {
-  $("lor-t").textContent = lor.t.toFixed(1);
-  $("lor-sep").textContent = (lor.separation ?? 1e-8).toExponential(1);
   drawLorCurve();
   const { ctx, w, h } = prep($("lor-anim"));
   const zmax = Math.max(50, lor.p.rho * 1.8), xm = Math.max(25, Math.sqrt(lor.p.beta * Math.max(lor.p.rho - 1, 1)) * 2.4);
@@ -48,11 +46,28 @@ function drawLor() {
   dot(ctx, X(lor.b[0]), Y(lor.b[2]), 4, tok("--accent-2"));
   ctx.fillStyle = tok("--muted"); ctx.font = `12px ${tok("--font-mono")}`; ctx.textAlign = "left"; ctx.textBaseline = "top";
   ctx.fillText("x → , z ↑", 8, 8);
+  $("lor-t").textContent = lor.t.toFixed(1);
+  $("lor-sep").textContent = (lor.separation ?? 1e-8).toExponential(1);
 }
+// Axes and the reference slope stay fixed while the trajectory advances.
+const curveBackground = document.createElement("canvas");
+let curveScale;
 function drawLorCurve() {
-  const { ctx, w, h } = prep($("lor-curve"));
-  const { X, Y } = axes(ctx, w, h, [0, 40], [-9, 2], { xlabel: "time", ylabel: "log₁₀ separation", nx: 4, ny: 5, l: 36 });
-  line(ctx, [[X(0), Y(-8)], [X(40), Y(-8 + 0.906 * 40 / Math.LN10)]].map(([x, y]) => [x, Math.max(y, Y(2))]), tok("--muted"), 1, [4, 4]);
+  const canvas = $("lor-curve");
+  const { ctx, w, h } = prep(canvas);
+  if (!curveScale || curveBackground.width !== canvas.width || curveBackground.height !== canvas.height) {
+    curveBackground.width = canvas.width;
+    curveBackground.height = canvas.height;
+    const background = curveBackground.getContext("2d");
+    background.setTransform(ctx.getTransform());
+    curveScale = axes(background, w, h, [0, 40], [-9, 2], {
+      xlabel: "time", ylabel: "log₁₀ separation", nx: 4, ny: 5, l: 36,
+    });
+    const { X, Y } = curveScale;
+    line(background, [[X(0), Y(-8)], [X(40), Y(2)]], tok("--muted"), 1, [4, 4]);
+  }
+  ctx.drawImage(curveBackground, 0, 0, w, h);
+  const { X, Y } = curveScale;
   line(ctx, lor.seps.map(([t, s]) => [X(t), Y(s)]), tok("--accent"), 1.5);
 }
 ["lor-rho", "lor-sigma", "lor-beta"].forEach((id) => $(id).addEventListener("input", lorParams));
@@ -60,4 +75,4 @@ function drawLorCurve() {
 lorParams();
 drawLor();
 registerSim("lor", "lor-play", stepLor, drawLor);
-onRedraw(drawLor);
+onRedraw(() => { curveScale = null; drawLor(); });

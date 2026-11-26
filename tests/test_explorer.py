@@ -361,8 +361,7 @@ def test_frame_time_with_all_simulations_visible(page):
         }
         requestAnimationFrame(frame);
     })""")
-    print("FRAME_MS p50 p90 p99", np.percentile(intervals, [50, 90, 99]))
-    assert np.percentile(intervals, 90) < 100  # allow occasional slow frames on CI
+    assert np.percentile(intervals, 90) < 34  # twice the measured Chromium p90 (16.8 ms)
     assert number(page, "lor-t") > 0
 
 
@@ -764,12 +763,27 @@ def configure_gas(page, n, kelvin, width):
 def test_gas_wall_impulses(page, n, kelvin, width):
     from scipy.constants import Boltzmann
     configure_gas(page, n, kelvin, width)
-    page.click("#gas-sample")
     pressure_kpa = n*Boltzmann*kelvin/(width*60**2*1e-27)/1000
     assert number(page, "gas-ideal") == pytest.approx(pressure_kpa, abs=0.0006)
-    # Finite Maxwell sample and finite wall-hit count over 100 ps.
-    assert number(page, "gas-pressure") == pytest.approx(pressure_kpa, rel=0.18)
-    assert number(page, "gas-time") == pytest.approx(100)
+    # qplay.kinetic uses centre-accessible dimensions and the first virial
+    # correction 1 + 4η. The explorer divides impulse by the physical wall
+    # area, so convert the predicted pressure to that same area convention.
+    diameter = 0.6  # nm
+    accessible = (width - diameter) * (60 - diameter)**2
+    area_ratio = ((60 - diameter)**2 + 2*(width - diameter)*(60 - diameter)) / (60**2 + 2*width*60)
+    eta = n * math.pi * diameter**3 / (6 * width * 60**2)
+    expected = pressure_kpa * width*60**2 / accessible * (1 + 4*eta) * area_ratio
+    # Independent Maxwell initial conditions are the sampling units. Successive
+    # wall hits within a trajectory are correlated and do not provide independent errors.
+    pressures = []
+    for seed in np.random.default_rng(903).choice(65536, 48, replace=False):
+        set_slider(page, "gas-seed", int(seed))
+        page.click("#gas-sample")
+        assert number(page, "gas-time") == pytest.approx(100)
+        page.eval_on_selector("#gas-sample", "button => { button.click(); button.click(); }")
+        pressures.append(number(page, "gas-pressure"))
+    standard_error = np.std(pressures, ddof=1) / math.sqrt(len(pressures))
+    assert np.mean(pressures) == pytest.approx(expected, abs=3*standard_error)
 
 
 @pytest.mark.parametrize("n,kelvin", [(100, 100), (200, 300), (300, 600)])

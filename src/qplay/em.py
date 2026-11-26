@@ -17,6 +17,8 @@ from .integrators import solve
 __all__ = [
     "K_E", "point_charge_field", "point_charge_potential", "solve_laplace", "particle_trajectory",
     "charged_particle", "rod_emf", "coil_emf", "wire_field", "solenoid_field",
+    "selector_speed", "gyroradius", "rod_braking_time",
+    "flux_linkage",
 ]
 
 K_E = 1 / (4 * np.pi * constants.epsilon_0)  # Coulomb constant, N m^2 / C^2
@@ -123,3 +125,32 @@ def solenoid_field(turns_per_metre: float, current: float) -> float:
     r"""Interior axial field of a long air-core solenoid, $B=\mu_0 nI$ in tesla."""
     from scipy.constants import mu_0
     return mu_0 * turns_per_metre * current
+
+
+def selector_speed(electric_field: float, magnetic_field: float) -> float:
+    r"""Transmitted speed $v=E/B$ in m/s for perpendicular field magnitudes in V/m and T."""
+    if electric_field < 0 or magnetic_field <= 0:
+        raise ValueError("use a nonnegative electric and positive magnetic field magnitude")
+    return electric_field / magnetic_field
+
+
+def gyroradius(mass: float, charge: float, transverse_speed: float, field: float) -> float:
+    r"""Nonrelativistic orbit radius $r=mv_\perp/|qB|$ in m (kg, C, m/s, T)."""
+    if mass <= 0 or charge == 0 or field == 0 or transverse_speed < 0:
+        raise ValueError("a charged particle needs positive mass, nonzero field and nonnegative speed")
+    return mass * transverse_speed / abs(charge * field)
+
+
+def rod_braking_time(mass: float, resistance: float, field: float, length: float) -> float:
+    r"""Time constant $\tau=mR/(BL)^2$ in s for a rod on frictionless rails (kg, Ω, T, m)."""
+    if min(mass, resistance, length) <= 0 or field == 0:
+        raise ValueError("mass, resistance and length must be positive and field nonzero")
+    return mass * resistance / (field * length)**2
+
+
+def flux_linkage(turns: int, field: float, area: float, angle: float) -> float:
+    r"""Flux linkage $N\Phi=NBA\cos\theta$ in Wb-turns for a uniform field (T).
+
+    Supply the coil area in m² and the angle from the field to its normal in radians.
+    """
+    return float(turns * field * area * np.cos(angle))

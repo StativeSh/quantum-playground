@@ -19,6 +19,7 @@ from scipy.sparse.linalg import expm_multiply
 __all__ = [
     "decay_constant", "half_life", "remaining", "bateman", "decay_chain", "simulate_decay",
     "binding_energy_per_nucleon",
+    "reaction_energy",
 ]
 
 
@@ -114,3 +115,12 @@ def binding_energy_per_nucleon(A: ArrayLike, Z: ArrayLike) -> float | NDArray[np
     energy = (15.75*a - 17.8*a**(2/3) - 0.711*z*(z-1)/a**(1/3)
               - 23.7*(a-2*z)**2/a + pairing) / a
     return float(energy) if energy.ndim == 0 else energy
+
+
+def reaction_energy(reactant_binding_energies: ArrayLike, product_binding_energies: ArrayLike) -> float:
+    r"""Released energy $Q=\sum B_{\rm products}-\sum B_{\rm reactants}$ in MeV.
+
+    Supply total binding energies in MeV, one entry per nucleus, for a
+    nucleon-conserving reaction. A negative result means energy is required.
+    """
+    return float(np.sum(product_binding_energies, dtype=float) - np.sum(reactant_binding_energies, dtype=float))

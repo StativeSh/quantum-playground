@@ -5,6 +5,7 @@ from scipy.constants import G
 
 __all__ = [
     "field", "potential", "escape_speed", "synchronous_radius",
+    "circular_speed", "orbital_period",
 ]
 
 
@@ -44,3 +45,15 @@ def synchronous_radius(mass: float, period: float = 86164.1) -> float:
     if mass <= 0 or period <= 0:
         raise ValueError("mass and period must be positive")
     return (G * mass * (period / (2 * np.pi))**2)**(1 / 3)
+
+
+def circular_speed(mass: float, radius: float) -> float:
+    r"""Circular orbital speed $v_c=\sqrt{GM/r}$ in m/s, for mass in kg and radius in m."""
+    return escape_speed(mass, radius) / np.sqrt(2)
+
+
+def orbital_period(semi_major_axis: float, gravitational_parameter: float) -> float:
+    r"""Keplerian period $T=2\pi\sqrt{a^3/\mu}$ in s, for $a$ in m and $\mu=G(M+m)$ in m³/s²."""
+    if min(semi_major_axis, gravitational_parameter) <= 0:
+        raise ValueError("a bound orbit needs positive semi-major axis and gravitational parameter")
+    return float(2 * np.pi * np.sqrt(semi_major_axis**3 / gravitational_parameter))

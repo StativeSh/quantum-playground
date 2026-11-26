@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0
+
+- Added fixed-string harmonics, fringe spacing, photoelectric energies and thresholds, capacitor energy, and reaction energy from total nuclear binding energies.
+- Added crossed-field selector speed, gyroradius, rod braking time flux linkage, circular orbit speed and period, de Broglie wavelength, and the Lorenz Hopf threshold.
+- Added unweighted straight-line fits with coefficient standard errors and an optional fixed zero intercept.
+- Documented the 0.3 compatibility interfaces scheduled for removal in 2.0.0.
+
 ## 1.0.1
 
 Lessons 1, 2, 3, 6 and 11, the demos and the figure-eight animation now use the 1.0 trajectory functions, so learners no longer see deprecation warnings. Lessons 1–11 upgrade an older installation, as lessons 12–17 already did. The test suite fails if repository code calls a deprecated name.

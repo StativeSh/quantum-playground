@@ -14,6 +14,7 @@ from scipy.sparse.linalg import splu
 __all__ = [
     "wave_1d", "heat_1d", "fourier_coefficients", "fourier_sum", "spectrum", "grating_angle",
     "slit_envelope", "image_distance", "refraction",
+    "string_harmonic", "fringe_spacing",
 ]
 
 
@@ -126,3 +127,20 @@ def refraction(theta: float, n1: float, n2: float) -> float | None:
         raise ValueError("require positive indices and an angle of incidence between -pi/2 and pi/2")
     sine = n1 * np.sin(theta) / n2
     return float(np.arcsin(sine)) if abs(sine) <= 1 else None
+
+
+def string_harmonic(n: int, length: float, tension: float, linear_density: float) -> float:
+    r"""Frequency in Hz of mode $f_n=n\sqrt{T/\mu}/(2L)$ on a uniform fixed-end string.
+
+    Supply length in m, tension in N and mass per unit length in kg/m.
+    """
+    if not isinstance(n, (int, np.integer)) or n < 1 or min(length, tension, linear_density) <= 0:
+        raise ValueError("use a positive integer harmonic and positive string parameters")
+    return float(n * np.sqrt(tension / linear_density) / (2 * length))
+
+
+def fringe_spacing(wavelength: float, distance: float, separation: float) -> float:
+    r"""Paraxial double-slit fringe spacing $\Delta y=\lambda L/d$ (all lengths in m)."""
+    if min(wavelength, distance, separation) <= 0:
+        raise ValueError("lengths must be positive")
+    return wavelength * distance / separation

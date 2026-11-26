@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 __all__ = [
     "bisect", "newton", "central_difference", "simpson", "monte_carlo_pi",
+    "fit_line",
 ]
 
 
@@ -87,3 +89,36 @@ def monte_carlo_pi(n=1_000_000, seed=0):
     """Estimate $\\pi$ from the fraction of random points inside the unit quarter-circle."""
     pts = np.random.default_rng(seed).random((n, 2))
     return 4 * np.mean((pts**2).sum(axis=1) <= 1)
+
+
+def fit_line(x: ArrayLike, y: ArrayLike, *, through_origin: bool = False) -> dict[str, float | None]:
+    r"""Fit $y=mx+b$ to paired observations by unweighted ordinary least squares.
+
+    Return gradient, intercept, gradientSE and interceptSE. For an unconstrained
+    fit, $S_{xx}=\sum(x_i-\bar x)^2$ and $s^2=\sum r_i^2/(n-2)$, giving
+    $SE_m=s/\sqrt{S_{xx}}$ and $SE_b=s\sqrt{1/n+\bar x^2/S_{xx}}$.
+    Two points determine the line but give no error estimate (None).
+    With through_origin, fix the intercept at zero, use uncentred sums and
+    divide the residual sum of squares by $n-1$.
+    """
+    xs, ys = np.asarray(x, dtype=float), np.asarray(y, dtype=float)
+    if xs.ndim != 1 or ys.shape != xs.shape or xs.size < 2:
+        raise ValueError("expected at least two paired one-dimensional observations")
+    if not np.all(np.isfinite(xs)) or not np.all(np.isfinite(ys)):
+        raise ValueError("observations must be finite")
+    x_mean = 0.0 if through_origin else xs.mean()
+    y_mean = 0.0 if through_origin else ys.mean()
+    dx, dy = xs - x_mean, ys - y_mean
+    sxx = dx @ dx
+    if sxx == 0:
+        raise ValueError("the gradient is undetermined")
+    gradient = float((dx @ dy) / sxx)
+    intercept = float(y_mean - gradient*x_mean)
+    degrees = xs.size - (1 if through_origin else 2)
+    gradient_se = intercept_se = None
+    if degrees:
+        residuals = dy - gradient*dx
+        variance = (residuals @ residuals) / degrees
+        gradient_se = float(np.sqrt(variance / sxx))
+        intercept_se = 0.0 if through_origin else float(np.sqrt(variance * (1/xs.size + x_mean**2/sxx)))
+    return dict(gradient=gradient, intercept=intercept, gradientSE=gradient_se, interceptSE=intercept_se)

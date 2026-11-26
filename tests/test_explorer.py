@@ -361,6 +361,7 @@ def test_frame_time_with_all_simulations_visible(page):
         }
         requestAnimationFrame(frame);
     })""")
+    print("FRAME_MS p50 p90 p99", np.percentile(intervals, [50, 90, 99]))
     assert np.percentile(intervals, 90) < 100  # allow occasional slow frames on CI
     assert number(page, "lor-t") > 0
 

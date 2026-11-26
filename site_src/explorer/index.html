@@ -89,6 +89,7 @@
   <section class="experiment" id="pendulum" aria-labelledby="pend-h">
     <div class="side">
       <h2 id="pend-h">Pendulum period</h2>
+      <p><strong>Model:</strong> The exact period assumes a point mass on a massless rod with no friction.</p>
       <p>One period is the time for a full swing out and back. Predict what will happen to the exact period when you double the starting angle from 5° to 10°.</p>
       <p>Keep the length at 1 m. Read the exact period at 5°, then move the amplitude slider to 10°. Now try 60° and compare it with 5°. At which angle does the small-angle period come closest?</p>
       <div class="control">
@@ -138,6 +139,7 @@
   <section class="experiment" id="tunnelling" aria-labelledby="tun-h">
     <div class="side">
       <h2 id="tun-h">Quantum tunnelling</h2>
+      <p><strong>Model:</strong> The curve is a stationary state for a one-dimensional rectangular barrier.</p>
       <p>A particle of energy <math><mi>E</mi></math> meets a barrier of height <math><msub><mi>V</mi><mn>0</mn></msub></math> and width <math><mi>a</mi></math>. Classically it bounces whenever <math><mi>E</mi><mo>&lt;</mo><msub><mi>V</mi><mn>0</mn></msub></math>. Units with <math><mi>ℏ</mi><mo>=</mo><mi>m</mi><mo>=</mo><mn>1</mn></math>.</p>
       <p>Hold E at 1.2 and the height at 2. Predict the effect of doubling the width from 1 to 2. Compare transmitted fractions and explain the change. <a href="../notebooks/02_quantum_mechanics.html">Investigate in Python</a>.</p>
       <div class="control">
@@ -177,6 +179,7 @@
   <section class="experiment" id="double-slit" aria-labelledby="slit-h">
     <div class="side">
       <h2 id="slit-h">Young's double slit</h2>
+      <p><strong>Model:</strong> The intensity uses far-field diffraction. The spacing readout uses the small-angle approximation.</p>
       <p>Predict what will happen to the spacing of the bright fringes if you double the slit separation from 0.25 to 0.50 mm. Will they move closer together, move farther apart, or stay put?</p>
       <div class="control">
         <label for="slit-lam">Wavelength λ <output id="slit-lam-out" for="slit-lam"></output></label>
@@ -237,6 +240,7 @@
   <section class="experiment" id="kepler" aria-labelledby="orb-h">
     <div class="side">
       <h2 id="orb-h">Kepler orbits</h2>
+      <p><strong>Model:</strong> A test particle orbits a fixed point mass in units where the initial radius and gravitational parameter are one.</p>
       <p>A planet starts at distance 1 moving sideways. At exactly the circular speed it goes round in a circle; any other speed gives an ellipse, and from <math><msqrt><mn>2</mn></msqrt></math> times the circular speed upwards it escapes.</p>
       <p>Compare launch speeds 1.0 and 1.2. Predict the change in period, then let each orbit complete and compare the measured period with Kepler’s prediction. <a href="../lessons/03_circular_motion_and_orbits.html">Investigate in Python</a>.</p>
       <div class="control">
@@ -282,6 +286,7 @@
   <section class="experiment" id="lorenz" aria-labelledby="lor-h">
     <div class="side">
       <h2 id="lor-h">Lorenz attractor</h2>
+      <p><strong>Model:</strong> The separation is between solutions of three dimensionless convection equations.</p>
       <p>Two copies of the Lorenz system start on the attractor, <math><msup><mn>10</mn><mrow><mo>−</mo><mn>8</mn></mrow></msup></math> apart. While the motion is chaotic the gap grows exponentially until it is as big as the attractor itself.</p>
       <p>Compare ρ = 10 and 28 with σ and β fixed. Predict which pair of trajectories will separate. Run each and compare how their separation changes. <a href="../notebooks/03_maths_and_chaos.html">Investigate in Python</a>.</p>
       <div class="control">
@@ -326,6 +331,7 @@
   <section class="experiment" id="ising" aria-labelledby="ising-h">
     <div class="side">
       <h2 id="ising-h">Ising model</h2>
+      <p><strong>Model:</strong> Spins occupy a finite square lattice. The exact curve describes an infinite lattice at equilibrium.</p>
       <p>Each square is a tiny magnet pointing up or down that prefers to match its neighbours. Heat fights that order. Below the critical temperature large domains form; above it the magnetisation averages to zero.</p>
       <p>Start with all spins up. Predict which temperature maintains order, 1.5 or 3.0. Run each from the same initial state and compare the fluctuating magnetisation with Onsager’s curve. <a href="../notebooks/04_orbitals_interference_and_phase_space.html">Investigate in Python</a>.</p>
       <div class="control">
@@ -361,6 +367,7 @@
   <section class="experiment" id="coil" aria-labelledby="coil-h">
     <div class="side">
       <h2 id="coil-h">A rotating coil</h2>
+      <p><strong>Model:</strong> The field is uniform. The rod loses energy only through resistance in the circuit.</p>
       <p>A 100-turn coil of area 0.010 m² turns at 10 rad/s in a 0.20 T field. Where is the induced voltage largest? Compare the flux linkage and emf at 0°, 90° and 180°.</p>
       <label for="coil-angle">Rotation angle <output id="coil-angle-out"></output></label>
       <input id="coil-angle" type="range" min="0" max="360" value="0">
@@ -381,6 +388,7 @@
   <section class="experiment" id="grating" aria-labelledby="grating-h">
     <div class="side">
       <h2 id="grating-h">Diffraction orders</h2>
+      <p><strong>Model:</strong> Light arrives at normal incidence. Screen colours illustrate wavelength, not calibrated brightness.</p>
       <p>Shine 500 nm light on a grating at normal incidence. Predict how many maxima are possible when the line density doubles from 400 to 800 lines/mm. Count both sides of the central ray.</p>
       <label for="grating-density">Line density <output id="grating-density-out"></output></label>
       <input id="grating-density" type="range" min="200" max="1600" step="10" value="400">
@@ -401,6 +409,7 @@
   <section class="experiment" id="projectile" aria-labelledby="projectile-h">
     <div class="side">
       <h2 id="projectile-h">Projectile launcher</h2>
+      <p><strong>Model:</strong> Gravity is constant. Optional air resistance is proportional to speed squared with a fixed drag coefficient.</p>
       <div class="prediction"></div>
       <div class="controls"></div>
       <label><input id="projectile-drag" type="checkbox"> Quadratic air resistance (0.020 m⁻¹)</label>
@@ -415,8 +424,8 @@
   <section class="experiment" id="photoelectric" aria-labelledby="photoelectric-h">
     <div class="side">
       <h2 id="photoelectric-h">Photoelectric effect</h2>
+      <p><strong>Model:</strong> The idealised current–voltage curve assumes unit quantum efficiency, a fixed 1 cm² collecting area and a linear fall-off with retarding voltage. The maximum kinetic energy, threshold frequency and stopping potential are exact for the selected work function.</p>
       <div class="prediction"></div>
-      <p>Ideal collector with 1 cm² illuminated area, one electron per absorbed photon and a uniform distribution of forward kinetic energies from zero to the maximum.</p>
       <div class="controls"></div>
       <label>Metal <select id="photoelectric-metal"><option value="2.1">Caesium (2.10 eV)</option><option value="2.28">Sodium (2.28 eV)</option><option value="4.3">Zinc (4.30 eV)</option><option value="5.6">Platinum (5.60 eV)</option></select></label>
       <div class="results"></div>
@@ -430,6 +439,7 @@
   <section class="experiment" id="decay" aria-labelledby="decay-h">
     <div class="side">
       <h2 id="decay-h">Radioactive decay dice</h2>
+      <p><strong>Model:</strong> Every nucleus has the same independent decay probability in each one-second step.</p>
       <div class="prediction"></div>
       <p>Each step represents one second. A filled dot marks a surviving nucleus. Reset to replay the same sample.</p>
       <div class="controls"></div>
@@ -445,6 +455,7 @@
   <section class="experiment" id="rc" aria-labelledby="rc-h">
     <div class="side">
       <h2 id="rc-h">RC charge and discharge</h2>
+      <p><strong>Model:</strong> The resistor and capacitor are ideal, with no leakage or source resistance.</p>
       <div class="prediction"></div>
       <div class="controls"></div>
       <label>Switch <select id="rc-mode"><option value="charge">Charge</option><option value="discharge">Discharge</option></select></label>
@@ -460,6 +471,7 @@
   <section class="experiment" id="collisions" aria-labelledby="collisions-h">
     <div class="side">
       <h2 id="collisions-h">Air-track collisions</h2>
+      <p><strong>Model:</strong> The carts collide along one line with a specified coefficient of restitution and no external impulse.</p>
       <div class="prediction"></div>
       <p>Positive velocity points right. Cart 1 starts on the left. The motion repeats so you can compare the two velocities.</p>
       <div class="controls"></div>
@@ -475,6 +487,7 @@
   <section class="experiment" id="heating" aria-labelledby="heating-h">
     <div class="side">
       <h2 id="heating-h">Heating curve</h2>
+      <p><strong>Model:</strong> The sample is insulated and the heater power and each phase’s specific heat capacity are constant.</p>
       <div class="prediction"></div>
       <p>The heater supplies constant power to an insulated sample. The graph ends 20 K above the melting point.</p>
       <div class="controls"></div>
@@ -490,6 +503,7 @@
   <section class="experiment" id="strings" aria-labelledby="strings-h">
     <div class="side">
       <h2 id="strings-h">Standing waves on a string</h2>
+      <p><strong>Model:</strong> The string is uniform with fixed ends. The 0.5 Hz tuning window is a display tolerance.</p>
       <div class="prediction"></div>
       <p>Tune the drive to within 0.5 Hz of a mode to see the standing wave. Both fixed ends count as nodes.</p>
       <div class="controls"></div>
@@ -504,6 +518,7 @@
   <section class="experiment" id="efield" aria-labelledby="efield-h">
     <div class="side">
       <h2 id="efield-h">Electric field mapper</h2>
+      <p><strong>Model:</strong> The sources are point charges. Arrow length is scaled for visibility.</p>
       <div class="prediction"></div>
       <p>Drag a charge or the probe, or use the position sliders. Arrows show field direction; contours are lines of equal potential.</p>
       <div class="controls"></div>
@@ -518,6 +533,7 @@
   <section class="experiment" id="spectrometer" aria-labelledby="spectrometer-h">
     <div class="side">
       <h2 id="spectrometer-h">Velocity selector and mass spectrometer</h2>
+      <p><strong>Model:</strong> Uniform crossed fields and a narrow entrance slit select an undeflected ion. The analyser neglects collisions.</p>
       <div class="prediction"></div>
       <p>An ideal narrow slit admits undeflected ions. The analyser uses the same magnetic field and no electric field.</p>
       <div class="controls"></div>
@@ -532,6 +548,7 @@
   <section class="experiment" id="lightclock" aria-labelledby="lightclock-h">
     <div class="side">
       <h2 id="lightclock-h">Light clock and muons</h2>
+      <p><strong>Model:</strong> The clock and the muons move at constant speed. Muon survival is a population probability.</p>
       <div class="prediction"></div>
       <p>Compare a 1 µs proper tick with the lab time. Muons travel 10 km and have a mean proper lifetime of 2.197 µs.</p>
       <div class="controls"></div>
@@ -547,6 +564,7 @@
   <section class="experiment" id="binding" aria-labelledby="binding-h">
     <div class="side">
       <h2 id="binding-h">Nuclear binding energy</h2>
+      <p><strong>Model:</strong> Reaction energies use liquid-drop binding estimates, especially approximate for light nuclei.</p>
       <div class="prediction"></div>
       <p>The liquid-drop estimate is most reliable for medium and heavy nuclei. Compare fusion and a near-symmetric split that conserve mass number and charge.</p>
       <div class="controls"></div>
@@ -563,6 +581,7 @@
   <section class="experiment" id="launch" aria-labelledby="launch-h">
     <div class="side">
       <h2 id="launch-h">Launch from a planet</h2>
+      <p><strong>Model:</strong> Gravity comes from a spherical planet. Air resistance and rotation are neglected.</p>
       <div class="prediction"></div>
       <p>Launch from the surface. Angles are measured above the local horizontal. The model neglects air resistance and rotation.</p>
       <div class="controls"></div>
@@ -577,6 +596,7 @@
   <section class="experiment" id="gas" aria-labelledby="gas-h">
     <div class="side">
       <h2 id="gas-h">Gas in a box</h2>
+      <p><strong>Model:</strong> Helium atoms are elastic hard spheres of radius 0.3 nm in a box with a fixed 60 nm × 60 nm cross-section. The piston resets the sample. Wall-impact pressure fluctuates around the dilute-gas prediction.</p>
       <div class="prediction"></div>
       <p>The piston sets the width of a 60 nm × 60 nm chamber. Changing a control prepares a fresh helium sample at the chosen temperature.</p>
       <div class="controls"></div>
@@ -593,6 +613,7 @@
   <section class="experiment" id="rp-freefall" aria-labelledby="rp-freefall-h">
     <div class="side">
       <h2 id="rp-freefall-h">Free fall with light gates</h2>
+      <p><strong>Model:</strong> Readings include seeded instrument noise. Clear repeats the same noise sequence. The reported uncertainty is one standard error from the straight-line fit.</p>
       <div class="prediction"></div>
       <p>Release a ball from rest and time its fall from each height.</p>
       <div class="controls"></div>
@@ -607,6 +628,7 @@
   <section class="experiment" id="rp-spring" aria-labelledby="rp-spring-h">
     <div class="side">
       <h2 id="rp-spring-h">Mass–spring period</h2>
+      <p><strong>Model:</strong> Readings include seeded instrument noise. Clear repeats the same noise sequence. The reported uncertainty is one standard error from the straight-line fit.</p>
       <div class="prediction"></div>
       <p>Time one cycle for several hanging masses.</p>
       <div class="controls"></div>
@@ -621,6 +643,7 @@
   <section class="experiment" id="rp-melde" aria-labelledby="rp-melde-h">
     <div class="side">
       <h2 id="rp-melde-h">Stationary waves on a string</h2>
+      <p><strong>Model:</strong> Readings include seeded instrument noise. Clear repeats the same noise sequence. The reported uncertainty is one standard error from the straight-line fit.</p>
       <div class="prediction"></div>
       <p>A 0.80 m string is driven at its fundamental resonance.</p>
       <div class="controls"></div>
@@ -635,6 +658,7 @@
   <section class="experiment" id="rp-resistivity" aria-labelledby="rp-resistivity-h">
     <div class="side">
       <h2 id="rp-resistivity-h">Resistivity of a wire</h2>
+      <p><strong>Model:</strong> Readings include seeded instrument noise. Clear repeats the same noise sequence. The reported uncertainty is one standard error from the straight-line fit.</p>
       <div class="prediction"></div>
       <p>Measure resistance along a wire of cross-sectional area 0.50 mm², including the leads.</p>
       <div class="controls"></div>
@@ -649,6 +673,7 @@
   <section class="experiment" id="rp-emf" aria-labelledby="rp-emf-h">
     <div class="side">
       <h2 id="rp-emf-h">EMF and internal resistance</h2>
+      <p><strong>Model:</strong> Readings include seeded instrument noise. Clear repeats the same noise sequence. The reported uncertainty is one standard error from the straight-line fit.</p>
       <div class="prediction"></div>
       <p>Vary the load current and measure the terminal voltage.</p>
       <div class="controls"></div>
@@ -663,6 +688,7 @@
   <section class="experiment" id="rp-capacitor" aria-labelledby="rp-capacitor-h">
     <div class="side">
       <h2 id="rp-capacitor-h">Capacitor discharge</h2>
+      <p><strong>Model:</strong> Readings include seeded instrument noise. Clear repeats the same noise sequence. The reported uncertainty is one standard error from the straight-line fit.</p>
       <div class="prediction"></div>
       <p>A 5.0 V capacitor discharges through a 10 kΩ resistor.</p>
       <div class="controls"></div>
@@ -677,6 +703,7 @@
   <section class="experiment" id="rp-boyle" aria-labelledby="rp-boyle-h">
     <div class="side">
       <h2 id="rp-boyle-h">Boyle’s law</h2>
+      <p><strong>Model:</strong> Readings include seeded instrument noise. Clear repeats the same noise sequence. The reported uncertainty is one standard error from the straight-line fit.</p>
       <div class="prediction"></div>
       <p>Compress a sealed gas at constant temperature and measure its absolute pressure.</p>
       <div class="controls"></div>
@@ -691,6 +718,7 @@
   <section class="experiment" id="rp-searchcoil" aria-labelledby="rp-searchcoil-h">
     <div class="side">
       <h2 id="rp-searchcoil-h">Search coil angle</h2>
+      <p><strong>Model:</strong> Readings include seeded instrument noise. Clear repeats the same noise sequence. The reported uncertainty is one standard error from the straight-line fit.</p>
       <div class="prediction"></div>
       <p>The field oscillates at 50 Hz. Measure the signed emf amplitude relative to the reference signal; θ is the angle between the field and the coil normal.</p>
       <div class="controls"></div>
@@ -705,6 +733,7 @@
   <section class="experiment" id="fourier" aria-labelledby="fourier-h">
     <div class="side">
       <h2 id="fourier-h">Build a Fourier series</h2>
+      <p><strong>Model:</strong> The displayed series is truncated after the selected odd harmonic.</p>
       <div class="prediction"></div>
       <p>Add odd harmonics to a square wave of height ±1. Overshoot is measured as a percentage of the jump.</p>
       <div class="controls"></div>
@@ -719,6 +748,7 @@
   <section class="experiment" id="bloch" aria-labelledby="bloch-h">
     <div class="side">
       <h2 id="bloch-h">Precession on the Bloch sphere</h2>
+      <p><strong>Model:</strong> A pure spin precesses in a constant field without relaxation.</p>
       <div class="prediction"></div>
       <p>A spin initially points in the xz plane. A constant field along z gives the Hamiltonian ℏωσz/2.</p>
       <div class="controls"></div>
@@ -734,6 +764,7 @@
   <section class="experiment" id="hydrogen" aria-labelledby="hydrogen-h">
     <div class="side">
       <h2 id="hydrogen-h">Hydrogen orbitals</h2>
+      <p><strong>Model:</strong> This is an xz slice of the hydrogen density. Square-root brightness reveals faint lobes; use the probe for numerical density.</p>
       <div class="prediction"></div>
       <p>Choose quantum numbers and sample the density in a plane through the nucleus. Lengths are in Bohr radii.</p>
       <div class="controls"></div>
@@ -748,6 +779,7 @@
   <section class="experiment" id="phase-portrait" aria-labelledby="phase-portrait-h">
     <div class="side">
       <h2 id="phase-portrait-h">Phase portraits</h2>
+      <p><strong>Model:</strong> The force and damping are linear. The arrows show local flow in dimensionless coordinates.</p>
       <div class="prediction"></div>
       <p>Explore dx/dt = y and dy/dt = −kx − by in dimensionless units. Arrows indicate the local direction of motion.</p>
       <div class="controls"></div>
@@ -762,6 +794,7 @@
   <section class="experiment" id="logistic" aria-labelledby="logistic-h">
     <div class="side">
       <h2 id="logistic-h">Logistic map and bifurcation</h2>
+      <p><strong>Model:</strong> The diagram samples a finite number of iterates after a 500-step settling interval.</p>
       <div class="prediction"></div>
       <p>Iterate x → rx(1 − x) for a population fraction. The bifurcation diagram discards the first 500 iterations.</p>
       <div class="controls"></div>
@@ -777,6 +810,7 @@
   <section class="experiment" id="double-pendulum" aria-labelledby="double-pendulum-h">
     <div class="side">
       <h2 id="double-pendulum-h">Two double pendulums</h2>
+      <p><strong>Model:</strong> Each pendulum has point bobs, rigid massless rods and frictionless pivots.</p>
       <div class="prediction"></div>
       <p>Both systems have 1 m rods, 1 kg bobs and start from rest. Only the starting angle of the second lower rod differs.</p>
       <div class="controls"></div>
@@ -792,6 +826,7 @@
   <section class="experiment" id="coherent-state" aria-labelledby="coherent-state-h">
     <div class="side">
       <h2 id="coherent-state-h">Coherent state in a harmonic well</h2>
+      <p><strong>Model:</strong> The potential is exactly harmonic and the packet is isolated.</p>
       <div class="prediction"></div>
       <p>Use natural units ℏ = m = 1. Vary the initial complex amplitude and inspect the packet at different times.</p>
       <div class="controls"></div>
@@ -808,6 +843,7 @@
   <section class="experiment" id="integrator-drift" aria-labelledby="integrator-drift-h">
     <div class="side">
       <h2 id="integrator-drift-h">Integrator energy drift</h2>
+      <p><strong>Model:</strong> The graph uses the absolute relative energy error on a logarithmic scale, with a floor of 10⁻¹⁶.</p>
       <div class="prediction"></div>
       <p>Integrate a unit-mass harmonic oscillator from x = 1, v = 0 using the same time step for all three methods. The graph shows Euler in rust, RK4 dashed and Verlet in the text colour.</p>
       <div class="controls"></div>

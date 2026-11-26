@@ -973,3 +973,183 @@ def test_practical_uncertainty_with_wider_data(page, name):
     panel.get_by_role("button", name="Clear").click()
     assert panel.locator("tbody tr").count() == 0
     assert "Record" in text(page, f"rp-{name}-{next(iter(truth))}")
+
+
+@pytest.fixture
+def paused_page(browser):
+    p = open_page(browser, reduced_motion="reduce")
+    yield p
+    try:
+        assert p.all_errors == []
+    finally:
+        p.context.close()
+
+
+def square_wave_series(n, phase):
+    from qplay import waves
+    indices = np.arange(1, 2*n)
+    coefficients = np.where(indices % 2, 4/(np.pi*indices), 0)
+    return waves.fourier_sum(0, np.zeros_like(coefficients), coefficients, phase, 1)
+
+
+@pytest.mark.parametrize("terms,phase", [(1, 0.125), (5, -0.2), (19, 0.035)])
+def test_fourier_probe(page, terms, phase):
+    set_slider(page, "fourier-terms", terms)
+    set_slider(page, "fourier-probe", phase)
+    assert number(page, "fourier-value") == pytest.approx(square_wave_series(terms, phase), abs=6e-7)
+
+
+@pytest.mark.parametrize("terms,period", [(2, 1), (8, 3), (40, 6)])
+def test_fourier_gibbs_peak(page, terms, period):
+    set_slider(page, "fourier-terms", terms)
+    set_slider(page, "fourier-period", period)
+    peak = 1/(4*terms)
+    assert number(page, "fourier-peak") == pytest.approx(peak*period, abs=6e-6)
+    assert number(page, "fourier-overshoot") == pytest.approx(50*(square_wave_series(terms, peak)-1), abs=6e-5)
+
+
+def qubit_components(tilt, omega, t):
+    angle = math.radians(tilt)/2
+    psi = quantum.evolve(omega*np.diag([1, -1])/2, [math.cos(angle), math.sin(angle)], t)
+    return quantum.bloch_vector(psi)
+
+
+@pytest.mark.parametrize("tilt,t", [(0, 1.2), (60, 0), (130, 2.4)])
+def test_bloch_precession(paused_page, tilt, t):
+    set_slider(paused_page, "bloch-tilt", tilt)
+    set_slider(paused_page, "bloch-time", t)
+    for key, expected in zip("xyz", qubit_components(tilt, 1, t)):
+        assert number(paused_page, "bloch-"+key) == pytest.approx(expected, abs=6e-6)
+
+
+@pytest.mark.parametrize("omega,t", [(-2, 1), (0, 3), (3.25, 0.8)])
+def test_bloch_field_reversal(paused_page, omega, t):
+    set_slider(paused_page, "bloch-omega", omega)
+    set_slider(paused_page, "bloch-time", t)
+    expected = qubit_components(60, omega, t)
+    assert number(paused_page, "bloch-y") == pytest.approx(expected[1], abs=6e-6)
+    assert number(paused_page, "bloch-z") == pytest.approx(expected[2], abs=6e-6)
+
+
+@pytest.mark.parametrize("n,l,m,x,z", [(1, 0, 0, 0, 0), (2, 1, 0, 0, 2), (3, 2, -1, 2, 1), (4, 2, 2, 4, -2)])
+def test_hydrogen_density_slice(page, n, l, m, x, z):
+    for key, val in [("n", n), ("l", l), ("m", m), ("x", x), ("z", z)]:
+        set_slider(page, "hydrogen-"+key, val)
+    _, _, rho = quantum.hydrogen_density_xz(n, l, m, extent=16, points=129)
+    assert number(page, "hydrogen-density") == pytest.approx(rho[int((z+16)*4), int((x+16)*4)], abs=6e-10)
+
+
+@pytest.mark.parametrize("n,l,m", [(2, 0, 0), (3, 1, 1), (4, 3, -3)])
+def test_hydrogen_nodes_and_equator(page, n, l, m):
+    for key, val in [("n", n), ("l", l), ("m", m), ("x", 2), ("z", 0)]:
+        set_slider(page, "hydrogen-"+key, val)
+    _, _, rho = quantum.hydrogen_density_xz(n, l, m, extent=2, points=3)
+    assert number(page, "hydrogen-density") == pytest.approx(rho[1, 2], abs=6e-10)
+    assert number(page, "hydrogen-nodes") == n-l-1
+    assert number(page, "hydrogen-angular") == l
+
+
+@pytest.mark.parametrize("k,b", [(-1, 0.25), (1, 0), (1, 0.5), (0.25, 2), (2, -0.5)])
+def test_phase_portrait_fixed_point(page, k, b):
+    from qplay import dynamics
+    set_slider(page, "phase-portrait-k", k)
+    set_slider(page, "phase-portrait-b", b)
+    jac = dynamics.jacobian(lambda s: [s[1], -k*s[0]-b*s[1]], [0, 0])
+    assert text(page, "phase-portrait-kind") == dynamics.classify_fixed_point(jac)
+    assert number(page, "phase-portrait-trace") == pytest.approx(np.trace(jac), abs=1e-6)
+    assert number(page, "phase-portrait-det") == pytest.approx(np.linalg.det(jac), abs=1e-6)
+
+
+@pytest.mark.parametrize("x,v,k,b", [(0.1, 1, 1, 0.5), (-1.5, 0.2, -2, 1), (1.2, -1, 3, -0.25)])
+def test_phase_portrait_initial_flow(page, x, v, k, b):
+    from qplay import dynamics
+    for key, val in [("x", x), ("v", v), ("k", k), ("b", b)]:
+        set_slider(page, "phase-portrait-"+key, val)
+    jac = dynamics.jacobian(lambda s: [s[1], -k*s[0]-b*s[1]], [0, 0])
+    assert number(page, "phase-portrait-accel") == pytest.approx((jac @ [x, v])[1], abs=6e-5)
+
+
+@pytest.mark.parametrize("r,x0,n", [(2.75, 0.25, 8), (3.2, 0.6, 20), (3.875, 0.25, 30)])
+def test_logistic_population(page, r, x0, n):
+    from qplay import chaos
+    for key, val in [("r", r), ("initial", x0), ("n", n)]:
+        set_slider(page, "logistic-"+key, val)
+    assert number(page, "logistic-value") == pytest.approx(chaos.logistic_map(r, x0, n+1)[-1], abs=6e-8)
+
+
+@pytest.mark.parametrize("r,x0", [(2.75, 0.25), (3.2, 0.6), (3.5, 0.4)])
+def test_logistic_bifurcation_slice(page, r, x0):
+    from qplay import chaos
+    set_slider(page, "logistic-r", r)
+    set_slider(page, "logistic-initial", x0)
+    _, attractor = chaos.bifurcation([r], n_transient=500, n_keep=64, x0=x0)
+    assert number(page, "logistic-min") == pytest.approx(attractor.min(), abs=6e-7)
+    assert number(page, "logistic-max") == pytest.approx(attractor.max(), abs=6e-7)
+
+
+@pytest.mark.parametrize("upper,lower,t", [(20, 30, 0.5), (100, 90, 1.2), (-80, 70, 2)])
+def test_double_pendulum_angles(paused_page, upper, lower, t):
+    for key, val in [("upper", upper), ("lower", lower), ("time", t)]:
+        set_slider(paused_page, "double-pendulum-"+key, val)
+    _, states = mechanics.double_pendulum([math.radians(upper), math.radians(lower), 0, 0], t_max=t, n=2)
+    for key, expected in zip(("theta1", "theta2"), states[-1, :2]):
+        assert number(paused_page, "double-pendulum-"+key) == pytest.approx(expected, abs=3e-6)
+
+
+@pytest.mark.parametrize("delta,t", [(0, 1), (0.5, 0.8), (3, 1.5)])
+def test_double_pendulum_separation(paused_page, delta, t):
+    set_slider(paused_page, "double-pendulum-offset", delta)
+    set_slider(paused_page, "double-pendulum-time", t)
+    tips = []
+    for angle in (90, 90+delta):
+        _, states = mechanics.double_pendulum([math.radians(100), math.radians(angle), 0, 0], t_max=t, n=2)
+        _, _, x, y = mechanics.double_pendulum_xy(states)
+        tips.append((x[-1], y[-1]))
+    assert number(paused_page, "double-pendulum-gap") == pytest.approx(math.dist(*tips), abs=3e-6)
+
+
+@pytest.mark.parametrize("real,imag,omega,t,x", [(1, 0, 1, 0, 1), (-1, 0.5, 2, 1, 0), (0.4, -1, 0.5, 2, -2)])
+def test_coherent_density(paused_page, real, imag, omega, t, x):
+    for key, val in [("real", real), ("imag", imag), ("omega", omega), ("time", t), ("probe", x)]:
+        set_slider(paused_page, "coherent-state-"+key, val)
+    alpha = complex(real, imag)*np.exp(-1j*omega*t)
+    expected = abs(quantum.coherent_state(x, alpha, omega=omega))**2
+    assert number(paused_page, "coherent-state-density") == pytest.approx(expected, abs=6e-8)
+
+
+@pytest.mark.parametrize("omega,t", [(0.5, 0), (1, 1.5), (2.5, 3)])
+def test_coherent_packet_moments(paused_page, omega, t):
+    set_slider(paused_page, "coherent-state-omega", omega)
+    set_slider(paused_page, "coherent-state-time", t)
+    alpha = np.exp(-1j*omega*t)
+    x = np.linspace(-15, 15, 10001)
+    psi = quantum.coherent_state(x, alpha, omega=omega)
+    rho = abs(psi)**2
+    mean = np.trapezoid(x*rho, x)
+    variance = np.trapezoid((x-mean)**2*rho, x)
+    assert number(paused_page, "coherent-state-center") == pytest.approx(mean, abs=6e-7)
+    assert number(paused_page, "coherent-state-width") == pytest.approx(math.sqrt(variance), abs=6e-7)
+    assert number(paused_page, "coherent-state-momentum") == pytest.approx(math.sqrt(2*omega)*alpha.imag, abs=6e-7)
+
+
+@pytest.mark.parametrize("dt,steps,omega", [(0.04, 20, 1), (0.1, 80, 1.5), (0.2, 150, 0.5)])
+def test_euler_and_rk4_drift(page, dt, steps, omega):
+    from qplay import integrators
+    for key, val in [("dt", dt), ("steps", steps), ("omega", omega)]:
+        set_slider(page, "integrator-drift-"+key, val)
+    times = np.arange(steps+1)*dt
+    for key, method in [("euler", integrators.euler_trajectory), ("rk4", integrators.rk4_trajectory)]:
+        _, states = method(lambda t, s: [s[1], -omega**2*s[0]], [1, 0], times)
+        x, v = states[-1]
+        assert number(page, "integrator-drift-"+key) == pytest.approx(x*x+(v/omega)**2-1, rel=6e-6, abs=3e-13)
+
+
+@pytest.mark.parametrize("dt,steps,omega", [(0.06, 30, 2), (0.14, 100, 1), (0.24, 200, 1.5)])
+def test_verlet_drift(page, dt, steps, omega):
+    from qplay import integrators
+    for key, val in [("dt", dt), ("steps", steps), ("omega", omega)]:
+        set_slider(page, "integrator-drift-"+key, val)
+    _, states = integrators.verlet_trajectory(lambda x: -omega**2*x, [1], [0], np.arange(steps+1)*dt)
+    x, v = states[-1]
+    assert number(page, "integrator-drift-verlet") == pytest.approx(x*x+(v/omega)**2-1, rel=6e-6, abs=3e-13)
+    assert number(page, "integrator-drift-time") == pytest.approx(dt*steps)

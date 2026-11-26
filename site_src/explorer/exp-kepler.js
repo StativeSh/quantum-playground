@@ -1,4 +1,4 @@
-import { $, tok, fmt, prep, axes, line, dot, onRedraw, registerSim } from "./core.js";
+import { extension, plot, measureTable, $, tok, fmt, prep, axes, line, dot, onRedraw, registerSim } from "./core.js";
 
 // ---------- Kepler orbits (GM = 1, start at r = 1) ----------
 const orb = { x: 1, y: 0, vx: 0, vy: 1, t: 0, trail: [], lastCross: null, measured: null, points: [] };
@@ -35,6 +35,7 @@ function stepOrb(dt) {                                       // velocity Verlet,
         orb.points = orb.points.filter((p) => Math.abs(p[0] - orb.el.a) > 1e-6).concat([[orb.el.a, tc]]).slice(-12);
         $("orb-Tm").textContent = fmt(tc, 2);
         drawOrbCurve();
+        if ($("kepler-law").open) refreshLaw?.();
       }
       orb.lastCross = tc;
     }
@@ -73,3 +74,30 @@ orbParams();
 drawOrb();
 registerSim("orb", "orb-play", stepOrb, drawOrb);
 onRedraw(() => { drawOrb(); drawOrbCurve(); });
+
+let refreshLaw;
+extension("kepler-law", "What slope do measured periods give on a plot of T² against a³?", [
+  "Choose a bound launch speed above and wait for one complete orbit.",
+  "Change the speed and measure another orbit. Compare the gradients from the recorded points.",
+], "Measured period squared against semi-major axis cubed", (lab,canvas) => {
+  const cubed=lab.result("a3","Current semi-major axis cubed","",5);
+  const squared=lab.result("t2","Measured period squared","",5);
+  const slope=lab.result("ratio","Measured T²/a³","",4);
+  const table=measureTable({columns:["a³","Measured T²"]});
+  $("kepler-law").append(table.element);
+  refreshLaw=() => {
+    const a=orb.el.a, points=orb.points.map(([axis,t]) => [axis**3,t*t]);
+    const row=points.find(([x]) => Math.abs(x-a**3)<1e-7);
+    cubed(Number.isFinite(a) ? a**3 : "Unbound");
+    squared(row ? row[1] : "Awaiting a completed orbit");
+    slope(row ? row[1]/row[0] : "—");
+    table.clear();
+    points.forEach(p => table.addRow(p.map(v => v.toFixed(4))));
+    const max=Math.max(1,...points.map(([x]) => x));
+    plot(canvas,{xLabel:"a³",yLabel:"T²",series:[
+      {points:[[0,0],[max,4*Math.PI**2*max]],dash:[4,3]},...points.map(p => ({points:[p]})),
+    ]});
+  };
+  $("orb-v").addEventListener("input",refreshLaw);
+  return refreshLaw;
+});

@@ -1,4 +1,4 @@
-import { $, tok, fmt, prep, axes, line, dot, onRedraw, registerSim } from "./core.js";
+import { extension, plot, $, tok, fmt, prep, axes, line, dot, onRedraw, registerSim } from "./core.js";
 
 // ---------- pendulum ----------
 const g = 9.81;
@@ -69,3 +69,45 @@ pendParams();
 drawPend();
 registerSim("pend", "pend-play", stepPend, drawPend);
 onRedraw(() => { drawPendCurve(); drawPend(); });
+
+extension("spring", "How does damping change the height and width of the resonance peak?", [
+  "Set a driving acceleration and sweep the drive frequency through the natural frequency.",
+  "Increase damping and compare the peak and Q. Use the time slider to compare kinetic and elastic energy.",
+], "Steady-state amplitude against angular driving frequency", (lab, canvas) => {
+  const omega=lab.range("omega","Natural angular frequency",1,5,0.1,2,"rad/s");
+  const gamma=lab.range("gamma","Damping rate",0.05,1,0.05,0.2,"s⁻¹");
+  const force=lab.range("force","Driving acceleration",0,2,0.1,1,"m/s²");
+  const drive=lab.range("drive","Driving angular frequency",0,8,0.1,2,"rad/s");
+  const time=lab.range("time","Elapsed time",0,12,0.1,2,"s");
+  const q=lab.result("q","Quality factor Q","",3);
+  const displacement=lab.result("x","Displacement","m",4);
+  const velocity=lab.result("v","Velocity","m/s",4);
+  const kinetic=lab.result("ke","Kinetic energy (1 kg mass)","J",4);
+  const potential=lab.result("pe","Elastic energy","J",4);
+  const meters=["Kinetic energy","Elastic energy"].map(label => {
+    const container=document.createElement("label"), meter=document.createElement("meter");
+    container.append(label+" ",meter);
+    $("spring").querySelector(".results").append(container);
+    return meter;
+  });
+  return () => {
+    const w=omega(), damping=gamma(), F=force(), W=drive(), end=time();
+    const accel=(t,x,v) => F*Math.cos(W*t)-2*damping*v-w*w*x;
+    let x=1, v=0;
+    const n=Math.max(1,Math.ceil(end/0.01)), h=end/n;
+    for(let i=0;i<n;i++) {
+      const t=i*h, a1=accel(t,x,v);
+      const v2=v+h*a1/2, a2=accel(t+h/2,x+h*v/2,v2);
+      const v3=v+h*a2/2, a3=accel(t+h/2,x+h*v2/2,v3);
+      const v4=v+h*a3, a4=accel(t+h,x+h*v3,v4);
+      x+=h*(v+2*v2+2*v3+v4)/6;
+      v+=h*(a1+2*a2+2*a3+a4)/6;
+    }
+    const K=v*v/2, U=(w*x)**2/2;
+    displacement(x); velocity(v); kinetic(K); potential(U); q(w/(2*damping));
+    meters.forEach((meter,i) => { meter.max=Math.max(1,K+U); meter.value=i ? U : K; });
+    const amplitude=f => F/Math.hypot(w*w-f*f,2*damping*f);
+    const points=Array.from({length:401},(_,i) => [i/50,amplitude(i/50)]);
+    plot(canvas,{xLabel:"drive (rad/s)",yLabel:"steady amplitude (m)",series:[{points},{points:[[W,amplitude(W)]]}]});
+  };
+});

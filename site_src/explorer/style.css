@@ -136,3 +136,11 @@ img { max-width: 100%; }
 .prediction summary { cursor: pointer; color: var(--accent); }
 .experiment-figures { align-content: start; }
 #efield-plot { touch-action: none; aspect-ratio: 1; }
+
+.extension { grid-column: 1 / -1; border-top: 1px solid var(--grid); padding-top: 12px; min-width: 0; }
+.extension > summary { cursor: pointer; font-weight: 600; }
+.extension[open] .side { margin-block: 12px; max-width: 45ch; }
+.extension canvas { max-width: 700px; }
+
+/* A live readout or canvas resize only needs layout within its own experiment. */
+.experiment { contain: layout; }

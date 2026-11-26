@@ -263,3 +263,24 @@ export function experiment(id, question, steps) {
   }
   return {range, result, start};
 }
+
+// Initialise optional modes when opened, so hidden canvases never enter layout.
+export function extension(id, question, steps, canvasLabel, setup) {
+  const panel = $(id);
+  let redraw;
+  panel.addEventListener("toggle", () => {
+    if (!panel.open) return;
+    if (!redraw) {
+      const canvas = document.createElement("canvas");
+      canvas.id = id + "-plot";
+      canvas.className = "c-plot";
+      canvas.setAttribute("role", "img");
+      canvas.setAttribute("aria-label", canvasLabel);
+      panel.append(canvas);
+      redraw = setup(experiment(id, question, steps), canvas);
+      for (const input of panel.querySelectorAll("input, select")) input.addEventListener("input", redraw);
+      onRedraw(() => { if (panel.open) redraw(); });
+    }
+    redraw();
+  });
+}

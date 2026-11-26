@@ -67,7 +67,14 @@ function scheduleRedraw() {
     for (const draw of redraws) draw();
   });
 }
-new ResizeObserver(scheduleRedraw).observe(document.querySelector(".wrap"));
+// Canvas aspect ratios follow the available width. A changing readout or
+// expanding measurement table can change page height without resizing a plot.
+let plotWidth;
+new ResizeObserver(([entry]) => {
+  const width = entry.contentRect.width;
+  if (width !== plotWidth) scheduleRedraw();
+  plotWidth = width;
+}).observe(document.querySelector(".wrap"));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", scheduleRedraw);
 new MutationObserver(scheduleRedraw).observe(document.documentElement, {
   attributes: true, attributeFilter: ["data-theme"],
@@ -86,7 +93,7 @@ function animate(now) {
   }
   // Advance every clock, but spread distant canvas paints across frames when
   // several experiments are on screen. A normal one- or two-panel view draws each frame.
-  const count = Math.min(2, active.length);
+  const count = active.length <= 2 ? active.length : 1;
   for (let i = 0; i < count; i++) active[(nextDraw + i) % active.length].draw();
   nextDraw = (nextDraw + count) % active.length;
   scheduleAnimation();

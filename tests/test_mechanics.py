@@ -57,6 +57,25 @@ def test_double_pendulum_conserves_energy():
     assert np.ptp(e) < 1e-6
 
 
+@pytest.mark.parametrize("m1, m2, l1, l2", [(1.0, 1.0, 1.0, 1.0), (2.0, 0.5, 1.5, 0.7)])
+@pytest.mark.parametrize("sign", [-1, 1])
+def test_double_pendulum_small_angle_normal_modes(m1, m2, l1, l2, sign):
+    r"""Started from rest in a normal mode, the linearised solution is $\theta_0\cos\omega t$.
+
+    $\omega^2$ solves $m_1 l_1 l_2\omega^4 - (m_1+m_2)g(l_1+l_2)\omega^2 + (m_1+m_2)g^2 = 0$, and
+    the mode shape is $\theta_2/\theta_1 = (m_1+m_2)(g-\omega^2 l_1)/(\omega^2 m_2 l_2)$.
+    """
+    g, eps = 9.81, 1e-4
+    a, b, c = m1 * l1 * l2, -(m1 + m2) * g * (l1 + l2), (m1 + m2) * g**2
+    w2 = (-b + sign * np.sqrt(b**2 - 4 * a * c)) / (2 * a)
+    ratio = (m1 + m2) * (g - w2 * l1) / (w2 * m2 * l2)
+    t, y = mechanics.double_pendulum([eps, eps * ratio, 0.0, 0.0], m1, m2, l1, l2, g,
+                                     t_max=5 * 2 * np.pi / np.sqrt(w2), n=500)
+    expected = np.cos(np.sqrt(w2) * t)
+    assert np.allclose(y[:, 0] / eps, expected, atol=1e-5)
+    assert np.allclose(y[:, 1] / (eps * ratio), expected, atol=1e-5)
+
+
 def test_circular_orbit_closes():
     t, state = mechanics.nbody_trajectory([1.0, 1e-9], [[0, 0], [1, 0]], [[0, 0], [0, 1]], 2 * np.pi, n=50)
     assert np.allclose(state[-1, 2:4], [1, 0], atol=1e-5)          # planet x, y after one period

@@ -4,7 +4,9 @@
 [![Pages](https://github.com/StativeSh/quantum-playground/actions/workflows/pages.yml/badge.svg)](https://stativesh.github.io/quantum-playground/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A physics and maths playground in Python: simulations, symbolic mechanics and Jupyter notebooks, with tests that check every solver against known analytic results.
+A physics and maths playground in Python: simulations, symbolic mechanics and Jupyter notebooks, with tests that check each solver against analytic results, conservation laws or limiting cases. Chaotic systems such as the double pendulum have no closed-form trajectory, so they are checked by invariants (for example energy conservation) rather than by comparing paths.
+
+> **How this was built:** developed with AI assistance (Claude Code). Correctness does not rest on that: it rests on the test suite (`make test-all`), which anyone can run. If a result looks wrong, please open an issue.
 
 **[Website](https://stativesh.github.io/quantum-playground/)**: every figure and animation, the executed notebooks and lessons, the [API reference](https://stativesh.github.io/quantum-playground/api/), and an [interactive explorer](https://stativesh.github.io/quantum-playground/explorer/) with live experiments, including pendulum motion, the double slit, radioactive decay and capacitor charging.
 
